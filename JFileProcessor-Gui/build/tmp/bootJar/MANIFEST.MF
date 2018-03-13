@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Start-Class: com.towianski.jfileprocessor.JFileFinderWin
+Main-Class: org.springframework.boot.loader.JarLauncher
+

@@ -1,0 +1,1408 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.towianski.models;
+
+import com.towianski.jfileprocessor.*;
+import com.towianski.chainfilters.ChainFilterOfBoolean;
+import com.towianski.models.ResultsData;
+import com.towianski.renderers.NumberRenderer;
+import com.towianski.renderers.FormatRenderer;
+import com.towianski.models.CyclingSpinnerListModel;
+import com.towianski.models.FilesTblModel;
+import com.towianski.listeners.MyMouseAdapter;
+import com.towianski.chainfilters.ChainFilterOfNames;
+import com.towianski.chainfilters.ChainFilterOfMaxDepth;
+import com.towianski.chainfilters.ChainFilterOfSizes;
+import com.towianski.chainfilters.ChainFilterOfDates;
+import com.towianski.chainfilters.ChainFilterOfMaxFileCount;
+import com.towianski.chainfilters.ChainFilterOfMaxFolderCount;
+import com.towianski.chainfilters.ChainFilterOfMinDepth;
+import com.towianski.chainfilters.ChainFilterOfPreVisitMaxDepth;
+import com.towianski.chainfilters.ChainFilterOfPreVisitMinDepth;
+import com.towianski.chainfilters.ChainFilterOfShowHidden;
+import com.towianski.chainfilters.FilterChain;
+import com.towianski.jfileprocess.actions.BackwardFolderAction;
+import com.towianski.jfileprocess.actions.CopyAction;
+import com.towianski.jfileprocess.actions.CutAction;
+import com.towianski.jfileprocess.actions.DeleteAction;
+import com.towianski.jfileprocess.actions.EnterAction;
+import com.towianski.jfileprocess.actions.ForwardFolderAction;
+import com.towianski.jfileprocess.actions.PasteAction;
+import com.towianski.jfileprocess.actions.RenameAction;
+import com.towianski.jfileprocess.actions.UpFolderAction;
+import com.towianski.jfileprocess.actions.ProcessInThread;
+import com.towianski.jfileprocess.actions.NewFolderAction;
+import com.towianski.listeners.MyFocusAdapter;
+import com.towianski.listeners.ScriptMenuItemListener;
+import com.towianski.models.CircularArrayList;
+import com.towianski.renderers.EnumFolderIconCellRenderer;
+import com.towianski.renderers.EnumIconCellRenderer;
+import com.towianski.renderers.PathRenderer;
+import com.towianski.renderers.TableCellListener;
+import com.towianski.sshutils.ScpTo;
+import static com.towianski.utils.ClipboardUtils.getClipboardStringsList;
+import static com.towianski.utils.ClipboardUtils.setClipboardContents;
+import com.towianski.utils.DesktopUtils;
+import com.towianski.utils.MyLogger;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Desktop;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.ActionMap;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListModel;
+import javax.swing.InputMap;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.KeyStroke;
+import javax.swing.RowSorter;
+import javax.swing.SortOrder;
+import javax.swing.SpinnerListModel;
+import javax.swing.SwingWorker;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
+import javax.swing.text.JTextComponent;
+
+/**
+ *
+ * @author Stan Towianski - June 2015
+ */
+public class JFileFinderWinModel
+    {
+    private final static MyLogger logger = MyLogger.getLogger(JFileFinderWinModel.class.getName() );
+
+    Thread jfinderThread = null;
+    JFileFinderSwingWorker jFileFinderSwingWorker = null;
+    WatchDirSw watchDirSw = null;
+    ResultsData resultsData = null;
+    JFileFinder jfilefinder = null;
+    Color saveColor = null;
+    ArrayList<Path> copyPaths = new ArrayList<Path>();
+    String copyPathStartPath = null;
+    private TableCellListener filesTblCellListener = null;
+    Boolean isDoingCutFlag = false;
+    Boolean countOnlyFlag = false;
+    SwingWorker afterFillSwingWorker = null;
+    File scriptsFile = new File( System.getProperty( "user.dir" ) + System.getProperty( "file.separator" ) + "menu-scripts" );
+    
+    public static final String PROCESS_STATUS_SEARCH_STARTED = "Search Started . . .";
+    public static final String PROCESS_STATUS_FILL_STARTED = "Fill Started . . .";
+    public static final String PROCESS_STATUS_SEARCH_CANCELED = "Search canceled";
+    public static final String PROCESS_STATUS_SEARCH_COMPLETED = "Search completed";
+    public static final String PROCESS_STATUS_FILL_CANCELED = "Fill canceled";
+    public static final String PROCESS_STATUS_FILL_COMPLETED = "Fill completed";
+    public static final String PROCESS_STATUS_CANCEL_SEARCH = "Cancel Search";
+    public static final String PROCESS_STATUS_CANCEL_FILL = "Cancel Fill";
+    public static final String PROCESS_STATUS_SEARCH_READY = "Search";
+    public static final String PROCESS_STATUS_ERROR = "Error";
+
+    public static final String SHOWFILESFOLDERSCB_BOTH = "Files & Folders";
+    public static final String SHOWFILESFOLDERSCB_FILES_ONLY = "Files Only";
+    public static final String SHOWFILESFOLDERSCB_FOLDERS_ONLY = "Folders Only";
+    public static final String SHOWFILESFOLDERSCB_NEITHER = "Neither";
+
+    public static final int FILESYSTEM_POSIX = 0;
+    public static final int FILESYSTEM_DOS = 1;
+    public int filesysType = FILESYSTEM_POSIX;
+
+    CircularArrayList pathsHistoryList = new CircularArrayList(50 );
+    SavedPathsPanel savedPathReplacablePanel = new SavedPathsPanel( this );
+//    HashMap<String,String> savedPathsHm = new HashMap<String,String>();
+    HashMap<String,ListOfFilesPanel> listOfFilesPanelHm = new HashMap<String,ListOfFilesPanel>();
+    static final String LIST_OF_FILES_SELECTED = "--Selected Items--";
+    String[] data = { LIST_OF_FILES_SELECTED };
+    DefaultComboBoxModel listOfFilesPanelsModel = new DefaultComboBoxModel(data);
+//    DefaultComboBoxModel listOfFilesPanelsModel = new DefaultComboBoxModel();
+
+    PrintStream console = System.out;            
+
+//    JDatePickerImpl date1 = null;
+//    JDatePickerImpl date2 = null;
+    
+    /**
+     * Creates new form JFileFinder
+     */
+    public JFileFinderWinModel() {
+    }
+
+//    public void start() 
+//    {
+//        System.out.println("Scripts Directory =" + scriptsFile + "=" );
+//        
+//        jSplitPane2.setLeftComponent( savedPathReplacablePanel );
+//
+//        date2.setMyEnabled( false );
+//        date2Op.setEnabled( false );
+//        jTabbedPane1.setSelectedIndex( 2 );
+//
+//        fileMgrMode.setSelected( true );
+//        fileMgrModeActionPerformed( null );
+//        useGlobPattern.setSelected( true );
+//        tabsLogicAndBtn.setSelected( true );
+//        saveColor = searchBtn.getBackground();
+//        this.addEscapeListener( this );
+//        filesTbl.addMouseListener( new MyMouseAdapter( jPopupMenu1, this, jScrollPane1 ) );
+//        jScrollPane1.addMouseListener( new MyMouseAdapter( jPopupMenu2, this, jScrollPane1 ) );
+//        this.setLocationRelativeTo( getRootPane() );
+//
+//        filesTblCellListener = new TableCellListener( filesTbl, filesTblCellChangedAction );
+////        filesTbl.putClientProperty( "terminateEditOnFocusLost", Boolean.TRUE );
+//
+//        filesTbl.addFocusListener( new MyFocusAdapter( filesTblCellListener, this ) );
+//        
+//        addkeymapstuff();
+//
+//        // TEMP TAKEN OUT FOR X11 Testing in method itself
+//        stdOutFile.setText( System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + "jfp-out-" + MyLogger.getNewLogDate() + ".log" );
+//        stdErrFile.setText( System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + "jfp-err-" + MyLogger.getNewLogDate() + ".log" );
+//        stdOutFilePropertyChange( null );
+//        stdErrFilePropertyChange( null );
+//        stdErrFilePropertyChange( null );
+//        
+//        startingFolder.requestFocus();
+//        
+////        filesTbl.getInputMap().put(
+////            KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "startEditing");
+//
+////        System.out.println( "create spinner");
+////        String[] andOrSpinModelList = { "", "And", "Or" };
+////        SpinnerListModel andOrSpinModel = new CyclingSpinnerListModel( andOrSpinModelList );
+////        jSpinner1 = new javax.swing.JSpinner( andOrSpinModel );        
+//
+//    jSplitPane2.setDividerLocation( 150 );
+//    System.out.println( "at start jSplitPane1.getLastDividerLocation() =" + jSplitPane1.getLastDividerLocation() );
+//    readInBookmarks();
+//    
+//    System.out.println( "read scriptsFile/menu-scripts from  =" + scriptsFile + "=" );
+//    
+//    RestServerSw restServer = null;
+//            if ( restServer == null )
+//                {
+//                restServer = new RestServerSw( this );
+//                }
+//            restServer.actionPerformed(null);
+//    }
+        
+//    public void addkeymapstuff()
+//    {
+//       EnterAction enterAction = new EnterAction( this );
+//       RenameAction renameAction = new RenameAction( this );
+//       DeleteAction deleteAction = new DeleteAction( this );
+//       UpFolderAction upFolderAction = new UpFolderAction( this );
+//       BackwardFolderAction backwardFolderAction = new BackwardFolderAction( this );
+//       ForwardFolderAction forwardFolderAction = new ForwardFolderAction( this );
+//       NewFolderAction newFolderAction = new NewFolderAction( this );
+//       CopyAction copyAction = new CopyAction( this );
+//       CutAction cutAction = new CutAction( this );
+//       PasteAction pasteAction = new PasteAction( this );
+//       
+////       InputEvent.CTRL_MASK   works on linux and windows but not Mac.
+////       using Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() works on mac and linux.
+//               
+//        InputMap inputMap = null;
+//        if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "mac" ) )
+//            {
+//            inputMap = filesTbl.getInputMap( JPanel.WHEN_IN_FOCUSED_WINDOW );
+//            }
+//        else
+//            {
+//            inputMap = filesTbl.getInputMap();
+//            }
+//            
+//        ActionMap actionMap = filesTbl.getActionMap();
+// 
+//        inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_ENTER, 0 ), "enterAction" );
+//        actionMap.put( "enterAction", enterAction );
+// 
+//        inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_F2, 0 ), "renameAction" );
+//        actionMap.put( "renameAction", renameAction );
+// 
+//        inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_DELETE, 0 ), "deleteAction" );
+//        actionMap.put( "deleteAction", deleteAction );
+// 
+//        inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_DELETE, InputEvent.SHIFT_DOWN_MASK ), "deleteAction2" );
+//        actionMap.put( "deleteAction2", deleteAction );
+//        
+//        inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_BACK_SPACE, 0 ), "upFolderAction" );
+//        actionMap.put( "upFolderAction", upFolderAction );
+// 
+//        System.out.println( "System.getProperty( \"os.name\" ) =" + System.getProperty( "os.name" ) + "=" );
+//        if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "mac" ) )
+//            {
+//            System.out.println( "Mac specific keys !" );
+//            inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_N, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ), "newFolderAction" );
+//            inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_C, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ), "copyAction" );
+//            inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_X, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ), "cutAction" );
+//            inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_V, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() ), "pasteAction" );
+//            }
+//        else
+//            {
+//            System.out.println( "non Mac specific keys" );
+//            inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_N, InputEvent.CTRL_MASK ), "newFolderAction" );
+//            inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_C, InputEvent.CTRL_MASK ), "copyAction" );
+//            inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_X, InputEvent.CTRL_MASK ), "cutAction" );
+//            inputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_V, InputEvent.CTRL_MASK ), "pasteAction" );
+//            }
+//        
+//        actionMap.put( "newFolderAction", newFolderAction );
+// 
+//        actionMap.put( "copyAction", copyAction );
+// 
+//        actionMap.put( "cutAction", cutAction );
+// 
+//        actionMap.put( "pasteAction", pasteAction );
+//
+//
+//        //------- Add actions to Starting Folder to go thru history  -------
+//        InputMap pathInputMap = startingFolder.getInputMap();
+//        ActionMap pathActionMap = startingFolder.getActionMap();
+// 
+//        pathInputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_LEFT, InputEvent.ALT_MASK ), "backwardFolderAction" );
+//        pathActionMap.put( "backwardFolderAction", backwardFolderAction );
+// 
+//        pathInputMap.put( KeyStroke.getKeyStroke( KeyEvent.VK_RIGHT, InputEvent.ALT_MASK ), "forwardFolderAction" );
+//        pathActionMap.put( "forwardFolderAction", forwardFolderAction );
+//    }
+
+    public DefaultComboBoxModel getListPanelModel( String listname ) {
+        if ( listOfFilesPanelHm.containsKey( listname ) )
+            {
+            return listOfFilesPanelHm.get( listname ).getModel();
+            }
+        return null;
+    }
+
+    public void setListPanelModel( String listname, DefaultComboBoxModel model ) {
+        if ( listOfFilesPanelHm.containsKey( listname ) )
+            {
+            listOfFilesPanelHm.get( listname ).setModel( model );
+            }
+    }
+
+    public DefaultComboBoxModel getListOfFilesPanelsModel() {
+        return listOfFilesPanelsModel;
+    }
+
+//    public SwingWorker takeAfterFillSwingWorker() {
+//        SwingWorker tmp = afterFillSwingWorker;
+//        afterFillSwingWorker = null;
+//        return tmp;
+//    }
+
+//    public void setAfterFillSwingWorker(SwingWorker afterFillSwingWorker) {
+//        this.afterFillSwingWorker = afterFillSwingWorker;
+//    }
+    
+    public void readInBookmarks() {
+        DefaultListModel listModel = (DefaultListModel) savedPathReplacablePanel.getSavedPathsList().getModel();
+        listModel.clear();
+        listModel.addElement( "New Window" );
+        listModel.addElement( "Trash" );
+        savedPathReplacablePanel.getSavedPathsHm().put( "New Window", "New Window" );
+        savedPathReplacablePanel.getSavedPathsHm().put( "Trash", DesktopUtils.getTrashFolder().toString() );
+        File selectedFile = new File( DesktopUtils.getBookmarks().toString() );
+        System.out.println( "Bookmarks File =" + selectedFile + "=" );
+            
+        try
+            {
+            if( ! selectedFile.exists() )
+                {
+                selectedFile.createNewFile();
+                }
+
+            FileReader fr = new FileReader( selectedFile.getAbsoluteFile() );
+            BufferedReader br = new BufferedReader(fr);
+
+//            DefaultComboBoxModel thisListModel = (DefaultComboBoxModel) savedPathsList.getModel();
+            int numItems = listModel.getSize();
+            System.out.println( "thisListModel.getSize() num of items =" + numItems + "=" );
+            
+            String line = "";
+            while ( ( line = br.readLine() ) != null )
+                {
+                System.out.println( "read line =" + line + "=" );
+                String[] pieces = line.split( "," );
+                listModel.addElement( pieces[0] );
+                savedPathReplacablePanel.getSavedPathsHm().put( pieces[0], pieces[1] );
+                }
+            //close BufferedWriter
+            br.close();
+            //close FileWriter 
+            fr.close();
+            }
+        catch( Exception ex )
+            {
+
+            }
+    }
+
+    public void saveBookmarks() {
+        File selectedFile = new File( DesktopUtils.getBookmarks().toString() );
+        System.out.println( "Bookmarks File =" + selectedFile + "=" );
+        
+        try
+            {
+            if ( ! selectedFile.exists() )
+                {
+                selectedFile.createNewFile();
+                }
+
+            FileWriter fw = new FileWriter( selectedFile.getAbsoluteFile() );
+            BufferedWriter bw = new BufferedWriter(fw);
+
+            //DefaultListModel thisListModel = (DefaultListModel) savedPathsList.getModel();
+            DefaultListModel listModel = (DefaultListModel) savedPathReplacablePanel.getSavedPathsList().getModel();
+            int numItems = listModel.getSize();
+            System.out.println( "thisListModel.getSize() num of items =" + numItems + "=" );
+            System.out.println( "savedPathReplacablePanel.getSavedPathsHm().size() =" + savedPathReplacablePanel.getSavedPathsHm().size() + "=" );
+            
+            //loop for jtable rows
+            for( int i = 0; i < numItems; i++ )
+                {
+                if ( ! listModel.getElementAt( i ).toString().equals( "New Window" ) && 
+                     ! listModel.getElementAt( i ).toString().equals( "Trash" ) )
+                    {
+                    System.out.println( "bookmark saving =" + listModel.getElementAt( i ).toString() + "=" );
+                    bw.write( listModel.getElementAt( i ).toString() + "," + savedPathReplacablePanel.getSavedPathsHm().get( listModel.getElementAt( i ).toString() ) );
+                    bw.write( "\n" );
+                    }
+                }
+            //close BufferedWriter
+            bw.close();
+            //close FileWriter 
+            fw.close();
+            }
+        catch( Exception ex )
+            {
+            ex.printStackTrace();
+            }
+        }
+    
+    public void removeListPanel( String listname ) {
+        listOfFilesPanelsModel.removeElement( listname );
+        listOfFilesPanelHm.remove( listname );
+    }
+
+//    public JRadioButton getUseGlobPattern() {
+//        return useGlobPattern;
+//    }
+//
+//    public void setUseGlobPattern(JRadioButton useGlobPattern) {
+//        this.useGlobPattern = useGlobPattern;
+//    }
+//
+//    public JRadioButton getUseRegexPattern() {
+//        return useRegexPattern;
+//    }
+//
+//    public void setUseRegexPattern(JRadioButton useRegexPattern) {
+//        this.useRegexPattern = useRegexPattern;
+//    }
+//
+//    public String getStartingFolder() {
+//        return startingFolder.getText().trim();
+//    }
+//
+//    public void setStartingFolder(String startingFolder) {
+//        this.startingFolder.setText( startingFolder );
+//    }
+//
+//    public boolean isShowGroupFlag() {
+//        return showGroupFlag.isSelected();
+//    }
+//
+////    public void setShowGroupFlag(JCheckBox showGroupFlag) {
+////        this.showGroupFlag = showGroupFlag;
+////    }
+//
+//    public boolean isShowOwnerFlag() {
+//        return showOwnerFlag.isSelected();
+//    }
+//
+////    public void setShowOwnerFlag(JCheckBox showOwnerFlag) {
+////        this.showOwnerFlag = showOwnerFlag;
+////    }
+//
+//    public boolean isShowPermsFlag() {
+//        return showPermsFlag.isSelected();
+//    }
+//
+////    public void setShowPermsFlag(JCheckBox showPermsFlag) {
+////        this.showPermsFlag = showPermsFlag;
+////    }
+//
+//    public int getFilesysType() {
+//        return filesysType;
+//    }
+//
+//    public void setFilesysType(int filesysType) {
+//        this.filesysType = filesysType;
+//    }
+//
+//    public Level getLogLevel() {
+//        return logLevelsLhm.get( logLevel.getSelectedItem() );
+//    }
+//
+//    public void callSearchBtnActionPerformed(java.awt.event.ActionEvent evt)
+//        {   // FIXXX  I can get rid of this method !
+//        searchBtnAction( evt );
+//        }
+//            
+//    public void callDeleteActionPerformed(java.awt.event.ActionEvent evt)
+//        {
+//        DeleteActionPerformed( evt );
+//        }
+//            
+//    public void callEnterActionPerformed(java.awt.event.ActionEvent evt)
+//        {
+//        EnterActionPerformed( evt );
+//        }
+//                        
+//    public void callRenameActionPerformed(java.awt.event.ActionEvent evt)
+//        {
+//        RenameActionPerformed( evt );
+//        }
+//                        
+//    public void callUpFolderActionPerformed(java.awt.event.ActionEvent evt)
+//        {
+//        upFolderActionPerformed( evt );
+//        }
+//                        
+//    public void callBackwardFolderActionPerformed(java.awt.event.ActionEvent evt)
+//        {
+//        backwardFolderActionPerformed( evt );
+//        }
+//                        
+//    public void callForwardFolderActionPerformed(java.awt.event.ActionEvent evt)
+//        {
+//        forwardFolderActionPerformed( evt );
+//        }
+//                        
+//    public void callNewFolderActionPerformed(java.awt.event.ActionEvent evt)
+//        {
+//        NewFolderActionPerformed( evt );  // note capital N for what netbeans created
+//        }
+//                        
+//    public void callCopyActionPerformed(java.awt.event.ActionEvent evt)
+//        {
+//        CopyActionPerformed( evt );
+//        }
+//                        
+//    public void callCutActionPerformed(java.awt.event.ActionEvent evt)
+//        {
+//        CutActionPerformed( evt );
+//        }
+//                        
+//    public void callPasteActionPerformed(java.awt.event.ActionEvent evt)
+//        {
+//        PasteActionPerformed( evt );
+//        }
+//                        
+//    public void stopSearch() {
+//        jfilefinder.cancelSearch();
+//        }
+//
+//    public void stopFill() {
+//        jfilefinder.cancelFill();
+//        }
+//
+//    public void setSearchBtn( String text, Color setColor )
+//        {
+//        searchBtn.setText( text );
+//        searchBtn.setBackground( setColor );
+//        searchBtn.setOpaque(true);
+//        }
+//
+////    public void resetSearchBtn() {
+////        searchBtn.setText( "Search" );
+////        searchBtn.setBackground( saveColor );
+////        searchBtn.setOpaque(true);
+////    }
+
+    public void setResultsData( ResultsData resultsData )
+        {
+        this.resultsData = resultsData;
+        }
+
+//    public void setNumFilesInTable()
+//        {
+//        NumberFormat numFormat = NumberFormat.getIntegerInstance();
+//        numFilesInTable.setText( numFormat.format( filesTbl.getModel().getRowCount() ) );
+//        }
+    
+//    public void setProcessStatus( String text )
+//        {
+//        processStatus.setText(text);
+//        switch( text )
+//            {
+//            case PROCESS_STATUS_SEARCH_STARTED:  
+//                processStatus.setBackground( Color.GREEN );
+//                setSearchBtn( this.PROCESS_STATUS_CANCEL_SEARCH, Color.RED );
+//                setMessage( "" );
+//                break;
+//            case PROCESS_STATUS_FILL_STARTED:
+//                processStatus.setBackground( Color.GREEN );
+//                setSearchBtn( this.PROCESS_STATUS_CANCEL_FILL, Color.RED );
+//                break;
+////            case PROCESS_STATUS_CANCEL_SEARCH:
+////                processStatus.setBackground( Color.RED );
+////                setSearchBtn( this.SEARCH_BTN_STOP_SEARCH, Color.RED );
+////                break;
+//            case PROCESS_STATUS_SEARCH_CANCELED:
+//                processStatus.setBackground( Color.YELLOW );
+//                setSearchBtn( this.PROCESS_STATUS_SEARCH_READY, saveColor );
+//                break;
+//            case PROCESS_STATUS_SEARCH_COMPLETED:
+//                processStatus.setBackground( saveColor );
+//                setSearchBtn( this.PROCESS_STATUS_SEARCH_READY, saveColor );
+//                break;
+////            case PROCESS_STATUS_CANCEL_FILL:
+////                processStatus.setBackground( Color.RED );
+////                setSearchBtn( this.SEARCH_BTN_STOP_SEARCH, Color.RED );
+////                break;
+//            case PROCESS_STATUS_FILL_CANCELED:
+//                processStatus.setBackground( Color.YELLOW );
+//                setSearchBtn( this.PROCESS_STATUS_SEARCH_READY, saveColor );
+//                break;
+//            case PROCESS_STATUS_FILL_COMPLETED:
+//                processStatus.setBackground( saveColor );
+//                setSearchBtn( this.PROCESS_STATUS_SEARCH_READY, saveColor );
+//                break;
+//            case PROCESS_STATUS_ERROR:
+//                processStatus.setBackground( Color.RED );
+//            System.out.println( "process status error !" );
+//                break;
+//            default:
+//                processStatus.setBackground( saveColor );
+//                setSearchBtn( this.PROCESS_STATUS_SEARCH_READY, saveColor );
+//                break;
+//            }
+//        }
+//
+//    public String getProcessStatus()
+//        {
+//        return processStatus.getText();
+//        }
+//
+//    public String getMessage()
+//        {
+//        return message.getText();
+//        }
+//
+//    public void setMessage( String text )
+//        {
+//        message.setText(text);
+//        }
+//
+//    ActionListener menuActionListener = new ActionListener()
+//        {
+//        @Override
+//        public void actionPerformed(ActionEvent e) 
+//            {
+//            message.setText(e.getActionCommand());
+//            } 
+//        };
+
+//    Action filesTblCellChangedAction = new AbstractAction()
+//        {
+//        public void actionPerformed(ActionEvent e)
+//            {
+//            System.out.println( "doing filesTblCellChangedAction()" );
+////            TableColumnModel tblColModel = filesTbl.getColumnModel();
+////            System.out.println( "filesTblCellChangedAction() table col count 1=" + tblColModel.getColumnCount() );
+//
+//            TableCellListener tcl = (TableCellListener)e.getSource();
+//            System.out.println("Row   : " + tcl.getRow());
+//            System.out.println("Column: " + tcl.getColumn());
+//            System.out.println("Old   : " + tcl.getOldValue());
+//            System.out.println("New   : " + tcl.getNewValue());
+//            Path targetPath = Paths.get( tcl.getNewValue().toString().trim() );
+//            FilesTblModel filesTblModel = (FilesTblModel) filesTbl.getModel();                
+//            if ( Files.exists( targetPath ) )
+//                {
+//                filesTblModel.setValueAt( tcl.getOldValue(), tcl.getRow(), tcl.getColumn() );
+//                JOptionPane.showMessageDialog( null, "That Folder name already exists!", "Error", JOptionPane.ERROR_MESSAGE );
+//                System.out.println( "That Folder name already exists! ( " + targetPath + ")" );
+//                setProcessStatus( PROCESS_STATUS_ERROR );
+//                processStatus.setText( "Error" );
+//                filesTblModel.deleteRowAt( 0 );
+//                }
+//            else
+//                {
+//                try {
+//                    if ( tcl.getOldValue() == null )
+//                        {
+//                        System.out.println( "try to create dir target =" + targetPath + "=" );
+//                        Files.createDirectory( targetPath );
+//
+////                        RenameActionPerformed( null );
+//                        }
+//                    else
+//                        {
+//                        Path sourcePath = Paths.get( tcl.getOldValue().toString().trim() );
+//                        if ( Files.exists( sourcePath ) )
+//                            {
+//                            System.out.println( "try to move dir source =" + sourcePath + "=   target =" + targetPath + "=" );
+//                            Files.move( sourcePath, targetPath );
+//                            }
+//                        }
+//                    }
+//                catch( AccessDeniedException ae )
+//                    {
+//                    setProcessStatus( PROCESS_STATUS_ERROR );
+//                    processStatus.setText( "Error" );
+//                    message.setText( "Access Denied Exception" );
+//                    filesTblModel.deleteRowAt( 0 );
+//                    }
+//                catch (Exception ex) 
+//                    {
+//                    System.out.println( "ex.getMessage() =" + ex.getMessage()+ "=" );
+//                    processStatus.setText( "Error" );
+//                    ex.printStackTrace();
+//                    message.setText( ex.getMessage() );
+//                    logger.log(Level.SEVERE, null, ex);
+//                    }
+//                }
+//            //filesTbl.setCellSelectionEnabled( false );
+//            setColumnSizes();
+//            }
+//        };
+
+//    public synchronized void stopDirWatcher()
+//        {
+//        if ( watchDirSw != null )
+//            {
+//            watchDirSw.cancelWatch();
+//            }
+//        }
+//
+//    public synchronized void startDirWatcher()
+//        {
+//        if ( ! stopFileWatchTb.isSelected()  // if On/Auto
+//            && ( ! maxDepth.getText().trim().equals( "" ) )
+//            && ( maxDepth.getText().trim().equals( maxDepth.getText().trim() ) )   )  // don't watch on a searched list
+//            {
+//            if ( watchDirSw == null )
+//                {
+//                watchDirSw = new WatchDirSw( this );
+//                }
+//            watchDirSw.actionPerformed(null);
+//            }
+//        }
+
+//    public void searchBtnAction( java.awt.event.ActionEvent evt )
+//    {
+//        System.out.println("jfilewin searchBtn() searchBtn.getText() =" + searchBtn.getText() + "=" );
+//        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+//        stopDirWatcher();
+//
+//        if ( searchBtn.getText().equalsIgnoreCase( PROCESS_STATUS_CANCEL_SEARCH ) )
+//            {
+//            System.out.println( "hit stop button, got rootPaneCheckingEnabled =" + rootPaneCheckingEnabled + "=" );
+//            setProcessStatus( PROCESS_STATUS_SEARCH_CANCELED );
+//            this.stopSearch();
+//            //JOptionPane.showConfirmDialog( null, "at call stop search" );
+//            }
+//        else if ( searchBtn.getText().equalsIgnoreCase( PROCESS_STATUS_CANCEL_FILL ) )
+//            {
+//            System.out.println( "hit stop fill button, got rootPaneCheckingEnabled =" + rootPaneCheckingEnabled + "=" );
+//            setProcessStatus( PROCESS_STATUS_FILL_CANCELED );
+//            this.stopFill();
+//            //JOptionPane.showConfirmDialog( null, "at call stop fill" );
+//            }
+//        else
+//            {
+//            //JOptionPane.showConfirmDialog( null, "at call do search" );
+//            try {
+//                String[] args = new String[3];
+//                args[0] = startingFolder.getText().trim();
+//                //int startingPathLength = (args[0].endsWith( System.getProperty( "file.separator" ) ) || args[0].endsWith( "/" ) ) ? args[0].length() - 1 : args[0].length();
+//                //args[0] = args[0].substring( 0, startingPathLength );
+//                if ( ! ( args[0].endsWith(System.getProperty( "file.separator" ) )
+//                         || args[0].endsWith( "/" ) ) ) 
+//                    {
+//                    args[0] += System.getProperty( "file.separator" );
+//                    }
+//                startingFolder.setText( args[0] );
+//
+//                args[1] = useRegexPattern.isSelected() ? "-regex" : "-glob";
+//                args[2] = filePattern.getText().trim();
+//                
+//                if ( useGlobPattern.isSelected()
+//                        && ! ( args[0].endsWith(System.getProperty( "file.separator" ) )
+//                         || args[0].endsWith( "/" ) )
+//                        && ! args[2].startsWith( "**" )
+//                        && ! (args[2].startsWith( System.getProperty( "file.separator" ) ) || args[2].startsWith( "/" )) )
+//                    {
+//                    int result = JOptionPane.showConfirmDialog( null, 
+//                       "There is no file separator (/ or \\ or **) between starting folder and pattern. Do you want to insert one?"
+//                            ,null, JOptionPane.YES_NO_OPTION );
+//                    if ( result == JOptionPane.YES_OPTION )
+//                        {
+//                        filePattern.setText( System.getProperty( "file.separator" ) + args[2] );
+//                        args[2] = filePattern.getText();
+//                        }
+//                    }
+//                
+//                //------- save history of paths  -------
+//                pathsHistoryList.add( args[0] );
+//                System.out.println( "after pathsHistoryList()" );
+//
+//                //public ChainFilterA( ChainFilterA nextChainFilter )
+//                //Long size1Long = Long.parseLong( size1.getText().trim() );
+//                System.out.println( "tabsLogic button.getText() =" + (tabsLogicAndBtn.isSelected() ? tabsLogicAndBtn.getText() : tabsLogicOrBtn.getText()) + "=" );
+//                FilterChain chainFilterList = new FilterChain( tabsLogicAndBtn.isSelected() ? tabsLogicAndBtn.getText() : tabsLogicOrBtn.getText() );
+//                FilterChain chainFilterFolderList = new FilterChain( tabsLogicAndBtn.isSelected() ? tabsLogicAndBtn.getText() : tabsLogicOrBtn.getText() );
+//                FilterChain chainFilterPreVisitFolderList = new FilterChain( tabsLogicAndBtn.isSelected() ? tabsLogicAndBtn.getText() : tabsLogicOrBtn.getText() );
+//
+//                try {
+//                    if ( ! filePattern.getText().trim().equals( "" ) )
+//                        {
+//                        System.out.println( "add filter of names!" );
+//                        ChainFilterOfNames chainFilterOfNames = new ChainFilterOfNames( args[1], (args[0] + args[2]).replace( "\\", "\\\\" ) );
+//                        if ( showFilesFoldersCb.getSelectedItem().equals( SHOWFILESFOLDERSCB_FOLDERS_ONLY )  ||
+//                             showFilesFoldersCb.getSelectedItem().equals( SHOWFILESFOLDERSCB_BOTH ) )
+//                            {
+//                            chainFilterFolderList.addFilter( chainFilterOfNames );
+//                            }
+//                        if ( showFilesFoldersCb.getSelectedItem().equals( SHOWFILESFOLDERSCB_FILES_ONLY )  ||
+//                             showFilesFoldersCb.getSelectedItem().equals( SHOWFILESFOLDERSCB_BOTH ) )
+//                            {
+//                            chainFilterList.addFilter( chainFilterOfNames );
+//                            }
+//                        }
+//                    }
+//                catch( Exception ex )
+//                    {
+//                    JOptionPane.showMessageDialog( this, "Error in a Name filter", "Error", JOptionPane.ERROR_MESSAGE );
+//                    setProcessStatus( PROCESS_STATUS_SEARCH_CANCELED );
+//                    return;
+//                    }
+//
+//                try {
+//                    System.out.println( "showFilesFoldersCb.getSelectedItem() =" + showFilesFoldersCb.getSelectedItem() + "=" );
+//                    if ( showFilesFoldersCb.getSelectedItem().equals( SHOWFILESFOLDERSCB_FILES_ONLY ) 
+//                         || showFilesFoldersCb.getSelectedItem().equals( SHOWFILESFOLDERSCB_NEITHER ) )
+//                        {
+//                        System.out.println( "add filter Boolean False for folders" );
+//                        ChainFilterOfBoolean chainFilterOfBoolean = new ChainFilterOfBoolean( false );
+//                        chainFilterFolderList.addFilter( chainFilterOfBoolean );
+//                        }
+//                    if ( showFilesFoldersCb.getSelectedItem().equals( SHOWFILESFOLDERSCB_FOLDERS_ONLY ) 
+//                         || showFilesFoldersCb.getSelectedItem().equals( SHOWFILESFOLDERSCB_NEITHER ) )
+//                        {
+//                        System.out.println( "add filter Boolean False for files" );
+//                        ChainFilterOfBoolean chainFilterOfBoolean = new ChainFilterOfBoolean( false );
+//                        chainFilterList.addFilter( chainFilterOfBoolean );
+//                        }
+//                    }
+//                catch( Exception ex )
+//                    {
+//                    JOptionPane.showMessageDialog( this, "Error in a Boolean filter", "Error", JOptionPane.ERROR_MESSAGE );
+//                    setProcessStatus( PROCESS_STATUS_SEARCH_CANCELED );
+//                    return;
+//                    }
+//
+//                try {
+//                    if ( ! size1.getText().trim().equals( "" ) )
+//                        {
+//                        System.out.println( "add filter of sizes!" );
+//                        ChainFilterOfSizes chainFilterOfSizes = new ChainFilterOfSizes( (String)size1Op.getSelectedItem(), size1.getText().trim(), ((String) sizeLogicOp.getValue()).trim(), (String)size2Op.getSelectedItem(), size2.getText().trim() );
+//                        chainFilterList.addFilter( chainFilterOfSizes );
+//                        }
+//                    }
+//                catch( Exception ex )
+//                    {
+//                    JOptionPane.showMessageDialog( this, "Error in a Size filter", "Error", JOptionPane.ERROR_MESSAGE );
+//                    setProcessStatus( PROCESS_STATUS_SEARCH_CANCELED );
+//                    return;
+//                    }
+//
+//                try {
+//                    if ( (Date) date1.getModel().getValue() != null )
+//                        {
+//                        System.out.println( "add filter of dates!" );
+//                        System.out.println( "selected date =" + (Date) date1.getModel().getValue() + "=" );
+//                        ChainFilterOfDates chainFilterOfDates = new ChainFilterOfDates( (String)date1Op.getSelectedItem(), (Date) date1.getModel().getValue(), ((String) dateLogicOp.getValue()).trim(), (String)date2Op.getSelectedItem(), (Date) date2.getModel().getValue() );
+//                        chainFilterList.addFilter( chainFilterOfDates );
+//                        }
+//                    }
+//                catch( Exception ex )
+//                    {
+//                    JOptionPane.showMessageDialog( this, "Error in a Date filter", "Error", JOptionPane.ERROR_MESSAGE );
+//                    setProcessStatus( PROCESS_STATUS_SEARCH_CANCELED );
+//                    return;
+//                    }
+//
+//                try {
+//                    if ( ! maxDepth.getText().trim().equals( "" ) )
+//                        {
+//                        System.out.println( "add filter of maxdepth!" );
+//                        System.out.println( "selected maxdepth =" + maxDepth.getText().trim() + "=" );
+//                        ChainFilterOfMaxDepth chainFilterOfMaxDepth = new ChainFilterOfMaxDepth( args[0], maxDepth.getText().trim() );
+//                        chainFilterFolderList.addFilter( chainFilterOfMaxDepth );
+//                        chainFilterList.addFilter( chainFilterOfMaxDepth );
+//                        ChainFilterOfPreVisitMaxDepth chainFilterOfPreVisitMaxDepth = new ChainFilterOfPreVisitMaxDepth( args[0], maxDepth.getText().trim() );
+//                        chainFilterPreVisitFolderList.addFilter( chainFilterOfPreVisitMaxDepth );
+//                        }
+//                    }
+//                catch( Exception ex )
+//                    {
+//                    JOptionPane.showMessageDialog( this, "Error in Max Depth filter", "Error", JOptionPane.ERROR_MESSAGE );
+//                    setProcessStatus( PROCESS_STATUS_SEARCH_CANCELED );
+//                    return;
+//                    }
+//
+//                try {
+//                    if ( ! stopFileCount.getText().trim().equals( "" ) )
+//                        {
+//                        System.out.println( "add filter of stopFileCount!" );
+//                        System.out.println( "selected stopFileCount =" + stopFileCount.getText().trim() + "=" );
+//                        ChainFilterOfMaxFileCount chainFilterOfMaxFileCount = new ChainFilterOfMaxFileCount( args[0], stopFileCount.getText().trim() );
+//                        chainFilterList.addFilter( chainFilterOfMaxFileCount );
+//                        }
+//                    }
+//                catch( Exception ex )
+//                    {
+//                    JOptionPane.showMessageDialog( this, "Error in stopFileCount filter", "Error", JOptionPane.ERROR_MESSAGE );
+//                    setProcessStatus( PROCESS_STATUS_SEARCH_CANCELED );
+//                    return;
+//                    }
+//
+//                try {
+//                    if ( ! stopFolderCount.getText().trim().equals( "" ) )
+//                        {
+//                        System.out.println( "add filter of stopFolderCount!" );
+//                        System.out.println( "selected stopFolderCount =" + stopFolderCount.getText().trim() + "=" );
+//                        ChainFilterOfMaxFolderCount chainFilterOfMaxFolderCount = new ChainFilterOfMaxFolderCount( args[0], stopFolderCount.getText().trim() );
+//                        chainFilterFolderList.addFilter( chainFilterOfMaxFolderCount );
+//                        }
+//                    }
+//                catch( Exception ex )
+//                    {
+//                    JOptionPane.showMessageDialog( this, "Error in stopFolderCount filter", "Error", JOptionPane.ERROR_MESSAGE );
+//                    setProcessStatus( PROCESS_STATUS_SEARCH_CANCELED );
+//                    return;
+//                    }
+//
+//                try {
+//                    if ( ! minDepth.getText().trim().equals( "" ) )
+//                        {
+//                        System.out.println( "add filter of minDepth!" );
+//                        System.out.println( "selected minDepth =" + minDepth.getText().trim() + "=" );
+//                        ChainFilterOfMinDepth chainFilterOfMinDepth = new ChainFilterOfMinDepth( args[0], minDepth.getText().trim() );
+//                        chainFilterFolderList.addFilter( chainFilterOfMinDepth );
+//                        chainFilterList.addFilter( chainFilterOfMinDepth );
+//                        ChainFilterOfPreVisitMinDepth chainFilterOfPreVisitMinDepth = new ChainFilterOfPreVisitMinDepth( args[0], minDepth.getText().trim() );
+//                        chainFilterPreVisitFolderList.addFilter( chainFilterOfPreVisitMinDepth );
+//                        }
+//                    }
+//                catch( Exception ex )
+//                    {
+//                    JOptionPane.showMessageDialog( this, "Error in Max Depth filter", "Error", JOptionPane.ERROR_MESSAGE );
+//                    setProcessStatus( PROCESS_STATUS_SEARCH_CANCELED );
+//                    return;
+//                    }
+//                
+//                try {
+//                    if ( ! showHiddenFilesFlag.isSelected() )
+//                        {
+//                        System.out.println( "add filter of do not show hidden files!" );
+//                        ChainFilterOfShowHidden filter = new ChainFilterOfShowHidden( false );
+//                        chainFilterList.addFilter( filter );
+//                        chainFilterFolderList.addFilter( filter );
+//                        }
+//                    }
+//                catch( Exception ex )
+//                    {
+//                    JOptionPane.showMessageDialog( this, "Error in a Name filter", "Error", JOptionPane.ERROR_MESSAGE );
+//                    setProcessStatus( PROCESS_STATUS_SEARCH_CANCELED );
+//                    return;
+//                    }
+//
+//                // if it matters for speed I could pass countOnlyFlag to jFileFinder too and not create the arrayList of paths !
+//                jfilefinder = new JFileFinder( this, args[0], args[1], args[2], chainFilterList, chainFilterFolderList, chainFilterPreVisitFolderList );
+//                jFileFinderSwingWorker = new JFileFinderSwingWorker( this, jfilefinder, args[0], args[1], args[2], countOnlyFlag );
+////                searchBtn.setText( "Stop" );
+////                searchBtn.setBackground(Color.RED);
+////                searchBtn.setOpaque(true);
+////                searchBtn.setBorderPainted(false);
+////                message.setText( "Search started . . ." );
+//                //setProcessStatus( PROCESS_STATUS_SEARCH_STARTED );
+//                System.out.println( "*************  jFileFinderSwingWorker.execute()  ****************" );
+//            
+//                jFileFinderSwingWorker.execute();   //doInBackground();
+//                //jfinderThread = new Thread( jfilefinder );
+////                        jfinderThread.start();
+////                        jfinderThread.join();
+////                        searchBtn.setText( "Search" );
+////                        searchBtn.setBackground( saveColor );
+////                        searchBtn.setOpaque(true);
+//            } 
+//            catch (Exception ex) {
+//                logger.log(Level.SEVERE, null, ex);
+//            } 
+//        }
+//    }
+
+    public void cleanup()
+        {
+        jfilefinder = null;
+        }
+
+//    public void dumpThreads()
+//        {
+//        System.out.println( "\n---  entered JFileFinderWin.dumpThreads()  ---" );
+//        Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
+//        for ( Thread td : threadSet )
+//            {
+//            System.out.println( "td name =" + td.getName() + "  id =" + td.getId() );
+//            }
+//        System.out.println();
+//        System.gc();
+//        }
+    
+//    public void emptyFilesTable()
+//        {
+//        System.out.println( "entered JFileFinderWin.emptyFilesTable()" );
+//        filesTbl.setModel( jfilefinder.emptyFilesTableModel( countOnlyFlag ) );
+//        setNumFilesInTable();
+//        }
+    
+//    public void setColumnSizes()
+//        {
+//        //System.out.println( "filesTbl.getRowCount() = " + filesTbl.getModel().getRowCount() + "   filesTblModel.getColumnCount()  = " + filesTbl.getModel().getColumnCount() );
+//        TableColumnModel tblColModel = filesTbl.getColumnModel();
+//        //System.out.println( "setColumnSizes() table col count =" + tblColModel.getColumnCount() );
+//        if ( tblColModel.getColumnCount() < 2 )
+//            {
+//            return;
+//            }
+//        System.out.println( "setColumnSizes() table col count =" + tblColModel.getColumnCount() );
+//        tblColModel.getColumn(FilesTblModel.FILESTBLMODEL_FILETYPE ).setMaxWidth( 16 );
+////        tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_ISLINK ).setCellRenderer( new LinktypeCBCellRenderer() );
+//        tblColModel.getColumn(FilesTblModel.FILESTBLMODEL_FILETYPE ).setCellRenderer( new EnumIconCellRenderer() );
+//        
+//        tblColModel.getColumn(FilesTblModel.FILESTBLMODEL_FOLDERTYPE ).setMaxWidth( 16 );
+////        tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_ISDIR ).setCellRenderer( new FiletypeCBCellRenderer() );
+//        tblColModel.getColumn(FilesTblModel.FILESTBLMODEL_FOLDERTYPE ).setCellRenderer( new EnumFolderIconCellRenderer() );
+//        if ( showJustFilenameFlag.isSelected() )
+//            {
+//            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setPreferredWidth( 300 );
+//            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setCellRenderer( new PathRenderer() );
+//            }
+//        else
+//            {
+//            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setPreferredWidth( 600 );
+//            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setCellRenderer( new DefaultTableCellRenderer() );
+//            }
+//        tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_MODIFIEDDATE ).setCellRenderer( FormatRenderer.getDateTimeRenderer() );
+//        tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_SIZE ).setCellRenderer( NumberRenderer.getIntegerRenderer() );
+//        tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_OWNER ).setCellRenderer( new DefaultTableCellRenderer() );
+//        tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_GROUP ).setCellRenderer( new DefaultTableCellRenderer() );
+//        tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PERMS ).setCellRenderer( new DefaultTableCellRenderer() );
+//        if ( ! isShowOwnerFlag() )
+//            {
+//            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_OWNER ).setPreferredWidth( 0 );
+//            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_OWNER ).setMinWidth( 0 );
+//            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_OWNER ).setMaxWidth( 0 );
+//            }
+//        if ( ! isShowGroupFlag() )
+//            {
+//            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_GROUP ).setPreferredWidth( 0 );
+//            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_GROUP ).setMinWidth( 0 );
+//            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_GROUP ).setMaxWidth( 0 );
+//            }
+//        if ( ! isShowPermsFlag() )
+//            {
+//            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PERMS ).setPreferredWidth( 0 );
+//            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PERMS ).setMinWidth( 0 );
+//            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PERMS ).setMaxWidth( 0 );
+//            }
+//        }
+        
+//    public void fillInFilesTable( FilesTblModel filesTblModel )
+//        {
+//        System.out.println( "entered JFileFinderWin.fillInFilesTable()" );
+//        
+//        if ( filesTblModel != null )
+//            {
+//            filesTbl.getSelectionModel().clearSelection();
+//            filesTbl.setModel( filesTblModel );
+//            }
+//        else
+//            {
+//            filesTbl.getSelectionModel().clearSelection();
+//            filesTbl.setModel( jfilefinder.getFilesTableModel() );
+//            }
+//        
+//        System.out.println( "resultsData.getFilesMatched() =" + resultsData.getFilesMatched() );
+//        if ( resultsData.getFilesMatched() > 0 || resultsData.getFoldersMatched() > 0 )  // if we found files
+//            {
+//            setColumnSizes();
+//            }
+//
+////        resultsData = null;  // to free up memory 
+//                
+//        // set up sorting
+//        TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>( filesTbl.getModel() );
+//        sorter.setSortsOnUpdates( false );
+//        //TableSorter<TableModel> sorter = new TableSorter<TableModel>( filesTblModel );
+//        filesTbl.setRowSorter( sorter );
+//        
+//        //int dirRowIndex = filesTbl.convertRowIndexToModel( filesTbl.getSelectedRow() );
+//
+//        if ( filesTbl.getModel().getColumnCount() > 1 )
+//            {
+//            List <RowSorter.SortKey> sortKeys = new ArrayList<RowSorter.SortKey>();
+//            sortKeys.add( new RowSorter.SortKey( FilesTblModel.FILESTBLMODEL_FOLDERTYPE, SortOrder.DESCENDING ) );
+//            sortKeys.add( new RowSorter.SortKey( FilesTblModel.FILESTBLMODEL_PATH, SortOrder.ASCENDING ) );
+//            sorter.setSortKeys( sortKeys );
+//            }
+//        
+//        System.gc();        
+//        }
+
+//    public void desktopOpen( File file )
+//        {
+//        //File file = fpath.toFile();
+//        //first check if Desktop is supported by Platform or not
+//        if ( ! Desktop.isDesktopSupported() )
+//            {
+//            System.out.println("Desktop is not supported");
+//            return;
+//            }
+//         
+//        Desktop desktop = Desktop.getDesktop();
+//        try {
+//            if ( file.exists() )
+//                {
+//                desktop.open( file );
+//                }
+//            } 
+//        catch (Exception ex) 
+//            {
+//            logger.log(Level.SEVERE, null, ex);
+//            JOptionPane.showMessageDialog( this, "Open not supported in this desktop", "Error", JOptionPane.ERROR_MESSAGE );
+//            }
+//        
+////        //let's try to open PDF file
+////        fpath = new File("/Users/pankaj/java.pdf");
+////        if(fpath.exists()) desktop.open(fpath);
+//        
+////        //let's try to open PDF file
+////        fpath = new File("/Users/pankaj/java.pdf");
+////        if(fpath.exists()) desktop.open(fpath);
+//        
+////        //let's try to open PDF file
+////        fpath = new File("/Users/pankaj/java.pdf");
+////        if(fpath.exists()) desktop.open(fpath);
+//        
+////        //let's try to open PDF file
+////        fpath = new File("/Users/pankaj/java.pdf");
+////        if(fpath.exists()) desktop.open(fpath);
+//        }
+//        
+//    public void desktopEdit( File file )
+//        {
+//        //File file = fpath.toFile();
+//        //first check if Desktop is supported by Platform or not
+//        if ( ! Desktop.isDesktopSupported() )
+//            {
+//            System.out.println("Desktop is not supported");
+//            return;
+//            }
+//         
+//        Desktop desktop = Desktop.getDesktop();
+//        try {
+//            if ( file.exists() )
+//                {
+//                desktop.edit( file );
+//                }
+//            } 
+//        catch (Exception ex) 
+//            {
+//            logger.log(Level.SEVERE, null, ex);
+////            JOptionPane.showMessageDialog( this, "Edit not supported in this desktop.\nWill try Open.", "Error", JOptionPane.ERROR_MESSAGE );
+//            desktopOpen( file );
+//            }
+//        }
+//        
+//    
+//    public static void addEscapeListener(final JFrame win) {
+//        ActionListener escListener = new ActionListener() {
+//
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                //System.out.println( "previewImportWin formWindow dispose()" );
+//                win.dispatchEvent( new WindowEvent( win, WindowEvent.WINDOW_CLOSING )); 
+//                win.dispose();
+//            }
+//        };
+//
+//        win.getRootPane().registerKeyboardAction(escListener,
+//                KeyStroke.getKeyStroke( KeyEvent.VK_ESCAPE, KeyEvent.SHIFT_DOWN_MASK ),
+//                JComponent.WHEN_IN_FOCUSED_WINDOW);
+//    }    
+//    
+////    public static void addHotKeysListener(final JTable table) {
+////        ActionListener hotkeysListener = new ActionListener() {
+////
+////            @Override
+////            public void actionPerformed(ActionEvent e) {
+////                System.out.println( "addHotKeysListener hotkeys()" );
+////                System.out.println( "addHotKeysListener hotkeys()" + e.get );
+////                win.dispatchEvent( new WindowEvent( table, WindowEvent.WINDOW_CLOSING )); 
+////                win.dispose();
+////            }
+////        };
+////
+////        table.registerKeyboardAction(hotkeysListener,
+////                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+////                JComponent.WHEN_IN_FOCUSED_WINDOW);
+////    }    
+//
+//    public void copyOrCut()
+//    {
+//        if ( filesTbl.getSelectedRow() < 0 )
+//            {
+//            JOptionPane.showMessageDialog( this, "Please select an item first.", "Error", JOptionPane.ERROR_MESSAGE );
+//            return;
+//            }
+//        FilesTblModel filesTblModel = (FilesTblModel) filesTbl.getModel();
+// 
+//        //copyPaths = new ArrayList<Path>();
+//        //ArrayList<String> filesList = new ArrayList<String>();
+//        
+//        // DESIGN NOTE:  first file on clipboard is starting/from path ! - 2nd is word cut or copy
+//        StringBuffer stringBuf = new StringBuffer();
+//        copyPathStartPath = startingFolder.getText().trim();
+//        //filesList.add( new File( copyPathStartPath ) );
+//        //filesList.add( copyPathStartPath );
+//        //filesList.add( ( isDoingCutFlag ? "CUT" : "COPY" ) );
+//        stringBuf.append( copyPathStartPath ).append( "?" );
+//        stringBuf.append( ( isDoingCutFlag ? "CUT" : "COPY" ) ).append( "?" );
+//        
+//        for( int row : filesTbl.getSelectedRows() )
+//            {
+//            int rowIndex = filesTbl.convertRowIndexToModel( row );
+//            //System.out.println( "add copy path  row =" + row + "   rowIndex = " + rowIndex );
+//            //System.out.println( "copy path  =" + ((String) filesTblModel.getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) ) + "=" );
+//            //copyPaths.add( Paths.get( (String) filesTblModel.getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) ) );
+//            //filesList.add( new File( (String) filesTblModel.getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) ) );
+//            stringBuf.append( (String) filesTblModel.getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) ).append( "?" );
+////            System.out.println( "add fpath =" + (String) filesTblModel.getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) + "=" );
+//            }   
+//
+////        ClipboardFiles clipboardFiles = new ClipboardFiles( filesList );
+////        clipboard.setContents( clipboardFiles, clipboardFiles );  );        
+//
+//        setClipboardContents( stringBuf.toString() );
+//        filesTbl.clearSelection();
+//    }
+    
+//    public ListOfFilesPanel getListOfFilesPanel( String winName )
+//        {
+//        String ans = null;
+//        if ( winName == null )
+//            {
+//            ans = JOptionPane.showInputDialog( "List Name: ", "" );
+//            if ( ans == null )
+//                {
+//                return null;
+//                }
+//            }
+//        else
+//            {
+//            ans = winName;
+//            }
+//        
+//        ListOfFilesPanel listOfFilesPanel = null;
+//        int pmIdx = listOfFilesPanelsModel.getIndexOf( ans );
+//        if ( listOfFilesPanelsModel.getIndexOf( ans ) < 0 )
+//            {
+//            System.out.println( "create new listOfFilesPanel " + ans );
+//            listOfFilesPanelsModel.addElement( ans );
+//            listOfFilesPanel = new ListOfFilesPanel( this, ans, listOfFilesPanelsModel );
+//            listOfFilesPanel.setState ( JFrame.ICONIFIED );
+//            listOfFilesPanel.setTitle(ans);
+//            listOfFilesPanelHm.put( ans, listOfFilesPanel );
+//            
+//            listOfFilesPanel.pack();
+//            listOfFilesPanel.setVisible(true);
+//            listOfFilesPanel.setState ( JFrame.NORMAL );            
+//            }
+//        else
+//            {
+//            System.out.println( "found existing listOfFilesPanel at pmIdx =" + pmIdx );
+//            listOfFilesPanel = (ListOfFilesPanel) listOfFilesPanelHm.get( ans );
+//            }
+//        return listOfFilesPanel;
+//        }
+
+//    public void savePathsToFile( File selectedFile )
+//    {
+//        System.out.println( "File to save to =" + selectedFile + "=" );
+//        //Settings.set( "last.directory", dialog.getCurrentDirectory().getAbsolutePath() );
+//        //String[] tt = { selectedFile.getPath() };
+//        //startingFolder.setText( selectedFile.getPath() );
+//        
+//        try
+//            {
+//            if( ! selectedFile.exists() )
+//                {
+//                selectedFile.createNewFile();
+//                }
+//
+//            FileWriter fw = new FileWriter( selectedFile.getAbsoluteFile());
+//            BufferedWriter bw = new BufferedWriter(fw);
+//
+//            int maxRows = filesTbl.getRowCount();
+//            FilesTblModel filesTblModel = (FilesTblModel) filesTbl.getModel();
+//            
+//            //loop for jtable rows
+//            for( int i = 0; i < maxRows; i++ )
+//                {
+//                bw.write( (String) filesTblModel.getValueAt( i, FilesTblModel.FILESTBLMODEL_PATH ) );
+//                bw.write( "\n" );
+//                }
+//            //close BufferedWriter
+//            bw.close();
+//            //close FileWriter 
+//            fw.close();
+////            JOptionPane.showMessageDialog(null, "Saved to File");        
+//            }
+//        catch( Exception exc )
+//            {
+//            exc.printStackTrace();
+//            }
+//    }
+    
+//    public void openPathsToList( ListOfFilesPanel listOfFilesPanel, String winName )
+//        {
+//        try
+//            {
+//            if ( listOfFilesPanel == null )
+//                {
+//                listOfFilesPanel = getListOfFilesPanel( winName );
+//                if ( listOfFilesPanel == null )
+//                    {
+//                    return;
+//                    }
+//                }
+//            int maxRows = filesTbl.getRowCount();
+//            FilesTblModel filesTblModel = (FilesTblModel) filesTbl.getModel();
+//            DefaultComboBoxModel listModel = (DefaultComboBoxModel) listOfFilesPanel.getModel();
+//            
+//            System.out.println( "add list path() num of items =" + maxRows + "=" );
+//            int numChanged = 0;
+//            
+//            //loop for jtable rows
+//            for( int i = 0; i < maxRows; i++ )
+//                {
+////                    System.out.println( "check path =" + (String) filesTblModel.getValueAt( i, FilesTblModel.FILESTBLMODEL_PATH ) + "=" );
+//                String str = (String) filesTblModel.getValueAt( i, FilesTblModel.FILESTBLMODEL_PATH );
+////                int foundAt = listModel.getIndexOf( str );
+////                    System.out.println( "is found idx =" + foundAt + "=" );
+////                if ( foundAt < 0 )
+//                    {
+//                    listModel.addElement( str );
+//                    numChanged ++;
+//                    }
+//                }
+//            listOfFilesPanel.setCount();
+//            }
+//        catch( Exception exc )
+//            {
+//            exc.printStackTrace();
+//            }
+//        }
+
+//    public DefaultComboBoxModel getSelectedItemsAsComboBoxModel()
+//        {
+//        DefaultComboBoxModel listModel = new DefaultComboBoxModel();
+//        try
+//            {
+//            FilesTblModel filesTblModel = (FilesTblModel) filesTbl.getModel();
+//            
+//            for( int row : filesTbl.getSelectedRows() )
+//                {
+//                int rowIndex = filesTbl.convertRowIndexToModel( row );
+//                String str = (String) filesTblModel.getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH );
+//                listModel.addElement( str );
+////                System.out.println( "add fpath =" + (String) filesTblModel.getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) + "=" );
+//                }   
+//            }
+//        catch( Exception exc )
+//            {
+//            exc.printStackTrace();
+//            }
+//        return listModel;
+//        }
+
+//    public CodeProcessorPanel openCodeWinPanel( JFileFinderWinModel jFileFinderWin, String selectedPath, String listOfFilesPanelName )
+//        {
+//        CodeProcessorPanel codeProcessorPanel = new CodeProcessorPanel( jFileFinderWin, selectedPath, listOfFilesPanelName );
+//        codeProcessorPanel.setState ( JFrame.ICONIFIED );
+//
+//        codeProcessorPanel.pack();
+//        codeProcessorPanel.setVisible(true);
+//        codeProcessorPanel.setState ( JFrame.NORMAL );
+//        return codeProcessorPanel;
+//        }
+        
+//    public ArrayList<String> pathsToNotWatch()
+//        {
+//        ArrayList<String> ignoreList = new ArrayList<String>();
+//            
+//        if ( stdOutFile.getText() != null && ! stdOutFile.getText().equals( "" ) )
+//            {
+//            ignoreList.add( stdOutFile.getText().trim() );
+//            }
+//        if ( stdErrFile.getText() != null && ! stdErrFile.getText().equals( "" ) )
+//            {
+//            ignoreList.add( stdErrFile.getText().trim() );
+//            }
+//        return ignoreList;
+//        }
+
+}
