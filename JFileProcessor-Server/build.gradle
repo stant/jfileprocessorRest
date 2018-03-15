@@ -14,8 +14,6 @@ group 'com.towianski'
 version '1.5.11'
 
 apply plugin: 'java'
-//apply plugin: 'eclipse'
-//apply plugin: 'idea'
 apply plugin: 'org.springframework.boot'
 
 jar {
@@ -25,7 +23,7 @@ jar {
 
 task copy(type: Copy) {
     from jar // here it automatically reads jar file produced from jar task
-    destinationDir file( '../../programs/jfp2' )
+    destinationDir file( '../../../programs/jfp2' )
 }
 
 build.dependsOn copy
@@ -97,8 +95,8 @@ dependencies {
     compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.13'
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.jcraft:jsch:0.1.54'
-    compile 'org.slf4j:slf4j-api:1.7.25'
-    compile 'org.slf4j:slf4j-simple:1.7.25'
+//    compile 'org.slf4j:slf4j-api:1.7.25'
+//    compile 'org.slf4j:slf4j-simple:1.7.25'
 //    compile("org.springframework.boot:spring-boot-starter-web:2.0.0.RC2")
 //    compile("org.springframework.boot:spring-boot-starter-tomcat:2.0.0.RC2")
 //    testCompile('org.springframework.boot:spring-boot-starter-test:2.0.0.RC2')

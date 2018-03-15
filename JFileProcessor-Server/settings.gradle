@@ -1,4 +1,6 @@
 rootProject.name = 'JFileProcessor-Server'
 
+//include ':JFileProcessor-Gui'
+//project(':JFileProcessor-Gui').projectDir = new File(settingsDir, '../JFileProcessor-Gui')
 include ':JFileProcessor-Sdk'
 project(':JFileProcessor-Sdk').projectDir = new File(settingsDir, '../JFileProcessor-Sdk')

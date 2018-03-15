@@ -1,8 +1,8 @@
 package testit.controllers;
 
-import com.towianski.jfileprocessor.services.SearchFiles;
+import com.towianski.jfileprocessor.restservices.SearchFiles;
 import com.towianski.jfileprocessor.JFileFinderWin;
-import com.towianski.jfileprocessor.services.CopyFiles;
+import com.towianski.jfileprocessor.restservices.CopyFiles;
 import com.towianski.models.CopyModel;
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.models.ResultsData;
