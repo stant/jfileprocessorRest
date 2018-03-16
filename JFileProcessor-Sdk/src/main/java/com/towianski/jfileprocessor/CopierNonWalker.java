@@ -360,8 +360,9 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
             try {
                 //    sftpChannel.put("C:/source/local/path/file.zip", "/target/remote/path/file.zip");
                 System.out.println( "SftpPut locFile =" + sourceFolder + "=   to rmtFile =" + destinationFolder + "=" );
-//                chanSftp.put( sourceFolder.toString(), destinationFolder.toString() );
-                jschSftpUtils.copyTo( jschSession, sourceFolder.toString(), destinationFolder.toString() );
+                chanSftp.put( sourceFolder.toString(), destinationFolder.toString() );
+//                jschSftpUtils.copyTo()  does not work with spaces in names off-hand.
+//                jschSftpUtils.copyTo( jschSession, sourceFolder.toString(), destinationFolder.toString() );
                 System.out.println( "at 8" );
     
                 if ( isDoingCutFlag )

@@ -7,6 +7,8 @@ import com.towianski.models.CopyModel;
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.models.ResultsData;
 import com.towianski.models.SearchModel;
+import com.towianski.utils.FileUtils;
+import java.nio.file.Paths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -72,6 +74,28 @@ public class JfpController {
 
 //            String response = "You entered SearchModel parm =" + parm;
             ResultsData response = copyBtnAction( parm );
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+
+        @RequestMapping(value = JfpRestURIConstants.RENAME_FILE, method = RequestMethod.PUT)
+        public ResponseEntity<String> rename(@PathVariable("oldname") String oldname, @PathVariable("newname") String newname) {
+
+//            String response = "You entered SearchModel parm =" + parm;
+//            ResultsData response = searchBtnAction( parm );
+            logger.info( "rename oldname =" + oldname + "=   newname =" + newname + "=" );
+            FileUtils.FileMove( Paths.get( oldname .replace( "|", "/" )), Paths.get( newname.replace( "|", "/" ) ) );
+            String response = "ok";
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+
+        @RequestMapping(value = JfpRestURIConstants.RENAME_FILE2, method = RequestMethod.PUT)
+        public ResponseEntity<String> rename2(@RequestParam("oldname") String oldname, @RequestParam("newname") String newname) {
+
+//            String response = "You entered SearchModel parm =" + parm;
+//            ResultsData response = searchBtnAction( parm );
+            logger.info( "rename2 oldname =" + oldname + "=   newname =" + newname + "=" );
+            FileUtils.FileMove( Paths.get( oldname .replace( "|", "/" )), Paths.get( newname.replace( "|", "/" ) ) );
+            String response = "ok";
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 

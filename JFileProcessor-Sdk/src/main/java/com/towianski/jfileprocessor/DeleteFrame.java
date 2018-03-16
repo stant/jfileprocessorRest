@@ -20,8 +20,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.nio.file.CopyOption;
 import java.nio.file.FileVisitOption;
-import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.EnumSet;

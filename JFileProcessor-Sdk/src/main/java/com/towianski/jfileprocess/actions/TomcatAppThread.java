@@ -84,7 +84,8 @@ public class TomcatAppThread implements Runnable
                         String[] mainCommand = System.getProperty("sun.java.command").split(" ");
 //                        String jfpFilename = menuS mainCommand[0];
 //                        System.out.println( "jfpFilename =" + jfpFilename + "=" );
-                        String fpath = System.getProperty( "user.dir" ) + System.getProperty( "file.separator" ) + "build" + System.getProperty( "file.separator" ) + "libs" + System.getProperty( "file.separator" );
+//                        String fpath = System.getProperty( "user.dir" ) + System.getProperty( "file.separator" ) + "build" + System.getProperty( "file.separator" ) + "libs" + System.getProperty( "file.separator" );
+                        String fpath = System.getProperty( "user.dir" ) + System.getProperty( "file.separator" );
                         fpath = fpath.replace( "-Gui", "-Server" );
 //                        System.out.println( "jfpFilename =" + jfpFilename + "=" );
                         String jfpFilename = "JFileProcessor-Server-1.5.11.jar";
