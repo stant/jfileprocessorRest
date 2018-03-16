@@ -1,4 +1,5 @@
-**.class
+*.class
+*/.gradle/
 nbproject/private/
 build/
 nbbuild/
