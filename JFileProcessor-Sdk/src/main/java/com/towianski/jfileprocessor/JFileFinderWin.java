@@ -179,6 +179,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
     DefaultComboBoxModel listOfFilesPanelsModel = new DefaultComboBoxModel(data);
 //    DefaultComboBoxModel listOfFilesPanelsModel = new DefaultComboBoxModel();
 
+    ConnUserInfo connUserInfo = new ConnUserInfo( false, null, null, null, null, null );
     int filesysType = Constants.FILESYSTEM_POSIX;
     
     PrintStream console = System.out;            
@@ -670,14 +671,14 @@ public class JFileFinderWin extends javax.swing.JFrame {
         message.setText(text);
         }
 
-    public JButton getRmtConnectBtn()
+    public String getRmtConnectBtn()
         {
-        return rmtConnectBtn;
+        return rmtConnectBtn.getText().trim();
         }
 
-    public void setRmtConnectBtn(JButton rmtConnectBtn)
+    public void setRmtConnectBtn(String text)
         {
-        this.rmtConnectBtn = rmtConnectBtn;
+        this.rmtConnectBtn.setText(text);
         }
 
     public String getRmtHost()
@@ -776,7 +777,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
                     else
                         {
                         Path sourcePath = Paths.get( tcl.getOldValue().toString().trim() );
-                        FileUtils.FileMove( jFileFinderWin, e, sourcePath, targetPath);
+                        FileUtils.FileMove( connUserInfo, sourcePath, targetPath );
 //                        if ( Files.exists( sourcePath ) )
 //                            {
 //                            System.out.println( "try to move dir source =" + sourcePath + "=   target =" + targetPath + "=" );
@@ -3323,7 +3324,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             String tmp = StringsList.remove( 0 );
             isDoingCutFlag = tmp.equalsIgnoreCase( "CUT" ) ? true : false;
             System.out.println( "read clipboard isDoingCutFlag =" + isDoingCutFlag );
-            ConnUserInfo connUserInfo = new ConnUserInfo( StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ) );
+            connUserInfo = new ConnUserInfo( StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ) );
             if ( rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) )
                 {
                 connUserInfo.setTo( "sftp://", getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort() );
@@ -3990,13 +3991,29 @@ public class JFileFinderWin extends javax.swing.JFrame {
             }
         restServerSw.actionPerformed(null);
         rmtConnectBtn.setText( Constants.RMT_CONNECT_BTN_CONNECTED );
+//            connUserInfo = new ConnUserInfo( "", "", "", "", "" );
+//            if ( rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) )
+//                {
+//                connUserInfo.setTo( "sftp://", getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort() );
+//                }
+//            else
+//                {
+//                connUserInfo.setTo( "file://", null, null, null, null );
+//                }
+        connUserInfo = new ConnUserInfo( true, "sftp://", getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort() );
+        rmtConnectBtn.setBackground( Color.GREEN );
+        
     }//GEN-LAST:event_rmtConnectBtnActionPerformed
 
     private void rmtDisconnectBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rmtDisconnectBtnActionPerformed
         if ( restServerSw != null )
             {
             rmtConnectBtn.setText( RMT_CONNECT_BTN_CONNECT );
+            System.out.println( "call restServerSw.cancelRestServer()" );
             restServerSw.cancelRestServer();
+            System.out.println( "after restServerSw.cancelRestServer()" );
+            restServerSw = null;
+            rmtConnectBtn.setBackground( saveColor );
             }
     }//GEN-LAST:event_rmtDisconnectBtnActionPerformed
 

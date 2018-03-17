@@ -137,7 +137,7 @@ public class SftpReturnFileFrame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void doCmdBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_doCmdBtnActionPerformed
-        if ( jFileFinderWin.getRmtConnectBtn().getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) )
+        if ( jFileFinderWin.getRmtConnectBtn().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) )
             {
             JschSftpUtils jschSftpUtils = new JschSftpUtils();
             jschSftpUtils.SftpPut( locFile, user, password, rhost, rmtFile );

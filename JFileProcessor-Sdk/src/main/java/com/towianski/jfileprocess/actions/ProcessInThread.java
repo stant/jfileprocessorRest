@@ -51,9 +51,11 @@ public class ProcessInThread {
                 File.separator + "bin" +
                 File.separator + "java";
         String classpath = System.getProperty("java.class.path");
-        String className = klass.getCanonicalName();
-
-        String[] runArgs = { javaBin, "-cp", classpath, className };
+//        String className = klass.getCanonicalName();
+        String className = "com.towianski.boot.StartApp";
+        
+//        String[] runArgs = { javaBin, "-cp", classpath, className };
+        String[] runArgs = { javaBin, "-jar", classpath };
         
         String[] allArgs = Arrays.copyOf( runArgs, runArgs.length + passArgs.length);
         System.arraycopy( passArgs, 0, allArgs, runArgs.length, passArgs.length );

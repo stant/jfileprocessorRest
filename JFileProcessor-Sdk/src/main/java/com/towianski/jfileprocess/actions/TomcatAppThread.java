@@ -32,21 +32,11 @@ public class TomcatAppThread implements Runnable
         SERVER_URI = "http://" + rmtHost + ":8080";
         }
     
-    public void cancelWatch()
+    public void cancelRestServer()
         {
         System.out.println("TomcatAppThread set cancelFlag to true");
         System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
-        System.out.println("cancelRegister() folder for watch " );
         cancelFlag = true;
-
-        try {
-//            watcher.close();
-            }
-        catch (Exception ex)
-            {
-            System.out.println("TomcatAppThread set cancelFlag caught error !");
-            Logger.getLogger(TomcatAppThread.class.getName()).log(Level.SEVERE, null, ex);
-            }
         System.out.println("TomcatAppThread exit cancelSearch()");
         }
 
@@ -59,8 +49,9 @@ public class TomcatAppThread implements Runnable
         int downTimes = 99;
         JschSftpUtils scpTo = new JschSftpUtils();
         String response = null;
+        boolean didFirstStart = false;
         
-        while ( true )
+        while ( ! cancelFlag )
             {
             try
                 {
@@ -71,10 +62,12 @@ public class TomcatAppThread implements Runnable
                     }
                 catch( Exception exc )
                     {
+                    response = null;
                     exc.printStackTrace();
                     }
-                System.out.println( "response =" + response + "=" );
-                if ( response == null || ! response.equalsIgnoreCase( "RUNNING" ) )
+                System.out.println( "ping response =" + response + "=" );
+                if ( ! cancelFlag && 
+                    ( response == null || ! response.equalsIgnoreCase( "RUNNING" ) ) )
                     {
                     if ( ++downTimes > 5 )
                         {
@@ -92,25 +85,32 @@ public class TomcatAppThread implements Runnable
                         System.out.println( "jfpFilename =" + jfpFilename + "=" );
                         scpTo.copyIfMissing( fpath + jfpFilename, user, passwd, rmtHost, jfpFilename );
                         System.out.println( "try scpTo   file =" + fpath + jfpFilename + "=   to remote =" + user + "@" + rmtHost + ":" + jfpFilename + "=" );
-                        scpTo.exec( user, passwd, rmtHost, "java -jar " + jfpFilename + " --logging.file=/tmp/jfp-springboot.logging" );
+                        if ( ! cancelFlag )
+                            {
+                            scpTo.exec( user, passwd, rmtHost, "java -jar " + jfpFilename + " --logging.file=/tmp/jfp-springboot.logging" );
+                            }
                         System.out.println( "after start remote jfp server" );
+                        Thread.sleep( 30000 );
                         downTimes = 0;
                         }
                     else
                         {
-                        Thread.sleep( 4000 );
+                        Thread.sleep( 1000 );
                         }
                     }
-                else
+                else if ( didFirstStart ) // is running or first start
                     {
-                    Thread.sleep( 30000 );
+                    Thread.sleep( 4000 );
+                    downTimes = 0;
                     }
                 }
             catch( Exception exc )
                 {
                 exc.printStackTrace();
                 }
+            didFirstStart = true;
             } // while
+        System.out.println( "Exiting TomcatAppThread run() - Done" );
         }
 
     public static void main(String[] args) throws IOException {

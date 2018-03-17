@@ -175,7 +175,7 @@ public class DeleterNonWalker extends SimpleFileVisitor<Path>
         {
         System.out.println( "entered deleteRecursive()" );
         System.out.println( "ck to delete =" + filename + "=" );
-        if ( filename.equals( "." ) || filename.equals( ".." ) )
+        if ( filename.endsWith( "." ) || filename.endsWith( ".." ) )
             {
             return;
             }

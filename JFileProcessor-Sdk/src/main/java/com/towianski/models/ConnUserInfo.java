@@ -16,7 +16,8 @@ public class ConnUserInfo
     String fromPassword = null;
     String fromHost = null;
     String fromSshPort = "22";
-    
+
+    boolean connectedFlag = false;
     String toProtocol = "file://";
     String toUser = null;
     String toPassword = null;
@@ -51,6 +52,16 @@ public class ConnUserInfo
         this.fromSshPort = fromSshPort;
         }
 
+    public ConnUserInfo( boolean connectedFlag, String toProtocol, String toUser, String toPassword, String toHost, String toSshPort )
+        {
+        this.connectedFlag = connectedFlag;
+        this.toProtocol = toProtocol;
+        this.toUser = toUser;
+        this.toPassword = toPassword;
+        this.toHost = toHost;
+        this.toSshPort = toSshPort;
+        }
+
     public void setTo( String toProtocol, String toUser, String toPassword, String toHost, String toSshPort )
         {
         this.toProtocol = toProtocol;
@@ -58,6 +69,16 @@ public class ConnUserInfo
         this.toPassword = toPassword;
         this.toHost = toHost;
         this.toSshPort = toSshPort;
+        }
+
+    public boolean isConnectedFlag()
+        {
+        return connectedFlag;
+        }
+
+    public void setConnectedFlag(boolean connectedFlag)
+        {
+        this.connectedFlag = connectedFlag;
         }
 
     public boolean isUsingSftp()

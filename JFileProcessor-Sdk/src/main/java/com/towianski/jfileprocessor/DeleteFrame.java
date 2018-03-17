@@ -332,7 +332,7 @@ public class DeleteFrame extends javax.swing.JFrame {
     private void doCmdBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_doCmdBtnActionPerformed
         //JOptionPane.showConfirmDialog( null, "doCmdBtnActionPerformed =" + evt.getSource() );
 
-        if ( jFileFinderWin.getRmtConnectBtn().getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) )
+        if ( jFileFinderWin.getRmtConnectBtn().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) )
             {
             deleteBtnActionSwing( evt );
 //            deleteBtnActionRest( evt );
