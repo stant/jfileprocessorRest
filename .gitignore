@@ -1,5 +1,6 @@
 *.class
 */.gradle/
+.gradle
 nbproject/private/
 build/
 nbbuild/
