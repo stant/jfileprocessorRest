@@ -7,7 +7,6 @@ package com.towianski.jfileprocessor;
 
 import com.towianski.jfileprocess.actions.CloseWinOnTimer;
 import com.towianski.models.ResultsData;
-import java.nio.file.Path;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,12 +19,12 @@ import javax.swing.SwingWorker;
 public class DeleteFrameSwingWorker extends SwingWorker<ResultsData, Long> {
 
     DeleteFrame deleteFrame = null;
-    ArrayList<Path> deletePaths = new ArrayList<Path>();
+    ArrayList<String> deletePaths = new ArrayList<String>();
     JFileDelete jfiledelete = null;
     boolean showProgressFlag = true;
     boolean closeWhenDoneFlag = true;
 
-    public DeleteFrameSwingWorker( DeleteFrame deleteFrame, JFileDelete jfiledelete, ArrayList<Path> deletePaths, boolean showProgressFlag, boolean closeWhenDoneFlag )
+    public DeleteFrameSwingWorker( DeleteFrame deleteFrame, JFileDelete jfiledelete, ArrayList<String> deletePaths, boolean showProgressFlag, boolean closeWhenDoneFlag )
         {
         this.deleteFrame = deleteFrame;
         this.jfiledelete = jfiledelete;

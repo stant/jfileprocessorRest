@@ -52,17 +52,17 @@ public class JfpController {
 //		return empData.get(empId);
 //	}
 	
-	@RequestMapping(value = JfpRestURIConstants.SEARCH, method = RequestMethod.GET)
+	@RequestMapping( value = JfpRestURIConstants.SEARCH, method = RequestMethod.GET )
 	public @ResponseBody FilesTblModel getFiles(@PathVariable("startingFolder") String startingFolder) {
-		logger.info("Start getFiles.");
-                return searchBtnAction( null );
+            logger.info("Start getFiles.");
+            return searchBtnAction( null );
 	}
 
-	@RequestMapping(value = JfpRestURIConstants.SYS_STOP, method = RequestMethod.GET)
+	@RequestMapping( value = JfpRestURIConstants.SYS_STOP, method = RequestMethod.GET )
 	public @ResponseBody void stop() {
-		logger.info("Stop server");
+            logger.info("Stop server");
 
-		System.exit(0);
+            System.exit(0);
 	}
 
     public FilesTblModel searchBtnAction( java.awt.event.ActionEvent evt )

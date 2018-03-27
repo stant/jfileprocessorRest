@@ -58,7 +58,7 @@ public class SpringRestExample {
         //object in the list and hence convert it to default JSON object type LinkedHashMap
 //        FilesTblModel filesTblModel = restTemplate.getForObject( SERVER_URI+JfpRestURIConstants.GET_FILES, FilesTblModel.class, SearchModel.class );
         
-        String response = restTemplate.postForEntity( SERVER_URI+JfpRestURIConstants.SEARCH, filesTblModel, String.class).getBody();
+        String response = restTemplate.postForEntity( SERVER_URI + JfpRestURIConstants.SEARCH, filesTblModel, String.class ).getBody();
         System.out.println( "response =" + response + "=" );
     }
     

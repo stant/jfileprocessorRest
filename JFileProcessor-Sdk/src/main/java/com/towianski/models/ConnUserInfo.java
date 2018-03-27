@@ -5,24 +5,30 @@
  */
 package com.towianski.models;
 
+import static com.towianski.models.Constants.FILESYSTEM_POSIX;
+
 /**
  *
  * @author stan
  */
 public class ConnUserInfo
     {
+    String fromUri = "";
     String fromProtocol = "file://";
     String fromUser = null;
     String fromPassword = null;
     String fromHost = null;
     String fromSshPort = "22";
-
+    int fromFilesysType = FILESYSTEM_POSIX;
+    
     boolean connectedFlag = false;
+    String ToUri = "";
     String toProtocol = "file://";
     String toUser = null;
     String toPassword = null;
     String toHost = null;
     String toSshPort = "22";
+    int toFilesysType = FILESYSTEM_POSIX;
 
     public ConnUserInfo()
         {
@@ -62,6 +68,15 @@ public class ConnUserInfo
         this.toSshPort = toSshPort;
         }
 
+    public void setFrom( String fromProtocol, String fromUser, String fromPassword, String fromHost, String fromSshPort )
+        {
+        this.fromProtocol = fromProtocol;
+        this.fromUser = fromUser;
+        this.fromPassword = fromPassword;
+        this.fromHost = fromHost;
+        this.fromSshPort = fromSshPort;
+        }
+
     public void setTo( String toProtocol, String toUser, String toPassword, String toHost, String toSshPort )
         {
         this.toProtocol = toProtocol;
@@ -80,6 +95,38 @@ public class ConnUserInfo
         {
         this.connectedFlag = connectedFlag;
         }
+
+    public String getFromUri() {
+        return "https://" + fromHost + ":8443";
+    }
+
+    public void setFromUri(String fromUri) {
+        this.fromUri = fromUri;
+    }
+
+    public String getToUri() {
+        return "https://" + toHost + ":8443";
+    }
+
+    public void setToUri(String ToUri) {
+        this.ToUri = ToUri;
+    }
+
+    public int getFromFilesysType() {
+        return fromFilesysType;
+    }
+
+    public void setFromFilesysType(int fromFilesysType) {
+        this.fromFilesysType = fromFilesysType;
+    }
+
+    public int getToFilesysType() {
+        return toFilesysType;
+    }
+
+    public void setToFilesysType(int toFilesysType) {
+        this.toFilesysType = toFilesysType;
+    }
 
     public boolean isUsingSftp()
         {

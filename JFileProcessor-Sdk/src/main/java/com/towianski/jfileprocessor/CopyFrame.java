@@ -242,14 +242,15 @@ public class CopyFrame extends javax.swing.JFrame {
 
         CopyModel copyModel = extractCopyModel();
         Rest.saveObjectToFile( "CopyModel.json", copyModel );
-        RestTemplate restTemplate = new RestTemplate();
+//        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
         //we can't get List<Employee> because JSON convertor doesn't know the type of
         //object in the list and hence convert it to default JSON object type LinkedHashMap
 //        FilesTblModel filesTblModel = restTemplate.getForObject( SERVER_URI+JfpRestURIConstants.GET_FILES, FilesTblModel.class, CopyModel.class );
 
         System.out.println( "rest send copyModel =" + copyModel + "=" );
 
-        String response = restTemplate.postForEntity( "http://" + jFileFinderWin.getRmtHost() + ":8080" + JfpRestURIConstants.COPY, copyModel, String.class).getBody();
+        String response = noHostVerifyRestTemplate.postForEntity( connUserInfo.getToUri() + JfpRestURIConstants.COPY, copyModel, String.class).getBody();
         System.out.println( "response =" + response + "=" );
         resultsData = Rest.jsonToObject( response, ResultsData.class );
         System.out.println( "resultsData.getFilesMatched() =" + resultsData.getFilesMatched() );

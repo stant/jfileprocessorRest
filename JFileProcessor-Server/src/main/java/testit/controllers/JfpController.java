@@ -3,8 +3,11 @@ package testit.controllers;
 import com.towianski.jfileprocessor.restservices.SearchFiles;
 import com.towianski.jfileprocessor.JFileFinderWin;
 import com.towianski.jfileprocessor.restservices.CopyFiles;
+import com.towianski.jfileprocessor.restservices.DeleteFiles;
 import com.towianski.models.ConnUserInfo;
+import com.towianski.models.Constants;
 import com.towianski.models.CopyModel;
+import com.towianski.models.DeleteModel;
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.models.ResultsData;
 import com.towianski.models.SearchModel;
@@ -81,6 +84,15 @@ public class JfpController {
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
+        @RequestMapping(value = JfpRestURIConstants.DELETE, method = RequestMethod.POST )
+        public ResponseEntity<ResultsData> delete(@RequestBody DeleteModel deleteModel) 
+            {
+            DeleteFiles deleteFiles = new DeleteFiles( deleteModel );
+
+            ResultsData response = deleteFiles.doInBackground();
+            return new ResponseEntity<>(response, HttpStatus.OK);
+            }
+
         @RequestMapping(value = JfpRestURIConstants.RENAME_FILE, method = RequestMethod.PUT)
         public ResponseEntity<String> rename(@PathVariable("oldname") String oldname, @PathVariable("newname") String newname) 
 //        public ResponseEntity<String> rename2(@RequestParam("oldname") String oldname, @RequestParam("newname") String newname) {
@@ -136,6 +148,18 @@ public class JfpController {
             logger.info("Ping server");
 
             return "RUNNING";
+	}
+
+	@RequestMapping( value = JfpRestURIConstants.SYS_GET_FILESYS, method = RequestMethod.GET )
+	public @ResponseBody int getFilesys() {
+            logger.info("SYS_GET_FILESYS()");
+            if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
+                {
+                logger.info("SYS_GET_FILESYS - DOS");
+                return Constants.FILESYSTEM_DOS;
+                }
+            logger.info("SYS_GET_FILESYS - POSIX");
+            return Constants.FILESYSTEM_POSIX;
 	}
 
     public ResultsData searchBtnAction( SearchModel searchModel )

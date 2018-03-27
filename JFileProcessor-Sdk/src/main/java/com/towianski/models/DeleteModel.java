@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import static com.towianski.models.Constants.FILESYSTEM_DOS;
 import java.nio.file.CopyOption;
 import java.nio.file.FileVisitOption;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.EnumSet;
 
@@ -21,15 +20,19 @@ import java.util.EnumSet;
 public class DeleteModel
     {
     int filesysType = FILESYSTEM_DOS;
+    ConnUserInfo connUserInfo = null;
     String searchBtnText = null;
     Boolean deleteFilesOnlyFlag = false;
     boolean deleteToTrashFlag = true;
     Boolean deleteReadonlyFlag = false;
     String startingPath = null;
-    ArrayList<Path> copyPaths = null;
+    ArrayList<String> deletePaths = null;
     ArrayList<CopyOption> copyOpts = new ArrayList<CopyOption>();
     EnumSet<FileVisitOption> fileVisitOptions = EnumSet.noneOf( FileVisitOption.class );
 
+    // Async results
+    boolean showProgressFlag = true;
+            
     public int getFilesysType()
         {
         return filesysType;
@@ -39,6 +42,14 @@ public class DeleteModel
         {
         this.filesysType = filesysType;
         }
+
+    public ConnUserInfo getConnUserInfo() {
+        return connUserInfo;
+    }
+
+    public void setConnUserInfo(ConnUserInfo connUserInfo) {
+        this.connUserInfo = connUserInfo;
+    }
 
     public String getSearchBtnText()
         {
@@ -82,12 +93,12 @@ public class DeleteModel
         this.startingPath = startingPath;
     }
 
-    public ArrayList<Path> getCopyPaths() {
-        return copyPaths;
+    public ArrayList<String> getDeletePaths() {
+        return deletePaths;
     }
 
-    public void setCopyPaths(ArrayList<Path> copyPaths) {
-        this.copyPaths = copyPaths;
+    public void setDeletePaths(ArrayList<String> deletePaths) {
+        this.deletePaths = deletePaths;
     }
 
     public ArrayList<CopyOption> getCopyOpts()
@@ -110,5 +121,13 @@ public class DeleteModel
         {
         this.fileVisitOptions = fileVisitOptions;
         }
+
+    public boolean isShowProgressFlag() {
+        return showProgressFlag;
+    }
+
+    public void setShowProgressFlag(boolean showProgressFlag) {
+        this.showProgressFlag = showProgressFlag;
+    }
 
     }

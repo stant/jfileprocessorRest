@@ -5,6 +5,7 @@
  */
 package com.towianski.jfileprocessor;
 
+import com.towianski.jfileprocess.actions.CloseWinOnTimer;
 import static com.towianski.jfileprocessor.DeleteFrame.PROCESS_STATUS_DELETE_CANCEL;
 import static com.towianski.jfileprocessor.DeleteFrame.PROCESS_STATUS_DELETE_CANCELED;
 import com.towianski.models.ConnUserInfo;
@@ -21,6 +22,7 @@ import java.awt.event.WindowEvent;
 import java.nio.file.CopyOption;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Path;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.logging.Level;
@@ -51,7 +53,8 @@ public class DeleteFrame extends javax.swing.JFrame {
 
     boolean cancelFlag = false;
     String startingPath = null;
-    ArrayList<Path> copyPaths = new ArrayList<Path>();
+//    ArrayList<Path> deletePaths = new ArrayList<Path>();
+    ArrayList<String> deletePaths = new ArrayList<String>();
     Deleter deleter = null;
     Boolean dataSyncLock = false;
     ConnUserInfo connUserInfo = null;
@@ -68,17 +71,17 @@ public class DeleteFrame extends javax.swing.JFrame {
         doCmdBtn.requestFocusInWindow();
     }
 
-    public void setup( JFileFinderWin jFileFinderWin, ConnUserInfo connUserInfo, String startingPath, ArrayList<Path> copyPaths )
+    public void setup( JFileFinderWin jFileFinderWin, ConnUserInfo connUserInfo, String startingPath, ArrayList<String> deletePaths )
         {
         this.jFileFinderWin = jFileFinderWin;
         this.connUserInfo = connUserInfo;
         this.startingPath = startingPath;
-        this.copyPaths = copyPaths;
+        this.deletePaths = deletePaths;
         
-        fromPath.setText( copyPaths.get( 0 ).toString() );
-        if ( copyPaths.size() > 1 )
+        fromPath.setText( deletePaths.get( 0 ).toString() );
+        if ( deletePaths.size() > 1 )
             {
-            fromPath.setText( copyPaths.get( 0 ) + " + others" );
+            fromPath.setText( deletePaths.get( 0 ) + " + others" );
             }
         }
     
@@ -334,8 +337,8 @@ public class DeleteFrame extends javax.swing.JFrame {
 
         if ( jFileFinderWin.getRmtConnectBtn().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) )
             {
-            deleteBtnActionSwing( evt );
-//            deleteBtnActionRest( evt );
+//            deleteBtnActionSwing( evt );
+            deleteBtnActionRest( evt );
             }
         else
             {
@@ -356,8 +359,8 @@ public class DeleteFrame extends javax.swing.JFrame {
             {
             try {
                 //JOptionPane.showConfirmDialog( null, "hit key" );  if ( 1 == 1 ) return;
-                jfiledelete = new JFileDelete( connUserInfo, startingPath, copyPaths, deleteFilesOnlyFlag.isSelected(), deleteToTrashFlag.isSelected(), deleteReadonlyFlag.isSelected(), jFileFinderWin.getFilesysType() );
-                DeleteFrameSwingWorker deleteFrameSwingWorker = new DeleteFrameSwingWorker( this, jfiledelete, copyPaths, showProgressTb.isSelected(), closeWhenDoneTb.isSelected() );
+                jfiledelete = new JFileDelete( connUserInfo, startingPath, deletePaths, deleteFilesOnlyFlag.isSelected(), deleteToTrashFlag.isSelected(), deleteReadonlyFlag.isSelected(), jFileFinderWin.getFilesysType() );
+                DeleteFrameSwingWorker deleteFrameSwingWorker = new DeleteFrameSwingWorker( this, jfiledelete, deletePaths, showProgressTb.isSelected(), closeWhenDoneTb.isSelected() );
                 deleteFrameSwingWorker.execute();   //doInBackground();
                } 
             catch (Exception ex)
@@ -375,27 +378,74 @@ public class DeleteFrame extends javax.swing.JFrame {
 
         DeleteModel deleteModel = extractDeleteModel();
         Rest.saveObjectToFile( "DeleteModel.json", deleteModel );
-        RestTemplate restTemplate = new RestTemplate();
+//        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
         //we can't get List<Employee> because JSON convertor doesn't know the type of
         //object in the list and hence convert it to default JSON object type LinkedHashMap
 //        FilesTblModel filesTblModel = restTemplate.getForObject( SERVER_URI+JfpRestURIConstants.GET_FILES, FilesTblModel.class, SearchModel.class );
 
         System.out.println( "rest send deleteModel =" + deleteModel + "=" );
 
-        String response = restTemplate.postForEntity( "http://" + connUserInfo.getToHost() + ":8080" + JfpRestURIConstants.DELETE, deleteModel, String.class).getBody();
+        String response = noHostVerifyRestTemplate.postForEntity( connUserInfo.getToUri() + JfpRestURIConstants.DELETE, deleteModel, String.class).getBody();
         System.out.println( "response =" + response + "=" );
         resultsData = Rest.jsonToObject( response, ResultsData.class );
         System.out.println( "resultsData.getFilesMatched() =" + resultsData.getFilesMatched() );
-        System.out.println( "resultsData.getFilesTblModel() =" + resultsData.getFilesTblModel().toString() );
 
-//        FilesTblModel filesTblModel = restTemplate.postForEntity( SERVER_URI+JfpRestURIConstants.SEARCH, searchModel, FilesTblModel.class).getBody();
-//        System.out.println( "response filesTblModel =" + filesTblModel + "=" );
+        // from deleteframeswingworker done()
+        try {
+            //System.out.println( "entered SwingWork.done()" );
+            NumberFormat numFormat = NumberFormat.getIntegerInstance();
+            String partialMsg = "";
+            String msg = "Deleted " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) + " folders out of " + numFormat.format( resultsData.getFilesVisited() );
+            if ( ! resultsData.getMessage().equals( "" ) )
+                {
+                msg = resultsData.getMessage();
+                }
+            
+            if ( ! resultsData.getProcessStatus().equals( "" ) )
+                {
+                this.setProcessStatus( resultsData.getProcessStatus() );
+                }
+            else if ( resultsData.getSearchWasCanceled() )
+                {
+                this.setProcessStatus( this.PROCESS_STATUS_DELETE_CANCELED );
+                msg = msg + " PARTIAL files list.";
+                }
+            else
+                {
+                this.setProcessStatus( this.PROCESS_STATUS_DELETE_COMPLETED );
+                new CloseWinOnTimer( this, closeWhenDoneTb.isEnabled() ? 4000 : 0 ){{setRepeats(false);}}.start();
+                }
+            this.setMessage( msg + partialMsg );
+            this.setResultsData( resultsData );
+            
+            // clean up
+            resultsData = null;
+            jfiledelete = null;
+            deletePaths = null;            
+            
+            this.callSearchBtnActionPerformed();
+            //System.out.println( "exiting SwingWork.done()" );
+            }
+        catch ( Exception e ) 
+            {
+            String why = null;
+            Throwable cause = e.getCause();
+            if (cause != null) {
+                why = cause.getMessage();
+            } else {
+                why = e.getMessage();
+            }
+            System.out.println( "Error in DeleteFrameSwingWorker(): " + why);
+            }
         }
 
     public DeleteModel extractDeleteModel()
         {
         System.out.println("jfilewin extractDeleteModel() " );  //searchBtn.getText() =" + searchBtn.getText() + "=" );
         DeleteModel deleteModel = new DeleteModel();
+//      filedelete = new JFileDelete( connUserInfo, startingPath, deletePaths, deleteFilesOnlyFlag.isSelected(), 
+//            deleteToTrashFlag.isSelected(), deleteReadonlyFlag.isSelected(), jFileFinderWin.getFilesysType() );
 
                 ArrayList<CopyOption> copyOpts = new ArrayList<CopyOption>();
                 EnumSet<FileVisitOption> fileVisitOptions = EnumSet.noneOf( FileVisitOption.class );
@@ -408,10 +458,16 @@ public class DeleteFrame extends javax.swing.JFrame {
 //                    fileVisitOptions = EnumSet.of( FOLLOW_LINKS );
 //                    }
 
+        deleteModel.setConnUserInfo( connUserInfo );
         deleteModel.setStartingPath( startingPath );        
-        deleteModel.setCopyPaths( copyPaths );
+        deleteModel.setDeletePaths( deletePaths );
+        deleteModel.setDeleteFilesOnlyFlag( deleteFilesOnlyFlag.isSelected() );
+        deleteModel.setDeleteToTrashFlag( deleteToTrashFlag.isSelected() );
+        deleteModel.setDeleteReadonlyFlag( deleteReadonlyFlag.isSelected() );
         deleteModel.setFileVisitOptions( fileVisitOptions );
         deleteModel.setCopyOpts( copyOpts );
+        deleteModel.setFilesysType( connUserInfo.getToFilesysType() );
+        deleteModel.setShowProgressFlag( showProgressTb.isEnabled() );
         
 //    int filesysType = FILESYSTEM_DOS;
         return deleteModel;

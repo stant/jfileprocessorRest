@@ -36,26 +36,6 @@ import com.towianski.jfileprocess.actions.RenameAction;
 import com.towianski.jfileprocess.actions.UpFolderAction;
 import com.towianski.jfileprocess.actions.ProcessInThread;
 import com.towianski.jfileprocess.actions.NewFolderAction;
-import com.towianski.jfileprocessor.CodeProcessorPanel;
-import com.towianski.jfileprocessor.CodeProcessorPanel;
-import com.towianski.jfileprocessor.CopyFrame;
-import com.towianski.jfileprocessor.CopyFrame;
-import com.towianski.jfileprocessor.DeleteFrame;
-import com.towianski.jfileprocessor.DeleteFrame;
-import com.towianski.jfileprocessor.JFileFinder;
-import com.towianski.jfileprocessor.JFileFinder;
-import com.towianski.jfileprocessor.JFileFinderSwingWorker;
-import com.towianski.jfileprocessor.JFileFinderSwingWorker;
-import com.towianski.jfileprocessor.ListOfFilesPanel;
-import com.towianski.jfileprocessor.ListOfFilesPanel;
-import com.towianski.jfileprocessor.RestServerSw;
-import com.towianski.jfileprocessor.RestServerSw;
-import com.towianski.jfileprocessor.SavedPathsPanel;
-import com.towianski.jfileprocessor.SavedPathsPanel;
-import com.towianski.jfileprocessor.SftpReturnFileFrame;
-import com.towianski.jfileprocessor.SftpReturnFileFrame;
-import com.towianski.jfileprocessor.WatchDirSw;
-import com.towianski.jfileprocessor.WatchDirSw;
 import com.towianski.listeners.MyFocusAdapter;
 import com.towianski.listeners.ScriptMenuItemListener;
 import com.towianski.models.CircularArrayList;
@@ -124,7 +104,6 @@ import javax.swing.ActionMap;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.InputMap;
-import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -162,6 +141,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
     JFileFinder jfilefinder = null;
     Color saveColor = null;
     ArrayList<Path> copyPaths = new ArrayList<Path>();
+    ArrayList<String> deletePaths = new ArrayList<String>();
     String copyPathStartPath = null;
     private TableCellListener filesTblCellListener = null;
     Boolean isDoingCutFlag = false;
@@ -179,7 +159,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
     DefaultComboBoxModel listOfFilesPanelsModel = new DefaultComboBoxModel(data);
 //    DefaultComboBoxModel listOfFilesPanelsModel = new DefaultComboBoxModel();
 
-    ConnUserInfo connUserInfo = new ConnUserInfo( false, null, null, null, null, null );
+    ConnUserInfo connUserInfo = null;
     int filesysType = Constants.FILESYSTEM_POSIX;
     
     PrintStream console = System.out;            
@@ -1134,14 +1114,16 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
         SearchModel searchModel = extractSearchModel();
         Rest.saveObjectToFile( "SearchModel.json", searchModel );
-        RestTemplate restTemplate = new RestTemplate();
+//        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
         //we can't get List<Employee> because JSON convertor doesn't know the type of
         //object in the list and hence convert it to default JSON object type LinkedHashMap
 //        FilesTblModel filesTblModel = restTemplate.getForObject( SERVER_URI+JfpRestURIConstants.GET_FILES, FilesTblModel.class, SearchModel.class );
 
         System.out.println( "rest send searchModel =" + searchModel + "=" );
 
-        String response = restTemplate.postForEntity( "http://" + rmtHost.getText().trim() + ":8080" + JfpRestURIConstants.SEARCH, searchModel, String.class).getBody();
+//        String response = restTemplate.postForEntity( "http://" + rmtHost.getText().trim() + ":8080" + JfpRestURIConstants.SEARCH, searchModel, String.class).getBody();
+        String response = noHostVerifyRestTemplate.postForEntity( connUserInfo.getToUri() + JfpRestURIConstants.SEARCH, searchModel, String.class).getBody();
         System.out.println( "response =" + response + "=" );
         resultsData = Rest.jsonToObject( response, ResultsData.class );
         System.out.println( "resultsData.getFilesMatched() =" + resultsData.getFilesMatched() );
@@ -1249,7 +1231,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
         if ( showJustFilenameFlag.isSelected() )
             {
             tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setPreferredWidth( 300 );
-            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setCellRenderer( new PathRenderer() );
+            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setCellRenderer( new PathRenderer( connUserInfo.getToFilesysType() ) );
             }
         else
             {
@@ -3324,7 +3306,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
             String tmp = StringsList.remove( 0 );
             isDoingCutFlag = tmp.equalsIgnoreCase( "CUT" ) ? true : false;
             System.out.println( "read clipboard isDoingCutFlag =" + isDoingCutFlag );
-            connUserInfo = new ConnUserInfo( StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ) );
+            System.out.println( "connUserInfo.getToFilesysType() =" + connUserInfo.getToFilesysType() );
+            connUserInfo.setFrom( StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ) );
             if ( rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) )
                 {
                 connUserInfo.setTo( "sftp://", getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort() );
@@ -3367,7 +3350,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             }
         FilesTblModel filesTblModel = (FilesTblModel) filesTbl.getModel();
         
-        copyPaths = new ArrayList<Path>();
+        deletePaths = new ArrayList<String>();
         //ArrayList<File> filesList = new ArrayList<File>();
 
         // Do not use clipboard for deletes. only allow per this app instance!
@@ -3380,13 +3363,14 @@ public class JFileFinderWin extends javax.swing.JFrame {
             int rowIndex = filesTbl.convertRowIndexToModel( row );
             //System.out.println( "add copy path  row =" + row + "   rowIndex = " + rowIndex );
             //System.out.println( "copy path  =" + ((String) filesTblModel.getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) ) + "=" );
-            copyPaths.add( Paths.get( (String) filesTblModel.getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) ) );
+//            copyPaths.add( Paths.get( (String) filesTblModel.getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) ) );
+            deletePaths.add( (String) filesTblModel.getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) );
             //System.out.println( "add filesList =" + copyPaths.get( copyPaths.size() - 1 ) );
             }   
 
         try {
             DeleteFrame deleteFrame = new DeleteFrame();
-            if ( copyPaths == null || copyPaths.size() < 1 )
+            if ( deletePaths == null || deletePaths.size() < 1 )
                 {
                 JOptionPane.showMessageDialog( this, "No Files selected to Delete.", "Error", JOptionPane.ERROR_MESSAGE );
                 return;
@@ -3397,7 +3381,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
                 {
                 deleteFrame.setDeleteToTrashFlag( false );
                 }
-            ConnUserInfo connUserInfo = new ConnUserInfo( "", "", "", "", "" );
+            connUserInfo.setFrom( "", "", "", "", "" );
             if ( rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) )
                 {
                 connUserInfo.setTo( "sftp://", getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort() );
@@ -3406,7 +3390,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
                 {
                 connUserInfo.setTo( "file://", null, null, null, null );
                 }
-            deleteFrame.setup( this, connUserInfo, copyPathStartPath, copyPaths );
+            deleteFrame.setup( this, connUserInfo, copyPathStartPath, deletePaths );
             deleteFrame.pack();
             deleteFrame.setVisible( true );
             } 
@@ -3734,6 +3718,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
                     }
                 }
             }
+        connUserInfo = new ConnUserInfo( false, "file://", null, null, null, null );
+        connUserInfo.setToFilesysType( filesysType );
     }//GEN-LAST:event_formWindowOpened
 
     private void startCmdWin1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startCmdWin1ActionPerformed
@@ -3985,11 +3971,14 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
     private void rmtConnectBtnActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_rmtConnectBtnActionPerformed
     {//GEN-HEADEREND:event_rmtConnectBtnActionPerformed
+        connUserInfo = new ConnUserInfo( false, "sftp://", getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort() );
+        connUserInfo.setFromFilesysType(filesysType);
         if ( restServerSw == null )
             {
-            restServerSw = new RestServerSw( this );
+            restServerSw = new RestServerSw( connUserInfo );
             }
         restServerSw.actionPerformed(null);
+        connUserInfo.setConnectedFlag(true);
         rmtConnectBtn.setText( Constants.RMT_CONNECT_BTN_CONNECTED );
 //            connUserInfo = new ConnUserInfo( "", "", "", "", "" );
 //            if ( rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) )
@@ -4000,7 +3989,6 @@ public class JFileFinderWin extends javax.swing.JFrame {
 //                {
 //                connUserInfo.setTo( "file://", null, null, null, null );
 //                }
-        connUserInfo = new ConnUserInfo( true, "sftp://", getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort() );
         rmtConnectBtn.setBackground( Color.GREEN );
         
     }//GEN-LAST:event_rmtConnectBtnActionPerformed
@@ -4011,6 +3999,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             rmtConnectBtn.setText( RMT_CONNECT_BTN_CONNECT );
             System.out.println( "call restServerSw.cancelRestServer()" );
             restServerSw.cancelRestServer();
+            connUserInfo.setConnectedFlag( false );
             System.out.println( "after restServerSw.cancelRestServer()" );
             restServerSw = null;
             rmtConnectBtn.setBackground( saveColor );

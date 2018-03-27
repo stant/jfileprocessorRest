@@ -74,6 +74,7 @@ dependencies {
 //    compile("org.springframework.boot:spring-boot-starter:2.0.0.RELEASE")
     compile group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: '2.0.0.RELEASE'
     compile("org.springframework:spring-web:5.0.4.RELEASE")
+    compile 'org.apache.httpcomponents:httpclient:4.5.5'
     compile("com.fasterxml.jackson.core:jackson-databind:2.9.4")
     compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.13'
 //    compile fileTree(dir: 'libs', include: ['*.jar'])

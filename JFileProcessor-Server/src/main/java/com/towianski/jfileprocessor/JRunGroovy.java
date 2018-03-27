@@ -16,7 +16,6 @@ import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
 
 
-
 public class JRunGroovy //  implements Runnable 
 {
     Boolean cancelFlag = false;

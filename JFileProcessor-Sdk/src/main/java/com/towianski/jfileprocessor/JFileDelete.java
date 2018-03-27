@@ -7,12 +7,11 @@ package com.towianski.jfileprocessor;
 
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.ResultsData;
-import com.towianski.sshutils.Sftp;
-import java.io.File;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,18 +26,19 @@ public class JFileDelete //  implements Runnable
     Boolean deleteReadonlyFlag = false;
     Boolean cancelFlag = false;
     String startingPath = null;
-    ArrayList<Path> copyPaths = new ArrayList<Path>();
+//    ArrayList<Path> deletePaths = new ArrayList<Path>();
+    ArrayList<String> deletePaths = new ArrayList<String>();
     Boolean dataSyncLock = false;
     Deleter deleter = null;
     DeleterNonWalker deleterNonWalker = null;
     ConnUserInfo connUserInfo = null;
     int fsType = -1;
     
-    public JFileDelete( ConnUserInfo connUserInfo, String startingPath, ArrayList<Path> copyPaths, Boolean deleteFilesOnlyFlag, Boolean deleteToTrashFlag, Boolean deleteReadonlyFlag, int fsType )
+    public JFileDelete( ConnUserInfo connUserInfo, String startingPath, ArrayList<String> deletePaths, Boolean deleteFilesOnlyFlag, Boolean deleteToTrashFlag, Boolean deleteReadonlyFlag, int fsType )
         {
         this.connUserInfo = connUserInfo;
         this.startingPath = startingPath;
-        this.copyPaths = copyPaths;
+        this.deletePaths = deletePaths;
         this.deleteFilesOnlyFlag = deleteFilesOnlyFlag;
         this.deleteToTrashFlag = deleteToTrashFlag;
         this.deleteReadonlyFlag = deleteReadonlyFlag;
@@ -56,15 +56,15 @@ public class JFileDelete //  implements Runnable
         //System.out.println( "entered jfilecopy getResultsData()" );
         ResultsData resultsData = new ResultsData();
         try {
-            if ( connUserInfo.isUsingSftp() )
-                {
-                System.out.println("jFileCopy use deleterNonWalker results" );
-                resultsData = new ResultsData( cancelFlag, deleterNonWalker.getProcessStatus(), deleterNonWalker.getMessage(), deleterNonWalker.getNumTested(), deleterNonWalker.getNumFilesDeleted(), deleterNonWalker.getNumFoldersDeleted() );
-                }
-            else
-                {
+//            if ( connUserInfo.isUsingSftp() )
+//                {
+//                System.out.println("jFileCopy use deleterNonWalker results" );
+//                resultsData = new ResultsData( cancelFlag, deleterNonWalker.getProcessStatus(), deleterNonWalker.getMessage(), deleterNonWalker.getNumTested(), deleterNonWalker.getNumFilesDeleted(), deleterNonWalker.getNumFoldersDeleted() );
+//                }
+//            else
+//                {
                 resultsData = new ResultsData( cancelFlag, deleter.getProcessStatus(), deleter.getMessage(), deleter.getNumTested(), deleter.getNumFilesDeleted(), deleter.getNumFoldersDeleted() );
-                }
+//                }
             }
         catch( Exception ex )
             {
@@ -82,54 +82,57 @@ public class JFileDelete //  implements Runnable
     public void run( DeleteFrameSwingWorker swingWorker )
         {
         System.out.println( "JFileDelete.run() connUserInfo.isUsingSftp() =" + connUserInfo.isUsingSftp() + "=" );
-        if ( connUserInfo.isUsingSftp() )
-            {
-            Sftp sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost() );
-            com.jcraft.jsch.ChannelSftp chanSftp = sftp.getSftp();
-            deleterNonWalker = new DeleterNonWalker( connUserInfo, chanSftp, startingPath, copyPaths, deleteFilesOnlyFlag, deleteToTrashFlag, deleteReadonlyFlag, fsType, swingWorker );
-
-            try {
-                synchronized( dataSyncLock ) 
-                    {
-                    cancelFlag = false;
-                    for ( Path fpath : copyPaths )
-                        {
-                        System.out.println( "ck delete path =" + fpath + "=" );
-                        String filename = fpath.toString().replace( "\\", "/" );
-                        System.out.println( "ck delete path =" + filename + "=" );
-//                        if ( fpath.toFile().exists() || Files.isSymbolicLink( fpath ) )
-                        if ( chanSftp.lstat( filename ).getSize() >= 0 || chanSftp.lstat( filename ).isLink() )
-                            {
-                            System.out.println( "\n-------  new DeleterNonWalker: copy path =" + filename + "=" );
-                            deleterNonWalker.deleteRecursiveRemote( filename );  // toPath gets calced to targetPath from setPaths()
-
-                            //break;  for testing to do just 1st path
-                            }
-                        }
-                    deleterNonWalker.done();
-//                    if ( deleterNonWalker.getProcessStatus().equals( "" ) )
+//        if ( connUserInfo.isUsingSftp() )
+//            {
+//            Sftp sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost() );
+//            com.jcraft.jsch.ChannelSftp chanSftp = sftp.getSftp();
+//            deleterNonWalker = new DeleterNonWalker( connUserInfo, chanSftp, startingPath, deletePaths, deleteFilesOnlyFlag, deleteToTrashFlag, deleteReadonlyFlag, fsType, swingWorker );
+//
+//            try {
+//                synchronized( dataSyncLock ) 
+//                    {
+//                    cancelFlag = false;
+//                    for ( Path fpath : deletePaths )
 //                        {
-//                        deleterNonWalker.setProcessStatus( CopyFrame.PROCESS_STATUS_COPY_COMPLETED );
+//                        System.out.println( "ck delete path =" + fpath + "=" );
+//                        String filename = fpath.toString().replace( "\\", "/" );
+//                        System.out.println( "ck delete path =" + filename + "=" );
+//                        if ( fpath.toFile().exists() || Files.isSymbolicLink( fpath ) )
+////                        if ( chanSftp.lstat( filename ).getSize() >= 0 || chanSftp.lstat( filename ).isLink() )
+//                            {
+//                            System.out.println( "\n-------  new DeleterNonWalker: copy path =" + filename + "=" );
+//                            deleterNonWalker.deleteRecursiveRemote( filename );  // toPath gets calced to targetPath from setPaths()
+//
+//                            //break;  for testing to do just 1st path
+//                            }
 //                        }
-                    }
-                } 
-            catch (Exception ex) 
-                {
-                Logger.getLogger(JFileCopy.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            finally
-                {
-                sftp.close();
-                }
-            }
-        else
-            {
-            deleter = new Deleter( startingPath, copyPaths, deleteFilesOnlyFlag, deleteToTrashFlag, deleteReadonlyFlag, fsType, swingWorker );
+//                    deleterNonWalker.done();
+////                    if ( deleterNonWalker.getProcessStatus().equals( "" ) )
+////                        {
+////                        deleterNonWalker.setProcessStatus( CopyFrame.PROCESS_STATUS_COPY_COMPLETED );
+////                        }
+//                    }
+//                } 
+//            catch (Exception ex) 
+//                {
+//                Logger.getLogger(JFileCopy.class.getName()).log(Level.SEVERE, null, ex);
+//                }
+//            finally
+//                {
+//                sftp.close();
+//                }
+//            }
+        // Skip using filewalker at all for deletes
+//        else
+//            {
+            deleter = new Deleter( startingPath, deletePaths, deleteFilesOnlyFlag, deleteToTrashFlag, deleteReadonlyFlag, fsType, swingWorker );
 //            synchronized( dataSyncLock ) 
 //                {
                 cancelFlag = false;
-                for ( Path fpath : copyPaths )
+//                for ( Path fpath : deletePaths )
+                for ( String strpath : deletePaths )
                     {
+                    Path fpath = Paths.get( strpath );
                     System.out.println( "delete path =" + fpath + "=" );
                     //EnumSet<FileVisitOption> opts = EnumSet.of( FOLLOW_LINKS );
                     if ( fpath.toFile().exists() || Files.isSymbolicLink( fpath ) )
@@ -156,7 +159,7 @@ public class JFileDelete //  implements Runnable
                     }
 //                }
             deleter.done();
-            }
+//            }
         }
         
     public static void main(String[] args) throws IOException 

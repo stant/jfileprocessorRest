@@ -2,6 +2,19 @@ package com.towianski.boot;
 
 import com.towianski.jfileprocessor.*;
 import com.towianski.utils.MyLogger;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import javax.net.ssl.SSLContext;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContexts;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.web.client.RestTemplate;
 
 public class StartApp
 {
@@ -11,8 +24,6 @@ public class StartApp
      */
     public static void main(String args[]) 
     {
-
-
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
@@ -58,6 +69,28 @@ public class StartApp
         });
         
     }
+    
+
+    @Bean
+    public RestTemplate noHostVerifyRestTemplate() throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException 
+        {
+        SSLContext sslContext = SSLContexts.custom()
+                .loadTrustMaterial(null, new TrustSelfSignedStrategy())
+                .build();
+
+        SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setSSLSocketFactory(sslConnectionSocketFactory)
+                .build();
+
+        HttpComponentsClientHttpRequestFactory requestFactory =
+                new HttpComponentsClientHttpRequestFactory();
+
+        requestFactory.setHttpClient(httpClient);
+
+        return new RestTemplate(requestFactory);
+        }
+    
 }
 
 

@@ -92,6 +92,7 @@ repositories {
 dependencies {
     compile project(':JFileProcessor-Sdk')
     compile("org.springframework.boot:spring-boot-starter-web:2.0.0.RELEASE")
+    compile("org.springframework.boot:spring-boot-starter-security:2.0.0.RELEASE")
     compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.13'
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.jcraft:jsch:0.1.54'

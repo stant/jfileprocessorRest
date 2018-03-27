@@ -109,7 +109,7 @@ public class JFileCopy //  implements Runnable
                     for ( Path fpath : copyPaths )
                         {
                         System.out.println( "\n-------  new CopierNonWalker: copy path =" + fpath + "=" );
-                        copierNonWalker.setPaths( fpath, startingPath, toPath );
+                        copierNonWalker.setPaths( fpath, startingPath, toPath, connUserInfo );
                         copierNonWalker.copyRecursive( new File( fpath.toString() ) );  // toPath gets calced to targetPath from setPaths()
 
                         //break;  for testing to do just 1st path

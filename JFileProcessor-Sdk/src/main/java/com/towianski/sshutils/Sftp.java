@@ -40,13 +40,13 @@ public Sftp( String user, String password, String rhost )
             }
       
         session=jsch.getSession(user, rhost, 22);
-        System.out.println( "at 2" );
+        System.out.println( "Sftp at 2" );
 
         session.setPassword( password );
 
         Properties config = new Properties();
         config.put("StrictHostKeyChecking","no");
-        System.out.println( "at 3" );
+        System.out.println( "Sftp at 3" );
         session.setConfig(config);
 
           // username and password will be given via UserInfo interface.
@@ -54,13 +54,14 @@ public Sftp( String user, String password, String rhost )
     //    System.out.println( "at 3" );
     //      session.setUserInfo(ui);
 
-        System.out.println( "at 4" );
+        System.out.println( "Sftp at 4" );
         session.connect();
-        System.out.println( "at 5" );
+        System.out.println( "Sftp at 5" );
 
         channel=session.openChannel( "sftp" );
         channel.connect();
         sftp = (com.jcraft.jsch.ChannelSftp)channel;
+        System.out.println( "Sftp done" );
         }
     catch(Exception e)
         {

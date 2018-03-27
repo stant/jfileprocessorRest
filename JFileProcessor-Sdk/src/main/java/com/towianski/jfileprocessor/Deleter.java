@@ -33,7 +33,8 @@ public class Deleter extends SimpleFileVisitor<Path>
     private long numTested = 0;
 
     boolean cancelFlag = false;
-    ArrayList<Path> copyPaths = new ArrayList<Path>();
+//    ArrayList<Path> deletePaths = new ArrayList<Path>();
+    ArrayList<String> deletePaths = new ArrayList<String>();
     Boolean dataSyncLock = false;
     Boolean deleteFilesOnlyFlag = false;
     Boolean deleteToTrashFlag = true;
@@ -44,10 +45,10 @@ public class Deleter extends SimpleFileVisitor<Path>
     DeleteFrameSwingWorker swingWorker = null;
     int fsType = -1;
     
-    public Deleter( String startingPath, ArrayList<Path> copyPaths, Boolean deleteFilesOnlyFlag, Boolean deleteToTrashFlag, Boolean deleteReadonlyFlag, int fsType, DeleteFrameSwingWorker swingWorker )
+    public Deleter( String startingPath, ArrayList<String> deletePaths, Boolean deleteFilesOnlyFlag, Boolean deleteToTrashFlag, Boolean deleteReadonlyFlag, int fsType, DeleteFrameSwingWorker swingWorker )
     {
         this.fromPath = Paths.get( startingPath );
-        this.copyPaths = copyPaths;
+        this.deletePaths = deletePaths;
         this.deleteFilesOnlyFlag = deleteFilesOnlyFlag;
         this.deleteToTrashFlag = deleteToTrashFlag;
         this.deleteReadonlyFlag = deleteReadonlyFlag;
@@ -95,10 +96,10 @@ public class Deleter extends SimpleFileVisitor<Path>
                         Files.setAttribute( trashFpath, "dos:readonly", false );
                         }        
                     }
-                //System.out.println( "visitFile() Files.copy trashFpath =" + trashFpath + "=" );
+                System.out.println( "visitFile() Files.copy trashFpath =" + trashFpath + "=" );
                 Files.copy( fpath, trashFpath, StandardCopyOption.REPLACE_EXISTING, LinkOption.NOFOLLOW_LINKS );
                 }
-            //System.out.println( "del fpath =" + fpath );
+            System.out.println( "del fpath =" + fpath );
             Files.delete( fpath );
             }
         catch ( java.nio.file.AccessDeniedException exAccessDenied ) 
@@ -157,7 +158,7 @@ public class Deleter extends SimpleFileVisitor<Path>
         {
         try {
             numTested++;
-            swingWorker.publish2( numTested );
+            if ( swingWorker != null )  swingWorker.publish2( numTested );
             if ( ! deleteFilesOnlyFlag )
                 {
                 if ( deleteReadonlyFlag )

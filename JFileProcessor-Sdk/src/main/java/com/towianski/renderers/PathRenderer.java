@@ -5,6 +5,7 @@
  */
 package com.towianski.renderers;
 
+import com.towianski.models.Constants;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -15,15 +16,32 @@ import javax.swing.table.DefaultTableCellRenderer;
  */
 public class PathRenderer extends DefaultTableCellRenderer
 {
+    int filesysType = -9;
+    String delim = "\\";   // default to DOS
+    int at = 0;
+    
+    public PathRenderer( int filesysType )
+    {
+    this.filesysType = filesysType;
+    if ( filesysType == Constants.FILESYSTEM_POSIX )    
+        {
+        delim = "/";
+        }
+    System.out.println( "filesysType =" + filesysType + "   delim =\"" + delim + "\"" );
+    }
   
-  @Override public void setValue(Object aValue) {
+  @Override public void setValue(Object aValue) 
+    {
     Object result = aValue;
-    if ((aValue != null) && (aValue instanceof String)) {
-      String filename = (String) aValue;
-      Path fpath = Paths.get( filename );
-      result = fpath.getFileName();
-      setTooltip( filename );
-    } 
+    if ((aValue != null) && (aValue instanceof String)) 
+        {
+        String filename = (String) aValue;
+//        Path fpath = Paths.get( filename );
+//        result = fpath.getFileName();
+        at = filename.lastIndexOf(delim);
+        result = at < 0 ? filename : filename.substring( at + 1 );
+        setTooltip( filename );
+        }
     super.setValue(result);
   }
 

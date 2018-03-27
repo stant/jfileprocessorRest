@@ -2,9 +2,8 @@ package com.towianski.jfileprocess.actions;
 
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.sshutils.JschSftpUtils;
+import com.towianski.utils.Rest;
 import java.io.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -29,7 +28,7 @@ public class TomcatAppThread implements Runnable
         this.passwd = passwd;
         this.rmtHost = rmtHost;
         this.lockObj = lockObj;
-        SERVER_URI = "http://" + rmtHost + ":8080";
+        SERVER_URI = "https://" + rmtHost + ":8443";
         }
     
     public void cancelRestServer()
@@ -40,14 +39,51 @@ public class TomcatAppThread implements Runnable
         System.out.println("TomcatAppThread exit cancelSearch()");
         }
 
+    //    public RestTemplate sslNoCkRestTemplate()
+//        {
+//    TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
+//
+//SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
+//        .loadTrustMaterial(null, acceptingTrustStrategy)
+//        .build();
+//
+//SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext);
+//
+//CloseableHttpClient httpClient = HttpClients.custom()
+//        .setSSLSocketFactory(csf)
+//        .build();
+//
+//HttpComponentsClientHttpRequestFactory requestFactory =
+//        new HttpComponentsClientHttpRequestFactory();
+//
+//requestFactory.setHttpClient(httpClient);
+//
+//RestTemplate restTemplate = new RestTemplate(requestFactory);
+
+
+//    SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(new SSLContextBuilder().loadTrustMaterial(null, new TrustSelfSignedStrategy()).build());
+//
+//      HttpClient httpClient = HttpClients.custom().setSSLSocketFactory(socketFactory).build();
+//
+//      RestTemplate template = new TestRestTemplate();
+//      ((HttpComponentsClientHttpRequestFactory) template.getRequestFactory()).setHttpClient(httpClient);
+      
     @Override
     public void run() {
         System.out.println( "entered TomcatAppThread run()" );
         System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
-        RestTemplate restTemplate = new RestTemplate();
+//        RestTemplate restTemplate = new RestTemplate();
+//        CloseableHttpClient httpClient = HttpClients.custom().setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE).build();
+//        HttpComponentsClientHttpRequestFactory requestFactory =
+//                new HttpComponentsClientHttpRequestFactory();
+//
+//        requestFactory.setHttpClient(httpClient);
+//        RestTemplate noHostVerifyRestTemplate = new RestTemplate( requestFactory );
+        RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
+
         cancelFlag = false;
         int downTimes = 99;
-        JschSftpUtils scpTo = new JschSftpUtils();
+        JschSftpUtils jschSftpUtils = new JschSftpUtils();
         String response = null;
         boolean didFirstStart = false;
         
@@ -58,14 +94,15 @@ public class TomcatAppThread implements Runnable
                 System.out.println( "TomcatAppThread.run() make rest /jfp/sys/ping call" );
                 try
                     {
-                    response = restTemplate.getForObject( SERVER_URI + JfpRestURIConstants.SYS_PING, String.class );
+                    response = noHostVerifyRestTemplate.getForObject( SERVER_URI + JfpRestURIConstants.SYS_PING, String.class );
                     }
                 catch( Exception exc )
                     {
+                    System.out.println( "TomcatAppThread.run() ping threw Exception !!" );
                     response = null;
                     exc.printStackTrace();
                     }
-                System.out.println( "ping response =" + response + "=" );
+                System.out.println( "TomcatAppThread.run() ping response =" + response + "=" );
                 if ( ! cancelFlag && 
                     ( response == null || ! response.equalsIgnoreCase( "RUNNING" ) ) )
                     {
@@ -83,11 +120,15 @@ public class TomcatAppThread implements Runnable
 //                        System.out.println( "jfpFilename =" + jfpFilename + "=" );
                         String jfpFilename = "JFileProcessor-Server-1.5.11.jar";
                         System.out.println( "jfpFilename =" + jfpFilename + "=" );
-                        scpTo.copyIfMissing( fpath + jfpFilename, user, passwd, rmtHost, jfpFilename );
-                        System.out.println( "try scpTo   file =" + fpath + jfpFilename + "=   to remote =" + user + "@" + rmtHost + ":" + jfpFilename + "=" );
+                        
+                        //jschSftpUtils.copyIfMissing( fpath + jfpFilename, user, passwd, rmtHost, jfpFilename );
+                        jschSftpUtils.sftpIfDiff( fpath + jfpFilename, user, passwd, rmtHost, jfpFilename );
+                        
+                        System.out.println( "try jschSftpUtils   file =" + fpath + jfpFilename + "=   to remote =" + user + "@" + rmtHost + ":" + jfpFilename + "=" );
                         if ( ! cancelFlag )
                             {
-                            scpTo.exec( user, passwd, rmtHost, "java -jar " + jfpFilename + " --logging.file=/tmp/jfp-springboot.logging" );
+                            jschSftpUtils.exec( user, passwd, rmtHost, "java -jar " + jfpFilename + " --logging.file=/tmp/jfp-springboot.logging" );
+//java -jar your-spring.jar --security.require-ssl=true --server.port=8443 --server.ssl.key-store=keystore --server.ssl.key-store-password=changeit --server.ssl.key-password=changeit
                             }
                         System.out.println( "after start remote jfp server" );
                         Thread.sleep( 30000 );

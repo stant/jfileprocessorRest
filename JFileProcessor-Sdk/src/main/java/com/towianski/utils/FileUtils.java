@@ -35,7 +35,9 @@ public class FileUtils
 
         if ( connUserInfo.isConnectedFlag() )
             {
-            RestTemplate restTemplate = new RestTemplate();
+//            RestTemplate restTemplate = new RestTemplate();
+            RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
+            
             try {
 //                 restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
                 HttpHeaders headers = new HttpHeaders();
@@ -46,7 +48,7 @@ public class FileUtils
                 param.put("newname",newFile);
                 param.put("oldname",oldFile);
                 HttpEntity<Object> requestEntity = new HttpEntity<Object>(headers);
-                HttpEntity<String> response = restTemplate.exchange( "http://" + connUserInfo.getToHost() + ":8080" + JfpRestURIConstants.RENAME_FILE 
+                HttpEntity<String> response = noHostVerifyRestTemplate.exchange( connUserInfo.getToUri() + JfpRestURIConstants.RENAME_FILE 
                                     , HttpMethod.PUT, requestEntity, String.class, param );
                 System.out.println("jfilewin FileMove()  response =" + response + "=" );
                 }
