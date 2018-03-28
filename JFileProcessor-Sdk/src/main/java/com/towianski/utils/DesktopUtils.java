@@ -188,6 +188,7 @@ public class DesktopUtils
         int x = (int) (bounds.getMaxX() / 2) - (f.getWidth() / 2);
         int y = (int) bounds.getMaxY() - f.getHeight();
         f.setLocation(x, y);
+        f.validate();
         f.setVisible(true);
         }
 }

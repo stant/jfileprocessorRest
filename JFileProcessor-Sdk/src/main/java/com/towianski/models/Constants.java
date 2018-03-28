@@ -31,6 +31,9 @@ public class Constants
     public static final int FILESYSTEM_DOS = 1;
     public int filesysType = FILESYSTEM_POSIX;
 
+    public static final String PATH_PROTOCOL_FILE = "file://";
+    public static final String PATH_PROTOCOL_SFTP = "sftp://";
+
     public static final String RMT_CONNECT_BTN_CONNECT = "Connect";
     public static final String RMT_CONNECT_BTN_CONNECTED = "Connected";
     public static final String RMT_CONNECT_BTN_DISCONNECT = "Disconnect";

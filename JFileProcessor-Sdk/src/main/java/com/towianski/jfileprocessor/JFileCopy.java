@@ -6,6 +6,7 @@ package com.towianski.jfileprocessor;
  */
 
 import com.towianski.models.ConnUserInfo;
+import com.towianski.models.Constants;
 import com.towianski.models.ResultsData;
 import com.towianski.sshutils.Sftp;
 import java.io.File;
@@ -94,10 +95,21 @@ public class JFileCopy //  implements Runnable
     public void run( CopyFrameSwingWorker swingWorker ) 
         {
         System.out.println( "JFileCopy.run() toPath =" + toPath + "=" );
+        System.out.println( "connUserInfo() =" + connUserInfo );
         
         if ( connUserInfo.isUsingSftp() )
             {
-            Sftp sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost() );
+            Sftp sftp = null;
+            if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_FILE ) &&
+                 connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_SFTP )  )
+                {
+                sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost() );
+                }
+            else if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_SFTP ) &&
+                      connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_FILE )  )
+                {
+                sftp = new Sftp( connUserInfo.getFromUser(), connUserInfo.getFromPassword(), connUserInfo.getFromHost() );
+                }
             com.jcraft.jsch.ChannelSftp chanSftp = sftp.getSftp();
             copierNonWalker = new CopierNonWalker( connUserInfo, chanSftp, isDoingCutFlag, copyOptions, swingWorker );
 

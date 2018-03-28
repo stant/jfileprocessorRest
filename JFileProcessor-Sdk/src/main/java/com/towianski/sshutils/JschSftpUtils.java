@@ -56,7 +56,7 @@ public void sftpIfDiff( String locFile, String user, String password, String rho
             System.out.println( "remote getHome() =" + chanSftp.getHome() + "=" );
             System.out.println( "remote pwd =" + chanSftp.pwd() + "=" );
             BasicFileAttributes attr = Files.readAttributes( Paths.get( locFile ), BasicFileAttributes.class );
-            sftpAttrs = chanSftp.lstat( rmtFile );
+            sftpAttrs = chanSftp.stat( rmtFile );
             if ( sftpAttrs.getSize() != attr.size() )
                 {
                 System.out.println( "file sizes diff so recopy over jar file." );
@@ -401,7 +401,7 @@ public long getRemoteFileSize( String lfile, String user, String password, Strin
         System.out.println( "remote getHome() =" + chanSftp.getHome() + "=" );
         System.out.println( "remote pwd =" + chanSftp.pwd() + "=" );
         System.out.println( "look for filename =" + filename );
-        attrs = chanSftp.lstat( filename );
+        attrs = chanSftp.stat( filename );
         System.out.println( "got attrs =" );
         System.out.println( attrs );
         fsize = attrs.getSize();

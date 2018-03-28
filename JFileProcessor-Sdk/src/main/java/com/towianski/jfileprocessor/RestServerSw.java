@@ -133,6 +133,10 @@ public class RestServerSw {
 //                tomcatAppPostThread.setName( "watchdirPostThread=" + count );
 //                tomcatAppPostThread.start();
 
+                if ( runThread != null && runThread.isAlive() )
+                    {
+                    cancelRestServer();
+                    }
                 tomcatAppThread = new TomcatAppThread( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost() );
                 runThread = newThread( tomcatAppThread );
                 runThread.setName( "tomcatAppThread=" + count++ );

@@ -182,7 +182,7 @@ public class DeleterNonWalker extends SimpleFileVisitor<Path>
 
         try {
             //        if ( ! sourceFolder.exists() )
-            if ( chanSftp.lstat( filename ).getSize() >= 0 )
+            if ( chanSftp.stat( filename ).getSize() >= 0 )
             { } // continue if not error meaning exists
            } 
         catch (SftpException ex) {
@@ -197,7 +197,7 @@ public class DeleterNonWalker extends SimpleFileVisitor<Path>
         numTested++;
         try {
 //            if ( sourceFolder.isDirectory() )
-            if ( chanSftp.lstat( filename ).isDir() )
+            if ( chanSftp.stat( filename ).isDir() )
                 {
                 System.out.println( "Is Directory" );
                 isDirFlag = true;

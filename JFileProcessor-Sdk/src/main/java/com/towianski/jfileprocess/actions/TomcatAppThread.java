@@ -36,6 +36,7 @@ public class TomcatAppThread implements Runnable
         System.out.println("TomcatAppThread set cancelFlag to true");
         System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
         cancelFlag = true;
+        Thread.currentThread().interrupt();
         System.out.println("TomcatAppThread exit cancelSearch()");
         }
 
@@ -72,13 +73,6 @@ public class TomcatAppThread implements Runnable
     public void run() {
         System.out.println( "entered TomcatAppThread run()" );
         System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
-//        RestTemplate restTemplate = new RestTemplate();
-//        CloseableHttpClient httpClient = HttpClients.custom().setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE).build();
-//        HttpComponentsClientHttpRequestFactory requestFactory =
-//                new HttpComponentsClientHttpRequestFactory();
-//
-//        requestFactory.setHttpClient(httpClient);
-//        RestTemplate noHostVerifyRestTemplate = new RestTemplate( requestFactory );
         RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
 
         cancelFlag = false;
@@ -144,6 +138,10 @@ public class TomcatAppThread implements Runnable
                     Thread.sleep( 4000 );
                     downTimes = 0;
                     }
+                }
+            catch( InterruptedException intexc )
+                {
+                System.out.println( "TomcatAppThread sleep interrupted" );
                 }
             catch( Exception exc )
                 {

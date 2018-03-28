@@ -7,8 +7,6 @@ package com.towianski.jfileprocessor;
 
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.models.ConnUserInfo;
-import com.towianski.models.Constants;
-import static com.towianski.models.Constants.FILESYSTEM_DOS;
 import com.towianski.models.ResultsData;
 import com.towianski.models.CopyModel;
 import com.towianski.utils.MyLogger;
@@ -25,7 +23,6 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.logging.Level;

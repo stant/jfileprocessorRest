@@ -3310,11 +3310,11 @@ public class JFileFinderWin extends javax.swing.JFrame {
             connUserInfo.setFrom( StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ) );
             if ( rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) )
                 {
-                connUserInfo.setTo( "sftp://", getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort() );
+                connUserInfo.setTo( Constants.PATH_PROTOCOL_SFTP, getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort() );
                 }
             else
                 {
-                connUserInfo.setTo( "file://", null, null, null, null );
+                connUserInfo.setTo( Constants.PATH_PROTOCOL_FILE, null, null, null, null );
                 }
             copyPaths.clear();
             for ( String fpath : StringsList )

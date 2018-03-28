@@ -232,5 +232,24 @@ public class ConnUserInfo
         {
         this.toSshPort = toSshPort;
         }
+
+    public String toString()
+        {
+        return "  fromUri =" + fromUri + "="
++ "  fromProtocol =" + fromProtocol + "="
++ "  fromUser =" + fromUser + "="
++ "  fromPassword =" + fromPassword + "="
++ "  fromHost =" + fromHost + "="
++ "  fromSshPort =" + fromSshPort + "="
++ "  fromFilesysType =" + fromFilesysType + "="
++ "  connectedFlag =" + connectedFlag + "="
++ "  ToUri =" + ToUri + "="
++ "  toProtocol =" + toProtocol + "="
++ "  toUser =" + toUser + "="
++ "  toPassword =" + toPassword + "="
++ "  toHost =" + toHost + "="
++ "  toSshPort =" + toSshPort + "="
++ "  toFilesysType =" + toFilesysType + "=";
+        }
         
     }
