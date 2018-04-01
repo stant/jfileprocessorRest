@@ -5,6 +5,7 @@
  */
 package com.towianski.jfileprocessor;
 
+import com.towianski.jfileprocess.actions.CloseWinOnTimer;
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.ResultsData;
@@ -20,8 +21,8 @@ import java.nio.file.CopyOption;
 import java.nio.file.FileVisitOption;
 import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
 import java.nio.file.LinkOption;
-import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -58,7 +59,7 @@ public class CopyFrame extends javax.swing.JFrame {
     Boolean cancelFillFlag = false;
     Boolean isDoingCutFlag = false;
     String startingPath = null;
-    ArrayList<Path> copyPaths = new ArrayList<Path>();
+    ArrayList<String> copyPaths = new ArrayList<String>();
     String toPath = null;
     Copier copier = null;
     Boolean dataSyncLock = false;
@@ -78,7 +79,7 @@ public class CopyFrame extends javax.swing.JFrame {
         doCmdBtn.requestFocusInWindow();
     }
 
-    public void setup( JFileFinderWin jFileFinderWin, ConnUserInfo connUserInfo, Boolean isDoingCutFlag, String startingPath, ArrayList<Path> copyPaths, String toPath )
+    public void setup( JFileFinderWin jFileFinderWin, ConnUserInfo connUserInfo, Boolean isDoingCutFlag, String startingPath, ArrayList<String> copyPaths, String toPath )
         {
         this.jFileFinderWin = jFileFinderWin;
         this.connUserInfo = connUserInfo;
@@ -199,34 +200,36 @@ public class CopyFrame extends javax.swing.JFrame {
 
     public void copyBtnActionSwing( java.awt.event.ActionEvent evt )
         {
-            try {
-                List<CopyOption> copyOpts = new ArrayList<CopyOption>();
-                EnumSet<FileVisitOption> fileVisitOptions = EnumSet.noneOf( FileVisitOption.class );
-                if ( replaceExisting.isSelected() )
-                    copyOpts.add( StandardCopyOption.REPLACE_EXISTING );
-                if ( copyAttribs.isSelected() )
-                    copyOpts.add( StandardCopyOption.COPY_ATTRIBUTES );
-                if ( noFollowLinks.isSelected() )
-                    {
-                    copyOpts.add( LinkOption.NOFOLLOW_LINKS );
-                    }
-                else
-                    {
-                    fileVisitOptions = EnumSet.of( FOLLOW_LINKS );
-                    }
+        System.out.println( "entered copyBtnActionSwing()" );
+        try {
+            ArrayList<CopyOption> copyOpts = new ArrayList<CopyOption>();
+            EnumSet<FileVisitOption> fileVisitOptions = EnumSet.noneOf( FileVisitOption.class );
+            if ( replaceExisting.isSelected() )
+                copyOpts.add( StandardCopyOption.REPLACE_EXISTING );
+            if ( copyAttribs.isSelected() )
+                copyOpts.add( StandardCopyOption.COPY_ATTRIBUTES );
+            if ( noFollowLinks.isSelected() )
+                {
+                copyOpts.add( LinkOption.NOFOLLOW_LINKS );
+                }
+            else
+                {
+                fileVisitOptions = EnumSet.of( FOLLOW_LINKS );
+                }
 //                CopyOption[] copyOptsAR = copyOpts.toArray( new CopyOption[ copyOpts.size() ] );
 //
 //                System.out.println( "copyOpts length =" + copyOptsAR.length + "=" );
 //                for ( CopyOption cc : copyOptsAR )
 //                    System.out.println( "cc =" + cc + "=" );
-                
-                jfilecopy = new JFileCopy( connUserInfo, isDoingCutFlag, startingPath, copyPaths, toPath, fileVisitOptions, copyOpts.toArray( new CopyOption[ copyOpts.size() ] ) );
-                CopyFrameSwingWorker copyFrameSwingWorker = new CopyFrameSwingWorker( this, jfilecopy, copyPaths, toPath, showProgressTb.isSelected(), closeWhenDoneTb.isSelected() );
-                
-                copyFrameSwingWorker.execute();   //doInBackground();
+
+            jfilecopy = new JFileCopy( connUserInfo, isDoingCutFlag, startingPath, copyPaths, toPath, fileVisitOptions, copyOpts );
+            CopyFrameSwingWorker copyFrameSwingWorker = new CopyFrameSwingWorker( this, jfilecopy, copyPaths, toPath, showProgressTb.isSelected(), closeWhenDoneTb.isSelected() );
+
+            copyFrameSwingWorker.execute();   //doInBackground();
             } 
-            catch (Exception ex) {
-                logger.log(Level.SEVERE, null, ex);
+        catch (Exception ex) 
+            {
+            logger.log(Level.SEVERE, null, ex);
             } 
         }
 
@@ -251,11 +254,60 @@ public class CopyFrame extends javax.swing.JFrame {
         System.out.println( "response =" + response + "=" );
         resultsData = Rest.jsonToObject( response, ResultsData.class );
         System.out.println( "resultsData.getFilesMatched() =" + resultsData.getFilesMatched() );
-        System.out.println( "resultsData.getFilesTblModel() =" + resultsData.getFilesTblModel().toString() );
+//        System.out.println( "resultsData.getFilesTblModel() =" + resultsData.getFilesTblModel().toString() );
 
-//        FilesTblModel filesTblModel = restTemplate.postForEntity( SERVER_URI+JfpRestURIConstants.SEARCH, copyModel, FilesTblModel.class).getBody();
-//        System.out.println( "response filesTblModel =" + filesTblModel + "=" );
-//        fillInFilesTable( resultsData.getFilesTblModel() );
+        try {
+            System.out.println( "entered CopyFiles.done()" );
+            NumberFormat numFormat = NumberFormat.getIntegerInstance();
+            String partialMsg = "";
+//            String msg =  "Copied " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) + " folders out of " + numFormat.format( resultsData.getFilesVisited() );
+            String msg =  "Copied " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) + " folders out of " + numFormat.format( resultsData.getFilesTested() ) + " files and " + numFormat.format( resultsData.getFoldersTested() ) + " folders.";
+//            System.out.println( "CopyFrameSwingWorker. got results msg =" + msg + "=" );
+            if ( resultsData.getSearchWasCanceled() )
+                {
+                this.setProcessStatus( this.PROCESS_STATUS_COPY_CANCELED );
+                msg = msg + " PARTIAL files list.";
+                }
+            else
+                {
+                this.setProcessStatus( this.PROCESS_STATUS_COPY_COMPLETED );
+                System.out.println( "do new CloseWinOnTimer( copyFrame, 4000 )" );
+                new CloseWinOnTimer( this, closeWhenDoneTb.isEnabled() ? 4000 : 0 ){{setRepeats(false);}}.start();
+                }
+
+//            if ( ! resultsData.getProcessStatus().trim().equals( "" ) )
+//                {
+//                copyFrame.setProcessStatus( resultsData.getProcessStatus() );
+//                }
+//            if ( ! resultsData.getMessage().trim().equals( "" ) )
+//                {
+//                msg = resultsData.getMessage();
+//                }
+
+            this.setMessage( msg + partialMsg );
+            this.setResultsData( resultsData );
+            
+            // clean up
+//            resultsData = null;
+            jfilecopy = null;
+            copyPaths = null;            
+            
+//            copyFrame.callSearchBtnActionPerformed();
+            this.callSearchBtnActionPerformed();
+            //System.out.println( "exiting SwingWork.done()" );
+            }
+        catch ( Exception e ) 
+            {
+            String why = null;
+            Throwable cause = e.getCause();
+            if (cause != null) {
+                why = cause.getMessage();
+            } else {
+                why = e.getMessage();
+            }
+            System.out.println( "Error in CopyFiles(): " + why);
+            e.printStackTrace();
+            }
         }
     
     public CopyModel extractCopyModel()
@@ -263,20 +315,20 @@ public class CopyFrame extends javax.swing.JFrame {
         System.out.println("jfilewin extractCopyModel() " );  //searchBtn.getText() =" + searchBtn.getText() + "=" );
         CopyModel copyModel = new CopyModel();
 
-                ArrayList<CopyOption> copyOpts = new ArrayList<CopyOption>();
-                EnumSet<FileVisitOption> fileVisitOptions = EnumSet.noneOf( FileVisitOption.class );
-                if ( replaceExisting.isSelected() )
-                    copyOpts.add( StandardCopyOption.REPLACE_EXISTING );
-                if ( copyAttribs.isSelected() )
-                    copyOpts.add( StandardCopyOption.COPY_ATTRIBUTES );
-                if ( noFollowLinks.isSelected() )
-                    {
-                    copyOpts.add( LinkOption.NOFOLLOW_LINKS );
-                    }
-                else
-                    {
-                    fileVisitOptions = EnumSet.of( FOLLOW_LINKS );
-                    }
+        ArrayList<CopyOption> copyOpts = new ArrayList<CopyOption>();
+        EnumSet<FileVisitOption> fileVisitOptions = EnumSet.noneOf( FileVisitOption.class );
+        if ( replaceExisting.isSelected() )
+            copyOpts.add( StandardCopyOption.REPLACE_EXISTING );
+        if ( copyAttribs.isSelected() )
+            copyOpts.add( StandardCopyOption.COPY_ATTRIBUTES );
+        if ( noFollowLinks.isSelected() )
+            {
+            copyOpts.add( LinkOption.NOFOLLOW_LINKS );
+            }
+        else
+            {
+            fileVisitOptions = EnumSet.of( FOLLOW_LINKS );
+            }
 
 //        jfilecopy = new JFileCopy( this, isDoingCutFlag, startingPath, copyPaths, toPath, fileVisitOptions, copyOpts.toArray( new CopyOption[ copyOpts.size() ] ) );
 
@@ -286,6 +338,7 @@ public class CopyFrame extends javax.swing.JFrame {
         copyModel.setToPath( toPath );
         copyModel.setFileVisitOptions( fileVisitOptions );
         copyModel.setCopyOpts( copyOpts );
+        copyModel.setConnUserInfo( connUserInfo );
         
 //    int filesysType = FILESYSTEM_DOS;
         return copyModel;
@@ -486,14 +539,15 @@ public class CopyFrame extends javax.swing.JFrame {
             }
         else
             {
-//            if ( jFileFinderWin.getRmtConnectBtn().getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) )
-//                {
-//                copyBtnActionRest( evt );
-//                }
-//            else
-//                {
+            System.out.println( "copyFrame().doCmdBtnActionPerformed() connUserInfo =" + connUserInfo + "=" );
+            if ( connUserInfo.isConnectedFlag() && connUserInfo.isRunCopyOnRemote() )
+                {
+                copyBtnActionRest( evt );
+                }
+            else
+                {
                 copyBtnActionSwing( evt );
-//                }
+                }
             }
         
     }//GEN-LAST:event_doCmdBtnActionPerformed

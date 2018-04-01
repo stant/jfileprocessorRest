@@ -77,12 +77,12 @@ public class JfpController {
         }
 
         @RequestMapping(value = JfpRestURIConstants.COPY, method = RequestMethod.POST)
-        public ResponseEntity<ResultsData> copy(@RequestBody CopyModel parm) {
-
-//            String response = "You entered SearchModel parm =" + parm;
-            ResultsData response = copyBtnAction( parm );
+        public ResponseEntity<ResultsData> copy(@RequestBody CopyModel copyModel) 
+            {
+            CopyFiles copyAction = new CopyFiles( copyModel );
+            ResultsData response = copyAction.doInBackground();
             return new ResponseEntity<>(response, HttpStatus.OK);
-        }
+            }
 
         @RequestMapping(value = JfpRestURIConstants.DELETE, method = RequestMethod.POST )
         public ResponseEntity<ResultsData> delete(@RequestBody DeleteModel deleteModel) 
@@ -166,12 +166,6 @@ public class JfpController {
         {
         SearchFiles searchAction = new SearchFiles();
         return searchAction.find( searchModel );
-        }
-
-    public ResultsData copyBtnAction( CopyModel copyModel )
-        {
-        CopyFiles copyAction = new CopyFiles();
-        return copyAction.run( copyModel );
         }
 
 //	public static void main(String[] args) throws Exception {

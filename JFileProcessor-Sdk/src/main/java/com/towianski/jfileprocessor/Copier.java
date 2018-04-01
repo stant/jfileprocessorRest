@@ -34,7 +34,8 @@ public class Copier extends SimpleFileVisitor<Path>
     private Path startingPath;
     private Path toPath;
     private Path fromPath;
-    private CopyOption[] copyOptions = null;
+//    private CopyOption[] copyOptions = null;
+    ArrayList<CopyOption> copyOptions = new ArrayList<CopyOption>();
     private long numFileMatches = 0;
     private long numFolderMatches = 0;
     private long numFileTests = 0;
@@ -60,7 +61,7 @@ public class Copier extends SimpleFileVisitor<Path>
 //       }           
 //   }
       
-    public Copier( Boolean isDoingCutFlag, CopyOption[] copyOptions, CopyFrameSwingWorker swingWorker )
+    public Copier( Boolean isDoingCutFlag, ArrayList<CopyOption> copyOptions, CopyFrameSwingWorker swingWorker )
     {
         this.isDoingCutFlag = isDoingCutFlag;
         this.copyOptions = copyOptions;
@@ -179,7 +180,7 @@ public class Copier extends SimpleFileVisitor<Path>
             }
         numTested++;
         numFileTests ++;
-        swingWorker.publish2( numTested );
+        if ( swingWorker != null )  swingWorker.publish2( numTested );
         
 //                    this.toPath.toRealPath().toString().startsWith( this.startingPath.toRealPath().toString() ) )
 //                    if ( this.toPath.toRealPath().toString().startsWith( this.startingPath.toRealPath().toString() ) )
@@ -210,7 +211,7 @@ public class Copier extends SimpleFileVisitor<Path>
 //            //copyOpts[0] = StandardCopyOption.REPLACE_EXISTING;
 //            copyOpts[1] = StandardCopyOption.COPY_ATTRIBUTES;
 //            //copyOpts[2] = LinkOption.NOFOLLOW_LINKS;
-            if ( copyOptions == null || copyOptions.length < 1 )
+            if ( copyOptions == null || copyOptions.size() < 1 )
                 {
 //                System.out.println("copy with default options. file =" + file + "=   to =" + toPath.resolve(startingPath.relativize( file ) ) + "=" );
                 Files.copy( file, toPathFile );
@@ -218,7 +219,7 @@ public class Copier extends SimpleFileVisitor<Path>
             else
                 {
 //                System.out.println("copy with sent options. file =" + file + "=   to =" + toPath.resolve(startingPath.relativize( file ) ) + "=" );
-                Files.copy( file, toPathFile, copyOptions );
+                Files.copy( file, toPathFile, copyOptions.toArray( new CopyOption[ copyOptions.size() ] ) );
                 }
             }
         catch ( java.nio.file.NoSuchFileException noSuchFileExc ) 
@@ -231,7 +232,7 @@ public class Copier extends SimpleFileVisitor<Path>
             {
             logger.log( Level.INFO, "CAUGHT WARNING  " + exAccessDenied.getClass().getSimpleName() + ": " + file );
             logger.log( Level.INFO, logger.getExceptionAsString( exAccessDenied ) );
-            swingWorker.setCloseWhenDoneFlag( false );
+            if ( swingWorker != null )  swingWorker.setCloseWhenDoneFlag( false );
             return FileVisitResult.CONTINUE;
             }
         catch ( java.nio.file.FileAlreadyExistsException faeExc )

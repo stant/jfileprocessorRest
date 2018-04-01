@@ -15,18 +15,18 @@ public class ConnUserInfo
     {
     String fromUri = "";
     String fromProtocol = "file://";
-    String fromUser = null;
-    String fromPassword = null;
-    String fromHost = null;
+    String fromUser = "";
+    String fromPassword = "";
+    String fromHost = "localhost";
     String fromSshPort = "22";
     int fromFilesysType = FILESYSTEM_POSIX;
     
     boolean connectedFlag = false;
     String ToUri = "";
     String toProtocol = "file://";
-    String toUser = null;
-    String toPassword = null;
-    String toHost = null;
+    String toUser = "";
+    String toPassword = "";
+    String toHost = "localhost";
     String toSshPort = "22";
     int toFilesysType = FILESYSTEM_POSIX;
 
@@ -86,6 +86,29 @@ public class ConnUserInfo
         this.toSshPort = toSshPort;
         }
 
+    public boolean isRunCopyOnLocal() {
+        return ! isRunCopyOnRemote();
+    }
+
+    public boolean isRunCopyOnRemote() {
+        return ( fromProtocol.equals( Constants.PATH_PROTOCOL_SFTP ) && toProtocol.equals( Constants.PATH_PROTOCOL_SFTP ) ) ? true : false;
+    }
+
+    public int getCopyProcotol() {
+        if ( fromHost.equals( toHost ) )
+            return Constants.COPY_PROTOCOL_LOCAL;
+        else if ( fromProtocol.equals( toProtocol ) )
+            return Constants.COPY_PROTOCOL_SFTP_GET;
+        else if ( fromProtocol.equals( Constants.PATH_PROTOCOL_FILE ) && toProtocol.equals( Constants.PATH_PROTOCOL_SFTP ) )
+            return Constants.COPY_PROTOCOL_SFTP_PUT;
+        else if ( fromProtocol.equals( Constants.PATH_PROTOCOL_SFTP ) && toProtocol.equals( Constants.PATH_PROTOCOL_FILE ) )
+            return Constants.COPY_PROTOCOL_SFTP_GET;
+
+        return Constants.COPY_PROTOCOL_LOCAL;
+    }
+
+    //----------------------
+    
     public boolean isConnectedFlag()
         {
         return connectedFlag;
@@ -94,10 +117,15 @@ public class ConnUserInfo
     public void setConnectedFlag(boolean connectedFlag)
         {
         this.connectedFlag = connectedFlag;
+        if ( ! connectedFlag )
+            {
+            setFrom( Constants.PATH_PROTOCOL_FILE, "", "", "localhost", "" );
+            setTo( Constants.PATH_PROTOCOL_FILE, "", "", "localhost", "" );
+            }
         }
 
     public String getFromUri() {
-        return "https://" + fromHost + ":8443";
+        return "https://" + fromHost + ":" + System.getProperty( "server.port", "8443" );
     }
 
     public void setFromUri(String fromUri) {
@@ -105,7 +133,7 @@ public class ConnUserInfo
     }
 
     public String getToUri() {
-        return "https://" + toHost + ":8443";
+        return "https://" + toHost + ":" + System.getProperty( "server.port", "8443" );
     }
 
     public void setToUri(String ToUri) {
@@ -235,14 +263,14 @@ public class ConnUserInfo
 
     public String toString()
         {
-        return "  fromUri =" + fromUri + "="
+        return  "  connectedFlag =" + connectedFlag + "="
++ "  fromUri =" + fromUri + "="
 + "  fromProtocol =" + fromProtocol + "="
 + "  fromUser =" + fromUser + "="
 + "  fromPassword =" + fromPassword + "="
 + "  fromHost =" + fromHost + "="
 + "  fromSshPort =" + fromSshPort + "="
 + "  fromFilesysType =" + fromFilesysType + "="
-+ "  connectedFlag =" + connectedFlag + "="
 + "  ToUri =" + ToUri + "="
 + "  toProtocol =" + toProtocol + "="
 + "  toUser =" + toUser + "="

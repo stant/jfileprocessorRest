@@ -21,7 +21,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.nio.file.CopyOption;
 import java.nio.file.FileVisitOption;
-import java.nio.file.Path;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -335,7 +334,7 @@ public class DeleteFrame extends javax.swing.JFrame {
     private void doCmdBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_doCmdBtnActionPerformed
         //JOptionPane.showConfirmDialog( null, "doCmdBtnActionPerformed =" + evt.getSource() );
 
-        if ( jFileFinderWin.getRmtConnectBtn().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) )
+        if ( connUserInfo.isConnectedFlag() )   //.getRmtConnectBtn().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) )
             {
 //            deleteBtnActionSwing( evt );
             deleteBtnActionRest( evt );

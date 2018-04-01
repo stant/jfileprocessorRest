@@ -9,13 +9,12 @@ import com.towianski.models.ConnUserInfo;
 import com.towianski.models.Constants;
 import com.towianski.models.ResultsData;
 import com.towianski.sshutils.Sftp;
-import java.io.File;
 
 import java.io.IOException;
 import java.nio.file.CopyOption;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.logging.Level;
@@ -24,23 +23,24 @@ import java.util.logging.Logger;
 
 
 public class JFileCopy //  implements Runnable 
-{
+    {
     Boolean cancelFlag = false;
     String processStatus = "";
     String message = "";
     Boolean cancelFillFlag = false;
     Boolean isDoingCutFlag = false;
     String startingPath = null;
-    ArrayList<Path> copyPaths = new ArrayList<Path>();
+    ArrayList<String> copyPaths = new ArrayList<String>();
     String toPath = null;
     Boolean dataSyncLock = false;
     Copier copier = null;
     CopierNonWalker copierNonWalker = null;
     EnumSet<FileVisitOption> fileVisitOptions = null;
-    private CopyOption[] copyOptions = null;
+//    private CopyOption[] copyOptions = null;
+    ArrayList<CopyOption> copyOptions = new ArrayList<CopyOption>();
     ConnUserInfo connUserInfo = null;
     
-    public JFileCopy( ConnUserInfo connUserInfo, Boolean isDoingCutFlag, String startingPath, ArrayList<Path> copyPaths, String toPath, EnumSet<FileVisitOption> fileVisitOptions, CopyOption[] copyOptions )
+    public JFileCopy( ConnUserInfo connUserInfo, Boolean isDoingCutFlag, String startingPath, ArrayList<String> copyPaths, String toPath, EnumSet<FileVisitOption> fileVisitOptions, ArrayList<CopyOption> copyOptions )
     {
 //        this.copyFrame = copyFrame;\
         this.connUserInfo = connUserInfo;
@@ -68,15 +68,16 @@ public class JFileCopy //  implements Runnable
         //System.out.println( "entered jfilecopy getResultsData()" );
         ResultsData resultsData = new ResultsData();
         try {
-            System.out.println( "JFileCopy.getResultsData() connUserInfo.isUsingSftp() =" + connUserInfo.isUsingSftp() + "=" );
-            if ( connUserInfo.isUsingSftp() )
+            System.out.println( "JFileCopy.getResultsData() connUserInfo.getCopyProcotol() =" + connUserInfo.getCopyProcotol() + "=" );
+//            if ( connUserInfo.isUsingSftp() )
+            if ( connUserInfo.getCopyProcotol() == Constants.COPY_PROTOCOL_LOCAL )
                 {
-                System.out.println("jFileCopy use copierNonWalker results" );
-                resultsData = new ResultsData( cancelFlag, copierNonWalker.getProcessStatus(), copierNonWalker.getMessage(), copierNonWalker.getNumTested(), copierNonWalker.getNumFileMatches(), copierNonWalker.getNumFolderMatches(), copierNonWalker.getNumFileTests(), copierNonWalker.getNumFolderTests() );
+                resultsData = new ResultsData( cancelFlag, copier.getProcessStatus(), copier.getMessage(), copier.getNumTested(), copier.getNumFileMatches(), copier.getNumFolderMatches(), copier.getNumFileTests(), copier.getNumFolderTests() );
                 }
             else
                 {
-                resultsData = new ResultsData( cancelFlag, copier.getProcessStatus(), copier.getMessage(), copier.getNumTested(), copier.getNumFileMatches(), copier.getNumFolderMatches(), copier.getNumFileTests(), copier.getNumFolderTests() );
+                System.out.println("jFileCopy use copierNonWalker results" );
+                resultsData = new ResultsData( cancelFlag, copierNonWalker.getProcessStatus(), copierNonWalker.getMessage(), copierNonWalker.getNumTested(), copierNonWalker.getNumFileMatches(), copierNonWalker.getNumFolderMatches(), copierNonWalker.getNumFileTests(), copierNonWalker.getNumFolderTests() );
                 }
             }
         catch( Exception ex )
@@ -97,7 +98,36 @@ public class JFileCopy //  implements Runnable
         System.out.println( "JFileCopy.run() toPath =" + toPath + "=" );
         System.out.println( "connUserInfo() =" + connUserInfo );
         
-        if ( connUserInfo.isUsingSftp() )
+        if ( connUserInfo.getCopyProcotol() == Constants.COPY_PROTOCOL_LOCAL )
+            {
+            copier = new Copier( isDoingCutFlag, copyOptions, swingWorker );
+            try {
+                synchronized( dataSyncLock ) 
+                    {
+                    cancelFlag = false;
+                    cancelFillFlag = false;
+                    for ( String pathstr : copyPaths )
+                        {
+                        System.out.println( "\n-------  new filewalk: copy path =" + pathstr + "=" );
+                        copier.setPaths( Paths.get( pathstr ), startingPath, toPath );
+                        Files.walkFileTree( Paths.get( pathstr ), fileVisitOptions, Integer.MAX_VALUE, copier );
+
+                        //break;  for testing to do just 1st path
+                        }
+                    }
+                } 
+            catch (IOException ex) 
+                {
+                Logger.getLogger(JFileCopy.class.getName()).log(Level.SEVERE, null, ex);
+                }
+        
+            copier.done();
+            if ( copier.getProcessStatus().equals( "" ) )
+                {
+                copier.setProcessStatus( CopyFrame.PROCESS_STATUS_COPY_COMPLETED );
+                }
+            }
+        else
             {
             Sftp sftp = null;
             if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_FILE ) &&
@@ -118,11 +148,11 @@ public class JFileCopy //  implements Runnable
                     {
                     cancelFlag = false;
                     cancelFillFlag = false;
-                    for ( Path fpath : copyPaths )
+                    for ( String pathstr : copyPaths )
                         {
-                        System.out.println( "\n-------  new CopierNonWalker: copy path =" + fpath + "=" );
-                        copierNonWalker.setPaths( fpath, startingPath, toPath, connUserInfo );
-                        copierNonWalker.copyRecursive( new File( fpath.toString() ) );  // toPath gets calced to targetPath from setPaths()
+                        System.out.println( "\n-------  new CopierNonWalker: copy path =" + pathstr + "=" );
+                        copierNonWalker.setPaths( Paths.get( pathstr ), startingPath, toPath, connUserInfo );
+                        copierNonWalker.copyRecursive( pathstr );  // toPath gets calced to targetPath from setPaths()
 
                         //break;  for testing to do just 1st path
                         }
@@ -140,35 +170,6 @@ public class JFileCopy //  implements Runnable
             finally
                 {
                 sftp.close();
-                }
-            }
-        else
-            {
-            copier = new Copier( isDoingCutFlag, copyOptions, swingWorker );
-            try {
-                synchronized( dataSyncLock ) 
-                    {
-                    cancelFlag = false;
-                    cancelFillFlag = false;
-                    for ( Path fpath : copyPaths )
-                        {
-                        System.out.println( "\n-------  new filewalk: copy path =" + fpath + "=" );
-                        copier.setPaths( fpath, startingPath, toPath );
-                        Files.walkFileTree( fpath, fileVisitOptions, Integer.MAX_VALUE, copier );
-
-                        //break;  for testing to do just 1st path
-                        }
-                    }
-                } 
-            catch (IOException ex) 
-                {
-                Logger.getLogger(JFileCopy.class.getName()).log(Level.SEVERE, null, ex);
-                }
-        
-            copier.done();
-            if ( copier.getProcessStatus().equals( "" ) )
-                {
-                copier.setProcessStatus( CopyFrame.PROCESS_STATUS_COPY_COMPLETED );
                 }
             }
         }

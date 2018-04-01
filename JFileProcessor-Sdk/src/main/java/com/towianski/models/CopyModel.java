@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import static com.towianski.models.Constants.FILESYSTEM_DOS;
 import java.nio.file.CopyOption;
 import java.nio.file.FileVisitOption;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.EnumSet;
 
@@ -24,13 +23,14 @@ public class CopyModel
     String searchBtnText = null;
     Boolean isDoingCutFlag = false;
     String startingPath = null;
-    ArrayList<Path> copyPaths = null;
+    ArrayList<String> copyPaths = null;
     String toPath = null;
 //    fileVisitOptions = null;
 //    copyOpts.toArray( new CopyOption[ copyOpts.size() ] ) );
     ArrayList<CopyOption> copyOpts = new ArrayList<CopyOption>();
     EnumSet<FileVisitOption> fileVisitOptions = EnumSet.noneOf( FileVisitOption.class );
-
+    ConnUserInfo connUserInfo = null;
+    
     public int getFilesysType()
         {
         return filesysType;
@@ -71,12 +71,12 @@ public class CopyModel
         this.startingPath = startingPath;
         }
 
-    public ArrayList<Path> getCopyPaths()
+    public ArrayList<String> getCopyPaths()
         {
         return copyPaths;
         }
 
-    public void setCopyPaths(ArrayList<Path> copyPaths)
+    public void setCopyPaths(ArrayList<String> copyPaths)
         {
         this.copyPaths = copyPaths;
         }
@@ -111,5 +111,13 @@ public class CopyModel
         {
         this.fileVisitOptions = fileVisitOptions;
         }
+
+    public ConnUserInfo getConnUserInfo() {
+        return connUserInfo;
+    }
+
+    public void setConnUserInfo(ConnUserInfo connUserInfo) {
+        this.connUserInfo = connUserInfo;
+    }
 
     }

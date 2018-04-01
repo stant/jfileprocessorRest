@@ -5,13 +5,15 @@
  */
 package com.towianski.jfileprocessor;
 
-import com.towianski.jfileprocess.actions.TomcatAppThread;
+import com.towianski.jfileprocess.actions.TomcatAppMonitorThread;
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.Constants;
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.utils.Rest;
+import java.awt.Color;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.SwingUtilities;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.web.client.RestTemplate;
 
@@ -26,15 +28,16 @@ public class RestServerSw {
  * and open the template in the editor.
  */
     ConnUserInfo connUserInfo = null;
+    JFileFinderWin jFileFinderWin = null;
+    boolean cancelFlag = false;
+    TomcatAppMonitorThread tomcatAppMonitorThread = null;
     Thread runThread = null;
-    Thread tomcatAppPostThread = null;
-    TomcatAppThread tomcatAppThread = null;
-    static long count = 0;
-    Object LockObj = "";
+    int count = 0;
     
-    public RestServerSw( ConnUserInfo connUserInfo )
+    public RestServerSw( ConnUserInfo connUserInfo, JFileFinderWin jFileFinderWin )
         {
         this.connUserInfo = connUserInfo;
+        this.jFileFinderWin = jFileFinderWin;
         }
 
     public RestTemplate timeoutRestTemplate( RestTemplateBuilder restTemplateBuilder )
@@ -44,46 +47,13 @@ public class RestServerSw {
                 .setReadTimeout(100)
                 .build();
         }
-    
-//    public RestTemplate sslNoCkRestTemplate()
-//        {
-//    TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
-//
-//SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
-//        .loadTrustMaterial(null, acceptingTrustStrategy)
-//        .build();
-//
-//SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext);
-//
-//CloseableHttpClient httpClient = HttpClients.custom()
-//        .setSSLSocketFactory(csf)
-//        .build();
-//
-//HttpComponentsClientHttpRequestFactory requestFactory =
-//        new HttpComponentsClientHttpRequestFactory();
-//
-//requestFactory.setHttpClient(httpClient);
-//
-//RestTemplate restTemplate = new RestTemplate(requestFactory);
 
-    public void cancelRestServer() 
+    public void cancelRestServer( boolean forceStop ) 
         {
         System.out.println( "enter RestServerSw.cancelRestServer()" );
-        if ( tomcatAppThread != null )
+        if ( tomcatAppMonitorThread != null )
             {
-            System.out.println( "RestServerSw.cancelRestServer() thread not null to make rest /jfp/sys/stop call" );
-            tomcatAppThread.cancelRestServer();
-            try
-                {
-//                RestTemplate restTemplate = timeoutRestTemplate( new RestTemplateBuilder() );
-                RestTemplate restTemplate = Rest.createNoHostVerifyShortTimeoutRestTemplate();
-                restTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.SYS_STOP, String.class );
-                } 
-            catch (Exception ex)
-                {
-                Logger.getLogger(RestServerSw.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            System.out.println( "RestServerSw.cancelRestServer() - after rest stop call" );
+            tomcatAppMonitorThread.cancelRestServer( forceStop );
             try
                 {
                 runThread.join();
@@ -91,24 +61,10 @@ public class RestServerSw {
                 } 
             catch (InterruptedException ex)
                 {
+                System.out.println( "RestServerSw.cancelRestServer() - ERROR on runThread.join()" );
+                ex.printStackTrace();
                 Logger.getLogger(RestServerSw.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            }
-        if ( tomcatAppPostThread != null )
-            {
-            System.out.println( "RestServerSw.cancelRestServer() - before tomcatAppPostThread.join()" );
-            if ( tomcatAppPostThread.isAlive() )
-                {
-                try
-                    {
-                    tomcatAppPostThread.join();
-                    } 
-                catch (InterruptedException ex)
-                    {
-                    Logger.getLogger(RestServerSw.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-            System.out.println( "RestServerSw.cancelRestServer() - after tomcatAppPostThread.join()" );
             }
         System.out.println( "exit RestServerSw.cancelRestServer()" );
         }
@@ -117,13 +73,14 @@ public class RestServerSw {
 //        if ( jFileFinderWin.searchBtn.getText().equalsIgnoreCase( Constants.PROCESS_STATUS_SEARCH_CANCELED ) )
         if ( 1 ==2  && ! connUserInfo.isConnectedFlag() )
             {
-            this.cancelRestServer();
+            this.cancelRestServer( false );
             }
         else
             {
             try {
                 System.out.println( "RestServerSw doCmdBtnActionPerformed start" );
-                System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+                System.out.println( "   on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+                System.out.println( "   connUserInfo = " + connUserInfo );
 //                RestServerSwingWorker = new TomcatAppSwingWorker( jFileFinderWin, this, startingPath );
 //                tomcatApp = RestServerSwingWorker.getTomcatApp();
 //                RestServerSwingWorker.execute();   //doInBackground();
@@ -135,12 +92,13 @@ public class RestServerSw {
 
                 if ( runThread != null && runThread.isAlive() )
                     {
-                    cancelRestServer();
+                    cancelRestServer( false );
                     }
-                tomcatAppThread = new TomcatAppThread( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost() );
-                runThread = newThread( tomcatAppThread );
-                runThread.setName( "tomcatAppThread=" + count++ );
+                tomcatAppMonitorThread = new TomcatAppMonitorThread( connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin, this );
+                runThread = newThread( tomcatAppMonitorThread );
+                runThread.setName( "tomcatAppMonitorThread=" + count++ );
                 runThread.start();
+
                 waitUntilStarted();
                 System.out.println( "RestServerSw after start watch thread, now exit actionPerformed" );
                 } 
@@ -151,33 +109,126 @@ public class RestServerSw {
             }
         }
 
+//    public void keepRunning() 
+//        {
+//        System.out.println( "entered RestServerSw keepRunning()" );
+//        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+//        RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
+//
+//        cancelFlag = false;
+//        int downTimes = 99;
+//        String response = null;
+//        boolean didFirstStart = false;
+//        
+//        while ( ! cancelFlag )
+//            {
+//            try
+//                {
+//                System.out.println( "RestServerSw.run() make rest /jfp/sys/ping call" );
+//                try
+//                    {
+//                    response = noHostVerifyRestTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.SYS_PING, String.class );
+//                    }
+//                catch( Exception exc )
+//                    {
+//                    System.out.println( "RestServerSw.run() ping threw Exception !!" );
+//                    response = null;
+//                    SwingUtilities.invokeLater(new Runnable() 
+//                        {
+//                        public void run() {
+//                            jFileFinderWin.setRmtConnectBtnBackground( Color.yellow );
+//                            }
+//                        });
+//                    exc.printStackTrace();
+//                    }
+//                System.out.println( "RestServerSw.run() ping response =" + response + "=" );
+//                if ( ! cancelFlag && 
+//                    ( response == null || ! response.equalsIgnoreCase( "RUNNING" ) ) )
+//                    {
+//                    if ( ++downTimes > 5 )
+//                        {
+//                tomcatAppMonitorThread = new TomcatAppMonitorThread( connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin, this );
+//                runThread = newThread( tomcatAppMonitorThread );
+//                runThread.setName( "tomcatAppMonitorThread=" + count++ );
+//                runThread.start();
+//                
+//                if ( tomcatAppMonitorThread.isStartedServer() )
+//                    {
+//                    Thread.sleep( 15000 );
+//                    }
+//                        SwingUtilities.invokeLater(new Runnable() 
+//                            {
+//                            public void run() {
+//                                jFileFinderWin.setRmtConnectBtnBackground( Color.yellow );
+//                                }
+//                            });
+//                        System.out.println( "after start remote jfp server" );
+////                        Thread.sleep( 30000 );
+//                        downTimes = 0;
+//                        }
+//                    else
+//                        {
+//                        Thread.sleep( 1000 );
+//                        }
+//                    }
+//                else if ( didFirstStart ) // is running or first start ?
+//                    {
+//                    Thread.sleep( 4000 );
+//                    }
+//                else if ( ! didFirstStart ) // is running or first start ?
+//                    {
+//                    // already running
+//                    downTimes = 0;
+//                    connUserInfo.setConnectedFlag( true );
+//                    SwingUtilities.invokeLater(new Runnable() 
+//                        {
+//                        public void run() {
+//                            jFileFinderWin.setRmtConnectBtnBackground( Color.green );
+//                            }
+//                        });
+//                    }
+//                }
+//            catch( InterruptedException intexc )
+//                {
+//                System.out.println( "RestServerSw sleep interrupted" );
+//                SwingUtilities.invokeLater(new Runnable() 
+//                    {
+//                    public void run() {
+//                        jFileFinderWin.setRmtConnectBtnBackground( Color.yellow );
+//                        }
+//                    });
+//                }
+//            catch( Exception exc )
+//                {
+//                SwingUtilities.invokeLater(new Runnable() 
+//                    {
+//                    public void run() {
+//                        jFileFinderWin.setRmtConnectBtnBackground( Color.yellow );
+//                        }
+//                    });
+//                exc.printStackTrace();
+//                }
+//            didFirstStart = true;
+//            } // while
+//        
+//        connUserInfo.setConnectedFlag( false );
+//        SwingUtilities.invokeLater(new Runnable() 
+//            {
+//            public void run() {
+//                jFileFinderWin.setRmtConnectBtnBackgroundReset();
+//                }
+//            });
+//        System.out.println( "Exiting RestServerSw run() - Done" );
+//        }
+
     public void waitUntilStarted()
         {
         System.out.println( "entered RestServerSw waitUntilStarted()" );
         System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
-
-//        RestTemplate restTemplate = new RestTemplate();
-
-//        CloseableHttpClient httpClient = HttpClients.custom().setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE).build();
-//        HttpComponentsClientHttpRequestFactory requestFactory =
-//                new HttpComponentsClientHttpRequestFactory();
-//
-//        requestFactory.setHttpClient(httpClient);
-//        RestTemplate noHostVerifyRestTemplate = new RestTemplate( requestFactory );
-
-        RestTemplate noHostVerifyRestTemplate = null;
-        try
-            {
-            System.out.println( "pause 12 seconds" );
-            Thread.sleep( 12000 );
-            noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
-            } 
-        catch (InterruptedException ex)
-            {
-            Logger.getLogger(RestServerSw.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
         
         boolean isRunning = false;
+        boolean firstWaitFlag = true;
         int response = -9;
         int waitCount = 15;
         
@@ -202,7 +253,16 @@ public class RestServerSw {
                 {
                 if ( response <0 || ! (response == Constants.FILESYSTEM_DOS || response == Constants.FILESYSTEM_POSIX) )
                     {
-                    Thread.sleep( 4000 );
+                    if ( firstWaitFlag )
+                        {
+                        firstWaitFlag = false;
+                        System.out.println( "pause 12 seconds first time. give longer pause to let server start." );
+                        Thread.sleep( 12000 );
+                        }
+                    else
+                        {
+                        Thread.sleep( 4000 );
+                        }
                     }
                 } 
             catch (InterruptedException ex)
@@ -212,13 +272,12 @@ public class RestServerSw {
 
             if ( --waitCount < 1 )  break;
             }
-        
         }
                 
     public Thread newThread(final Runnable r) 
         {
         Thread thread = new Thread( r );
-        thread.setName( "tomcatApp" + thread.getName());
+        thread.setName( "TomcatAppMonitorThread" + thread.getName());
         thread.setDaemon(true);
         return thread;
         }

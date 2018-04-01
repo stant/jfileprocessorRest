@@ -21,13 +21,13 @@ public class CopyFrameSwingWorker extends SwingWorker<ResultsData, Long> {
 
 //    JFileFinderWin jFileFinderWin = null;
     CopyFrame copyFrame = null;
-    ArrayList<Path> copyPaths = new ArrayList<Path>();
+    ArrayList<String> copyPaths = new ArrayList<String>();
     String toPath = null;
     JFileCopy jfilecopy = null;
     boolean showProgressFlag = true;
     boolean closeWhenDoneFlag = true;
 
-    public CopyFrameSwingWorker( CopyFrame copyFrame, JFileCopy jfilecopy, ArrayList<Path> copyPaths, String toPath, boolean showProgressFlag, boolean closeWhenDoneFlag )
+    public CopyFrameSwingWorker( CopyFrame copyFrame, JFileCopy jfilecopy, ArrayList<String> copyPaths, String toPath, boolean showProgressFlag, boolean closeWhenDoneFlag )
         {
 //        this.jFileFinderWin = jFileFinderWin;
         this.copyFrame = copyFrame;

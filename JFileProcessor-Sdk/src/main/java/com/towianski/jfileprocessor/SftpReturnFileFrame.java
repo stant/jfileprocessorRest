@@ -5,7 +5,7 @@
  */
 package com.towianski.jfileprocessor;
 
-import com.towianski.models.Constants;
+import com.towianski.models.ConnUserInfo;
 import com.towianski.sshutils.JschSftpUtils;
 import com.towianski.utils.MyLogger;
 import java.awt.event.ActionEvent;
@@ -25,7 +25,7 @@ public class SftpReturnFileFrame extends javax.swing.JFrame {
 //    private final static MyLogger logger = new MyLogger( Logger.getLogger( CopyFrame.class.getName() ) );
     private final static MyLogger logger = MyLogger.getLogger(SftpReturnFileFrame.class.getName() );
 
-    JFileFinderWin jFileFinderWin = null;
+    ConnUserInfo connUserInfo = null;
     String locFile = null;
     String user = null;
     String password = null;
@@ -35,11 +35,11 @@ public class SftpReturnFileFrame extends javax.swing.JFrame {
     /**
      * Creates new form CopyFrame
      */
-    public SftpReturnFileFrame( JFileFinderWin jFileFinderWin, String locFile, String user, String password, String rhost, String rmtFile )
+    public SftpReturnFileFrame( ConnUserInfo connUserInfo, String locFile, String user, String password, String rhost, String rmtFile )
         {
         initComponents();
         
-        this.jFileFinderWin = jFileFinderWin;
+        this.connUserInfo = connUserInfo;
         this.locFile = locFile;
         this.user = user;
         this.password = password;
@@ -137,7 +137,7 @@ public class SftpReturnFileFrame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void doCmdBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_doCmdBtnActionPerformed
-        if ( jFileFinderWin.getRmtConnectBtn().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) )
+        if ( connUserInfo.isConnectedFlag() )   //jFileFinderWin.getRmtConnectBtn().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) )
             {
             JschSftpUtils jschSftpUtils = new JschSftpUtils();
             jschSftpUtils.SftpPut( locFile, user, password, rhost, rmtFile );

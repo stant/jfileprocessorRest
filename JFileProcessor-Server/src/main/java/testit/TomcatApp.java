@@ -17,7 +17,6 @@ package testit;
  */
 
 import java.security.KeyManagementException;
-import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import javax.net.ssl.HostnameVerifier;
@@ -40,21 +39,13 @@ import javax.servlet.ServletContextListener;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLContexts;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.tomcat.util.descriptor.web.SecurityCollection;
 import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.web.client.RestTemplate;
 
 
 @Configuration
@@ -92,32 +83,33 @@ public class TomcatApp {
 
         };
     }
-	
-@Bean
-    public ServletWebServerFactory servletContainer() {
-        TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory() {
-            @Override
-            protected void postProcessContext(Context context) {
-                SecurityConstraint securityConstraint = new SecurityConstraint();
-                securityConstraint.setUserConstraint("CONFIDENTIAL");
-                SecurityCollection collection = new SecurityCollection();
-                collection.addPattern("/*");
-                securityConstraint.addCollection(collection);
-                context.addConstraint(securityConstraint);
-            }
-        };
-        tomcat.addAdditionalTomcatConnectors(redirectConnector());
-        return tomcat;
-    }
 
-    private Connector redirectConnector() {
-        Connector connector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
-        connector.setScheme("http");
-        connector.setPort(8080);
-        connector.setSecure(false);
-        connector.setRedirectPort(8443);
-        return connector;
-    }
+        // This will redirect http to https - skipping http
+//@Bean
+//    public ServletWebServerFactory servletContainer() {
+//        TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory() {
+//            @Override
+//            protected void postProcessContext(Context context) {
+//                SecurityConstraint securityConstraint = new SecurityConstraint();
+//                securityConstraint.setUserConstraint("CONFIDENTIAL");
+//                SecurityCollection collection = new SecurityCollection();
+//                collection.addPattern("/*");
+//                securityConstraint.addCollection(collection);
+//                context.addConstraint(securityConstraint);
+//            }
+//        };
+//        tomcat.addAdditionalTomcatConnectors(redirectConnector());
+//        return tomcat;
+//    }
+//
+//    private Connector redirectConnector() {
+//        Connector connector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
+//        connector.setScheme("http");
+//        connector.setPort(8080);
+//        connector.setSecure(false);
+//        connector.setRedirectPort(8443);
+//        return connector;
+//    }
     
 //    @Bean
 //    public UserDetailsService userDetailsService() throws Exception {
@@ -150,28 +142,28 @@ public class TomcatApp {
 //    	final static String KEYSTORE_PASSWORD = "s3cr3t";
 
 	static
-	{
-                System.out.println( "TomcatApp Static block" );
+            {
+            System.out.println( "TomcatApp Static block" );
 
-                disableSslVerification();
+            disableSslVerification();
                 
-//		System.setProperty("javax.net.ssl.trustStore", "/home/stan/sslkeystore");
-//		System.setProperty("javax.net.ssl.trustStorePassword", "jfp2018");
-		System.setProperty("javax.net.ssl.keyStore",  "/home/stan/sslkeystore");
-		System.setProperty("javax.net.ssl.keyStorePassword", "jfp2018");
+////		System.setProperty("javax.net.ssl.trustStore", "/home/stan/sslkeystore");
+////		System.setProperty("javax.net.ssl.trustStorePassword", "jfp2018");
+//		System.setProperty("javax.net.ssl.keyStore",  "/home/stan/sslkeystore");
+//		System.setProperty("javax.net.ssl.keyStorePassword", "jfp2018");
 
-		javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
-				new javax.net.ssl.HostnameVerifier() {
-
-					public boolean verify(String hostname,
-							javax.net.ssl.SSLSession sslSession) {
-                                                System.out.println( "TomcatApp setDefaultHostnameVerifier. verify()" );
+            javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
+                    new javax.net.ssl.HostnameVerifier() 
+                        {
+                        public boolean verify(String hostname,
+                                        javax.net.ssl.SSLSession sslSession) {
+                                System.out.println( "TomcatApp setDefaultHostnameVerifier. verify()" );
 //						if (hostname.equals("localhost")) {
-							return true;
+                                        return true;
 //						}
 //						return false;
-					}
-				});
+                        }
+                });
 	}
 
         

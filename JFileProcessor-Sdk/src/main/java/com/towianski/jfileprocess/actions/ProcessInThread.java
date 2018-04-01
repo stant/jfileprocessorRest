@@ -55,7 +55,7 @@ public class ProcessInThread {
         String className = "com.towianski.boot.StartApp";
         
 //        String[] runArgs = { javaBin, "-cp", classpath, className };
-        String[] runArgs = { javaBin, "-jar", classpath };
+        String[] runArgs = { javaBin, "-Dserver.port=" + System.getProperty( "server.port", "8443" ), "-jar", classpath };
         
         String[] allArgs = Arrays.copyOf( runArgs, runArgs.length + passArgs.length);
         System.arraycopy( passArgs, 0, allArgs, runArgs.length, passArgs.length );

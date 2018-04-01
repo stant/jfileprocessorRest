@@ -5,80 +5,54 @@
  */
 package com.towianski.jfileprocessor.restservices;
 
+import com.towianski.jfileprocess.actions.CloseWinOnTimer;
+import com.towianski.jfileprocessor.CopyFrame;
 import com.towianski.jfileprocessor.JFileCopy;
 import com.towianski.models.CopyModel;
 import com.towianski.models.ResultsData;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
- * @author stan
+ * @author Stan Towianski - June 2015
  */
-public class CopyFiles
+public class CopyFiles   //extends SwingWorker<ResultsData, Long> 
     {
 
-    public ResultsData run( CopyModel copyModel )
+//    JFileFinderWin jFileFinderWin = null;
+    CopyFrame copyFrame = null;
+    ArrayList<String> copyPaths = new ArrayList<String>();
+    String toPath = null;
+    JFileCopy jfilecopy = null;
+    boolean showProgressFlag = true;
+    boolean closeWhenDoneFlag = true;
+
+    public CopyFiles( CopyModel copyModel )
         {
+////        this.jFileFinderWin = jFileFinderWin;
+//        this.copyFrame = copyFrame;
+//        this.jfilecopy = jfilecopy;
+//        this.copyPaths = copyPaths;
+//        this.toPath = toPath;
+//        this.showProgressFlag = showProgressFlag;
+//        this.closeWhenDoneFlag = closeWhenDoneFlag;
+
+        jfilecopy = new JFileCopy( copyModel.getConnUserInfo(), copyModel.getIsDoingCutFlag(), copyModel.getStartingPath(), copyModel.getCopyPaths(), copyModel.getToPath(), copyModel.getFileVisitOptions(), copyModel.getCopyOpts() );
+        }
+
+//    @Override
+    public ResultsData doInBackground() {
 //        copyFrame.stopDirWatcher();
 //        copyFrame.setProcessStatus( copyFrame.PROCESS_STATUS_COPY_STARTED );
-        JFileCopy jfilecopy = new JFileCopy( copyModel.getIsDoingCutFlag(), copyModel.getStartingPath(), copyModel.getCopyPaths(), copyModel.getToPath(), copyModel.getFileVisitOptions(), copyModel.getCopyOpts() );
+        jfilecopy.run( null );
+        return jfilecopy.getResultsData();
+    }
 
-        jfilecopy.run();
-//        return jfilecopy.getResultsData();
-//    }
-//    @Override
-//    public void done() {
-        ResultsData resultsData = null;
-        try {
-            //System.out.println( "entered SwingWork.done()" );
-            resultsData = jfilecopy.getResultsData();
-            //Integer ii = get();
-            //System.out.println( "SwingWork.done() at 2  ii = " + ii );
-            //System.out.println( "SwingWork.done() got ans =" + matchedPathsList + "=" );
-//            NumberFormat numFormat = NumberFormat.getIntegerInstance();
-//            String partialMsg = "";
-////            String msg =  "Copied " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) + " folders out of " + numFormat.format( resultsData.getFilesVisited() );
-//            String msg =  "Copied " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) + " folders out of " + numFormat.format( resultsData.getFilesTested() ) + " files and " + numFormat.format( resultsData.getFoldersTested() ) + " folders.";
-////            System.out.println( "CopyFrameSwingWorker. got results msg =" + msg + "=" );
-//            if ( resultsData.getSearchWasCanceled() )
-//                {
-//                copyFrame.setProcessStatus( copyFrame.PROCESS_STATUS_COPY_CANCELED );
-//                msg = msg + " PARTIAL files list.";
-//                }
-//            else
-//                {
-//                copyFrame.setProcessStatus( copyFrame.PROCESS_STATUS_COPY_COMPLETED );
-//                System.out.println( "do new CloseWinOnTimer( copyFrame, 4000 )" );
-//                new CloseWinOnTimer( copyFrame, closeWhenDoneFlag ? 4000 : 0 ){{setRepeats(false);}}.start();
-//                }
-//
-//            if ( ! resultsData.getProcessStatus().trim().equals( "" ) )
-//                {
-//                copyFrame.setProcessStatus( resultsData.getProcessStatus() );
-//                }
-//            if ( ! resultsData.getMessage().trim().equals( "" ) )
-//                {
-//                msg = resultsData.getMessage();
-//                }
-//
-//            copyFrame.setMessage( msg + partialMsg );
-//            copyFrame.setResultsData( resultsData );
-//            
-//            // clean up
-//            resultsData = null;
-//            jfilecopy = null;
-//            copyPaths = null;            
-            
-//            copyFrame.callSearchBtnActionPerformed();
-            //System.out.println( "exiting SwingWork.done()" );
-            }
-        catch (Exception ignore) 
-            {}
-        return resultsData;
-        }
-    
-//    public void setCloseWhenDoneFlag(boolean closeWhenDoneFlag) {
-//        this.closeWhenDoneFlag = closeWhenDoneFlag;
-//    }
+    public void setCloseWhenDoneFlag(boolean closeWhenDoneFlag) {
+        this.closeWhenDoneFlag = closeWhenDoneFlag;
+    }
 
 //    public void publish2( Long num ) {
 //        if ( showProgressFlag )
@@ -87,12 +61,74 @@ public class CopyFiles
 //            }
 //        }
 
-//    protected void process(List<Long> numList ) {
-//        if ( showProgressFlag )
-//            {
-//            Long lastNum = numList.get( numList.size() - 1 );
-//            copyFrame.setMessage( "" + lastNum );
-//            }
-//        }
+    protected void process(List<Long> numList ) {
+        if ( showProgressFlag )
+            {
+            Long lastNum = numList.get( numList.size() - 1 );
+            copyFrame.setMessage( "" + lastNum );
+            }
+        }
      
-    }
+//    @Override
+    public ResultsData done()   // NOT ACTUALLY USED !
+        {
+        ResultsData resultsData = new ResultsData();
+        try {
+            System.out.println( "entered CopyFiles.done()" );
+//            ResultsData resultsData = get();
+            resultsData = doInBackground();
+            //Integer ii = get();
+            //System.out.println( "SwingWork.done() at 2  ii = " + ii );
+            //System.out.println( "SwingWork.done() got ans =" + matchedPathsList + "=" );
+            NumberFormat numFormat = NumberFormat.getIntegerInstance();
+            String partialMsg = "";
+//            String msg =  "Copied " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) + " folders out of " + numFormat.format( resultsData.getFilesVisited() );
+            String msg =  "Copied " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) + " folders out of " + numFormat.format( resultsData.getFilesTested() ) + " files and " + numFormat.format( resultsData.getFoldersTested() ) + " folders.";
+//            System.out.println( "CopyFrameSwingWorker. got results msg =" + msg + "=" );
+            if ( resultsData.getSearchWasCanceled() )
+                {
+                resultsData.setProcessStatus( copyFrame.PROCESS_STATUS_COPY_CANCELED );
+                msg = msg + " PARTIAL files list.";
+                }
+            else
+                {
+                resultsData.setProcessStatus( copyFrame.PROCESS_STATUS_COPY_COMPLETED );
+                System.out.println( "do new CloseWinOnTimer( copyFrame, 4000 )" );
+                new CloseWinOnTimer( copyFrame, closeWhenDoneFlag ? 4000 : 0 ){{setRepeats(false);}}.start();
+                }
+
+//            if ( ! resultsData.getProcessStatus().trim().equals( "" ) )
+//                {
+//                copyFrame.setProcessStatus( resultsData.getProcessStatus() );
+//                }
+//            if ( ! resultsData.getMessage().trim().equals( "" ) )
+//                {
+//                msg = resultsData.getMessage();
+//                }
+
+            resultsData.setMessage( msg + partialMsg );
+//            copyFrame.setResultsData( resultsData );
+            
+            // clean up
+//            resultsData = null;
+            jfilecopy = null;
+            copyPaths = null;            
+            
+//            copyFrame.callSearchBtnActionPerformed();
+            //System.out.println( "exiting SwingWork.done()" );
+            }
+        catch ( Exception e ) 
+            {
+            String why = null;
+            Throwable cause = e.getCause();
+            if (cause != null) {
+                why = cause.getMessage();
+            } else {
+                why = e.getMessage();
+            }
+            System.out.println( "Error in CopyFiles(): " + why);
+            e.printStackTrace();
+            }
+        return resultsData;
+    }    
+}
