@@ -226,7 +226,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
 //        SpinnerListModel andOrSpinModel = new CyclingSpinnerListModel( andOrSpinModelList );
 //        jSpinner1 = new javax.swing.JSpinner( andOrSpinModel );        
 
-    jSplitPane2.setDividerLocation( 180 );  // 150
+    jSplitPane2.setDividerLocation( 150 );  // 150
     System.out.println( "at start jSplitPane1.getLastDividerLocation() =" + jSplitPane1.getLastDividerLocation() );
     readInBookmarks();
     
@@ -1689,7 +1689,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
+    private void initComponents()
+    {
         java.awt.GridBagConstraints gridBagConstraints;
 
         buttonGroup1 = new javax.swing.ButtonGroup();
@@ -1727,21 +1728,25 @@ public class JFileFinderWin extends javax.swing.JFrame {
         deletePath = new javax.swing.JButton();
         jPanel10 = new javax.swing.JPanel();
         topPanel = new javax.swing.JPanel();
-        jSplitPane1 = new javax.swing.JSplitPane();
-        jPanel6 = new javax.swing.JPanel();
         jLabel17 = new javax.swing.JLabel();
         rmtUser = new javax.swing.JTextField();
         jLabel18 = new javax.swing.JLabel();
+        rmtPasswd = new javax.swing.JTextField();
         jLabel19 = new javax.swing.JLabel();
         rmtHost = new javax.swing.JTextField();
         rmtConnectBtn = new javax.swing.JButton();
+        rmtDisconnectBtn = new javax.swing.JButton();
+        rmtForceDisconnectBtn = new javax.swing.JButton();
+        jLabel20 = new javax.swing.JLabel();
+        rmtSshPort = new javax.swing.JTextField();
+        jSplitPane1 = new javax.swing.JSplitPane();
+        jPanel6 = new javax.swing.JPanel();
         fileMgrMode = new javax.swing.JCheckBox();
         startingFolder = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
         leftHistory = new javax.swing.JButton();
         rightHistory = new javax.swing.JButton();
-        rmtForceDisconnectBtn = new javax.swing.JButton();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jPanel5 = new javax.swing.JPanel();
         showHiddenFilesFlag = new javax.swing.JCheckBox();
@@ -1799,15 +1804,12 @@ public class JFileFinderWin extends javax.swing.JFrame {
         stopFileWatchTb = new javax.swing.JToggleButton();
         fileWatchLbl = new javax.swing.JLabel();
         dumpThreadListToLog = new javax.swing.JButton();
-        rmtPasswd = new javax.swing.JTextField();
-        rmtSshPort = new javax.swing.JTextField();
-        jLabel20 = new javax.swing.JLabel();
-        rmtDisconnectBtn = new javax.swing.JButton();
         jPanel7 = new javax.swing.JPanel();
         searchBtn = new javax.swing.JButton();
         jLabel3 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        filesTbl = new javax.swing.JTable() {
+        filesTbl = new javax.swing.JTable()
+        {
             public void changeSelection(    int row, int column, boolean toggle, boolean extend)
             {
                 super.changeSelection(row, column, toggle, extend);
@@ -1828,56 +1830,70 @@ public class JFileFinderWin extends javax.swing.JFrame {
             botPanel = new javax.swing.JPanel();
 
             Copy.setText("Copy   (Ctrl-C)");
-            Copy.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            Copy.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     CopyActionPerformed(evt);
                 }
             });
             jPopupMenu1.add(Copy);
 
             Cut.setText("Cut   (Ctrl-X)");
-            Cut.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            Cut.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     CutActionPerformed(evt);
                 }
             });
             jPopupMenu1.add(Cut);
 
             Paste.setText("Paste   (Ctrl-P)");
-            Paste.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            Paste.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     PasteActionPerformed(evt);
                 }
             });
             jPopupMenu1.add(Paste);
 
             Delete.setText("Delete   (Del or fn-Del)");
-            Delete.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            Delete.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     DeleteActionPerformed(evt);
                 }
             });
             jPopupMenu1.add(Delete);
 
             Rename.setText("Rename   (F2)");
-            Rename.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            Rename.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     RenameActionPerformed(evt);
                 }
             });
             jPopupMenu1.add(Rename);
 
             NewFolder.setText("New Folder   (Ctrl-N)");
-            NewFolder.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            NewFolder.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     NewFolderActionPerformed(evt);
                 }
             });
             jPopupMenu1.add(NewFolder);
 
             copyFilename.setText("Copy Filename to Clipboard");
-            copyFilename.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            copyFilename.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     copyFilenameActionPerformed(evt);
                 }
             });
@@ -1885,32 +1901,40 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPopupMenu1.add(jSeparator1);
 
             Edit.setText("Edit File");
-            Edit.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            Edit.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     EditActionPerformed(evt);
                 }
             });
             jPopupMenu1.add(Edit);
 
             openFile.setText("Open File");
-            openFile.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            openFile.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     openFileActionPerformed(evt);
                 }
             });
             jPopupMenu1.add(openFile);
 
             openFolderOfFiles.setText("Open Folder Containing File(s)");
-            openFolderOfFiles.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            openFolderOfFiles.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     openFolderOfFilesActionPerformed(evt);
                 }
             });
             jPopupMenu1.add(openFolderOfFiles);
 
             startCmdWin.setText("Open Terminal here");
-            startCmdWin.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            startCmdWin.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     startCmdWinActionPerformed(evt);
                 }
             });
@@ -1918,32 +1942,40 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPopupMenu1.add(jSeparator2);
 
             savePathsToFile.setText("Save Paths to File");
-            savePathsToFile.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            savePathsToFile.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     savePathsToFileActionPerformed(evt);
                 }
             });
             jPopupMenu1.add(savePathsToFile);
 
             openListWindow.setText("Open List Window");
-            openListWindow.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            openListWindow.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     openListWindowActionPerformed(evt);
                 }
             });
             jPopupMenu1.add(openListWindow);
 
             readFileIntoListWin.setText("Read File into List Window");
-            readFileIntoListWin.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            readFileIntoListWin.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     readFileIntoListWinActionPerformed(evt);
                 }
             });
             jPopupMenu1.add(readFileIntoListWin);
 
             openCodeWin.setText("Open Code Window");
-            openCodeWin.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            openCodeWin.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     openCodeWinActionPerformed(evt);
                 }
             });
@@ -1951,20 +1983,26 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPopupMenu1.add(jSeparator3);
 
             scriptsMenu.setText("Scripts");
-            scriptsMenu.addMenuListener(new javax.swing.event.MenuListener() {
-                public void menuCanceled(javax.swing.event.MenuEvent evt) {
-                }
-                public void menuDeselected(javax.swing.event.MenuEvent evt) {
-                }
-                public void menuSelected(javax.swing.event.MenuEvent evt) {
+            scriptsMenu.addMenuListener(new javax.swing.event.MenuListener()
+            {
+                public void menuSelected(javax.swing.event.MenuEvent evt)
+                {
                     scriptsMenuMenuSelected(evt);
+                }
+                public void menuDeselected(javax.swing.event.MenuEvent evt)
+                {
+                }
+                public void menuCanceled(javax.swing.event.MenuEvent evt)
+                {
                 }
             });
             jPopupMenu1.add(scriptsMenu);
 
             Paste1.setText("Paste   (Ctrl-P)");
-            Paste1.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            Paste1.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     Paste1ActionPerformed(evt);
                 }
             });
@@ -1974,44 +2012,55 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPopupMenu2.add(NewFolder1);
 
             startCmdWin1.setText("Open Terminal here");
-            startCmdWin1.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            startCmdWin1.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     startCmdWin1ActionPerformed(evt);
                 }
             });
             jPopupMenu2.add(startCmdWin1);
 
             savePathsToFile1.setText("Save Paths to File");
-            savePathsToFile1.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            savePathsToFile1.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     savePathsToFile1ActionPerformed(evt);
                 }
             });
             jPopupMenu2.add(savePathsToFile1);
 
             setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-            setTitle("JFileProcessor v1.5.11 - Stan Towianski  (c) 2015-2017");
+            setTitle("JFileProcessor v1.6.0 - Stan Towianski  (c) 2015-2017");
             setIconImage(Toolkit.getDefaultToolkit().getImage( JFileFinderWin.class.getResource("/icons/jfp.png") ));
-            addWindowListener(new java.awt.event.WindowAdapter() {
-                public void windowClosing(java.awt.event.WindowEvent evt) {
+            setMinimumSize(new java.awt.Dimension(800, 179));
+            setPreferredSize(new java.awt.Dimension(970, 502));
+            addWindowListener(new java.awt.event.WindowAdapter()
+            {
+                public void windowClosing(java.awt.event.WindowEvent evt)
+                {
                     formWindowClosing(evt);
                 }
-                public void windowOpened(java.awt.event.WindowEvent evt) {
+                public void windowOpened(java.awt.event.WindowEvent evt)
+                {
                     formWindowOpened(evt);
                 }
             });
 
             replaceSavePathPanel.setMinimumSize(new java.awt.Dimension(0, 0));
-            replaceSavePathPanel.setPreferredSize(new java.awt.Dimension(100, 500));
+            replaceSavePathPanel.setPreferredSize(new java.awt.Dimension(150, 500));
             replaceSavePathPanel.setLayout(new java.awt.GridBagLayout());
 
             savedPathsListScrollPane.setMinimumSize(new java.awt.Dimension(0, 0));
-            savedPathsListScrollPane.setPreferredSize(new java.awt.Dimension(100, 500));
+            savedPathsListScrollPane.setPreferredSize(new java.awt.Dimension(150, 500));
 
             savedPathsList.setModel(new DefaultListModel() );
             savedPathsList.setPreferredSize(new java.awt.Dimension(100, 500));
-            savedPathsList.addMouseListener(new java.awt.event.MouseAdapter() {
-                public void mouseClicked(java.awt.event.MouseEvent evt) {
+            savedPathsList.addMouseListener(new java.awt.event.MouseAdapter()
+            {
+                public void mouseClicked(java.awt.event.MouseEvent evt)
+                {
                     savedPathsListMouseClicked(evt);
                 }
             });
@@ -2031,8 +2080,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
             addPath.setMaximumSize(new java.awt.Dimension(31, 23));
             addPath.setMinimumSize(new java.awt.Dimension(0, 0));
             addPath.setPreferredSize(new java.awt.Dimension(31, 23));
-            addPath.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            addPath.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     addPathActionPerformed(evt);
                 }
             });
@@ -2043,8 +2094,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
             deletePath.setMaximumSize(new java.awt.Dimension(75, 23));
             deletePath.setMinimumSize(new java.awt.Dimension(0, 0));
             deletePath.setPreferredSize(new java.awt.Dimension(75, 23));
-            deletePath.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            deletePath.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     deletePathActionPerformed(evt);
                 }
             });
@@ -2054,103 +2107,133 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
             jPanel10.setPreferredSize(new java.awt.Dimension(800, 500));
             jPanel10.setLayout(new java.awt.BorderLayout());
-            jPanel10.add(topPanel, java.awt.BorderLayout.PAGE_START);
 
-            jSplitPane1.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
-
-            jPanel6.setMinimumSize(new java.awt.Dimension(400, 55));
-            jPanel6.setPreferredSize(new java.awt.Dimension(400, 155));
-            jPanel6.setLayout(new java.awt.GridBagLayout());
-
+            jLabel17.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
             jLabel17.setText("Remote User");
-            jLabel17.setMaximumSize(new java.awt.Dimension(74, 25));
-            jLabel17.setMinimumSize(new java.awt.Dimension(74, 25));
-            jLabel17.setPreferredSize(new java.awt.Dimension(74, 25));
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 3;
-            gridBagConstraints.gridy = 0;
-            gridBagConstraints.gridwidth = 2;
-            gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
-            jPanel6.add(jLabel17, gridBagConstraints);
+            jLabel17.setMaximumSize(new java.awt.Dimension(100, 25));
+            jLabel17.setMinimumSize(new java.awt.Dimension(100, 25));
+            jLabel17.setPreferredSize(new java.awt.Dimension(100, 25));
+            topPanel.add(jLabel17);
 
             rmtUser.setText("stan");
             rmtUser.setMargin(new java.awt.Insets(2, 7, 0, 0));
             rmtUser.setMaximumSize(new java.awt.Dimension(74, 25));
             rmtUser.setMinimumSize(new java.awt.Dimension(74, 25));
             rmtUser.setPreferredSize(new java.awt.Dimension(74, 25));
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 5;
-            gridBagConstraints.gridy = 0;
-            gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
-            jPanel6.add(rmtUser, gridBagConstraints);
+            topPanel.add(rmtUser);
 
+            jLabel18.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
             jLabel18.setText("Pass");
             jLabel18.setMaximumSize(new java.awt.Dimension(50, 25));
             jLabel18.setMinimumSize(new java.awt.Dimension(50, 25));
             jLabel18.setPreferredSize(new java.awt.Dimension(50, 25));
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 7;
-            gridBagConstraints.gridy = 0;
-            gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
-            gridBagConstraints.insets = new java.awt.Insets(0, 7, 0, 0);
-            jPanel6.add(jLabel18, gridBagConstraints);
+            topPanel.add(jLabel18);
 
+            rmtPasswd.setText("yearly55");
+            rmtPasswd.setMaximumSize(new java.awt.Dimension(80, 25));
+            rmtPasswd.setMinimumSize(new java.awt.Dimension(80, 25));
+            rmtPasswd.setPreferredSize(new java.awt.Dimension(80, 25));
+            topPanel.add(rmtPasswd);
+
+            jLabel19.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
             jLabel19.setText("Host");
             jLabel19.setMaximumSize(new java.awt.Dimension(50, 25));
             jLabel19.setMinimumSize(new java.awt.Dimension(50, 25));
             jLabel19.setPreferredSize(new java.awt.Dimension(50, 25));
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 9;
-            gridBagConstraints.gridy = 0;
-            gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
-            gridBagConstraints.insets = new java.awt.Insets(0, 7, 0, 0);
-            jPanel6.add(jLabel19, gridBagConstraints);
+            topPanel.add(jLabel19);
 
-            rmtHost.setText("192.168.152.101");
+            rmtHost.setText("192.168.56.103");
             rmtHost.setMargin(new java.awt.Insets(2, 7, 0, 0));
-            rmtHost.setMaximumSize(new java.awt.Dimension(120, 25));
-            rmtHost.setMinimumSize(new java.awt.Dimension(120, 25));
-            rmtHost.setPreferredSize(new java.awt.Dimension(120, 25));
-            rmtHost.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            rmtHost.setMaximumSize(new java.awt.Dimension(150, 25));
+            rmtHost.setMinimumSize(new java.awt.Dimension(150, 25));
+            rmtHost.setPreferredSize(new java.awt.Dimension(150, 25));
+            rmtHost.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     rmtHostActionPerformed(evt);
                 }
             });
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 10;
-            gridBagConstraints.gridy = 0;
-            gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
-            jPanel6.add(rmtHost, gridBagConstraints);
+            topPanel.add(rmtHost);
 
             rmtConnectBtn.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/yellow/connect-icon-16.png"))); // NOI18N
             rmtConnectBtn.setMaximumSize(new java.awt.Dimension(45, 25));
             rmtConnectBtn.setMinimumSize(new java.awt.Dimension(45, 25));
             rmtConnectBtn.setPreferredSize(new java.awt.Dimension(45, 25));
-            rmtConnectBtn.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            rmtConnectBtn.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     rmtConnectBtnActionPerformed(evt);
                 }
             });
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 11;
-            gridBagConstraints.gridy = 0;
-            gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
-            gridBagConstraints.insets = new java.awt.Insets(0, 7, 0, 0);
-            jPanel6.add(rmtConnectBtn, gridBagConstraints);
+            topPanel.add(rmtConnectBtn);
+
+            rmtDisconnectBtn.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/yellow/disconnect-icon-16.png"))); // NOI18N
+            rmtDisconnectBtn.setMaximumSize(new java.awt.Dimension(45, 25));
+            rmtDisconnectBtn.setMinimumSize(new java.awt.Dimension(45, 25));
+            rmtDisconnectBtn.setPreferredSize(new java.awt.Dimension(45, 25));
+            rmtDisconnectBtn.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
+                    rmtDisconnectBtnActionPerformed(evt);
+                }
+            });
+            topPanel.add(rmtDisconnectBtn);
+
+            rmtForceDisconnectBtn.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/yellow/disconnect-icon-16.png"))); // NOI18N
+            rmtForceDisconnectBtn.setText("!!");
+            rmtForceDisconnectBtn.setMaximumSize(new java.awt.Dimension(65, 25));
+            rmtForceDisconnectBtn.setMinimumSize(new java.awt.Dimension(65, 25));
+            rmtForceDisconnectBtn.setPreferredSize(new java.awt.Dimension(65, 25));
+            rmtForceDisconnectBtn.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
+                    rmtForceDisconnectBtnActionPerformed(evt);
+                }
+            });
+            topPanel.add(rmtForceDisconnectBtn);
+
+            jLabel20.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+            jLabel20.setText("SSH Port");
+            topPanel.add(jLabel20);
+
+            rmtSshPort.setText("22");
+            rmtSshPort.setMinimumSize(new java.awt.Dimension(30, 25));
+            rmtSshPort.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
+                    rmtSshPortActionPerformed(evt);
+                }
+            });
+            topPanel.add(rmtSshPort);
+
+            jPanel10.add(topPanel, java.awt.BorderLayout.PAGE_START);
+
+            jSplitPane1.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
+
+            jPanel6.setMinimumSize(new java.awt.Dimension(400, 30));
+            jPanel6.setPreferredSize(new java.awt.Dimension(400, 155));
+            jPanel6.setLayout(new java.awt.GridBagLayout());
 
             fileMgrMode.setText("File Mgr Mode");
-            fileMgrMode.setMaximumSize(new java.awt.Dimension(74, 25));
-            fileMgrMode.setMinimumSize(new java.awt.Dimension(74, 25));
-            fileMgrMode.setPreferredSize(new java.awt.Dimension(74, 25));
-            fileMgrMode.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            fileMgrMode.setMaximumSize(new java.awt.Dimension(125, 25));
+            fileMgrMode.setMinimumSize(new java.awt.Dimension(125, 25));
+            fileMgrMode.setPreferredSize(new java.awt.Dimension(125, 25));
+            fileMgrMode.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     fileMgrModeActionPerformed(evt);
                 }
             });
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridx = 0;
             gridBagConstraints.gridy = 0;
-            gridBagConstraints.gridwidth = 2;
+            gridBagConstraints.gridwidth = 3;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
             jPanel6.add(fileMgrMode, gridBagConstraints);
 
@@ -2158,20 +2241,24 @@ public class JFileFinderWin extends javax.swing.JFrame {
             startingFolder.setMaximumSize(new java.awt.Dimension(200, 26));
             startingFolder.setMinimumSize(new java.awt.Dimension(200, 26));
             startingFolder.setPreferredSize(new java.awt.Dimension(200, 26));
-            startingFolder.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            startingFolder.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     startingFolderActionPerformed(evt);
                 }
             });
-            startingFolder.addKeyListener(new java.awt.event.KeyAdapter() {
-                public void keyTyped(java.awt.event.KeyEvent evt) {
+            startingFolder.addKeyListener(new java.awt.event.KeyAdapter()
+            {
+                public void keyTyped(java.awt.event.KeyEvent evt)
+                {
                     startingFolderKeyTyped(evt);
                 }
             });
             gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 4;
-            gridBagConstraints.gridy = 1;
-            gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+            gridBagConstraints.gridx = 6;
+            gridBagConstraints.gridy = 0;
+            gridBagConstraints.gridwidth = 3;
             gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
             gridBagConstraints.weightx = 0.5;
@@ -2183,8 +2270,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jLabel1.setMinimumSize(new java.awt.Dimension(50, 27));
             jLabel1.setPreferredSize(new java.awt.Dimension(50, 27));
             gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 1;
-            gridBagConstraints.gridy = 1;
+            gridBagConstraints.gridx = 3;
+            gridBagConstraints.gridy = 0;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
             gridBagConstraints.insets = new java.awt.Insets(5, 12, 5, 0);
             jPanel6.add(jLabel1, gridBagConstraints);
@@ -2195,14 +2282,16 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jButton1.setMaximumSize(new java.awt.Dimension(40, 23));
             jButton1.setMinimumSize(new java.awt.Dimension(40, 23));
             jButton1.setPreferredSize(new java.awt.Dimension(40, 23));
-            jButton1.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            jButton1.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     jButton1ActionPerformed(evt);
                 }
             });
             gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 0;
-            gridBagConstraints.gridy = 1;
+            gridBagConstraints.gridx = 9;
+            gridBagConstraints.gridy = 0;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
             gridBagConstraints.insets = new java.awt.Insets(5, 10, 0, 0);
             jPanel6.add(jButton1, gridBagConstraints);
@@ -2210,47 +2299,34 @@ public class JFileFinderWin extends javax.swing.JFrame {
             leftHistory.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/Actions-go-previous-icon-16.png"))); // NOI18N
             leftHistory.setMinimumSize(new java.awt.Dimension(30, 23));
             leftHistory.setPreferredSize(new java.awt.Dimension(30, 23));
-            leftHistory.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            leftHistory.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     leftHistoryActionPerformed(evt);
                 }
             });
             gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 2;
-            gridBagConstraints.gridy = 1;
+            gridBagConstraints.gridx = 4;
+            gridBagConstraints.gridy = 0;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
             jPanel6.add(leftHistory, gridBagConstraints);
 
             rightHistory.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/Actions-go-next-icon-16.png"))); // NOI18N
             rightHistory.setMinimumSize(new java.awt.Dimension(30, 23));
             rightHistory.setPreferredSize(new java.awt.Dimension(30, 23));
-            rightHistory.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            rightHistory.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     rightHistoryActionPerformed(evt);
                 }
             });
             gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 3;
-            gridBagConstraints.gridy = 1;
+            gridBagConstraints.gridx = 5;
+            gridBagConstraints.gridy = 0;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
             jPanel6.add(rightHistory, gridBagConstraints);
-
-            rmtForceDisconnectBtn.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/yellow/disconnect-icon-16.png"))); // NOI18N
-            rmtForceDisconnectBtn.setText("Force");
-            rmtForceDisconnectBtn.setMaximumSize(new java.awt.Dimension(65, 25));
-            rmtForceDisconnectBtn.setMinimumSize(new java.awt.Dimension(65, 25));
-            rmtForceDisconnectBtn.setPreferredSize(new java.awt.Dimension(65, 25));
-            rmtForceDisconnectBtn.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    rmtForceDisconnectBtnActionPerformed(evt);
-                }
-            });
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 13;
-            gridBagConstraints.gridy = 0;
-            gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-            gridBagConstraints.insets = new java.awt.Insets(0, 4, 0, 0);
-            jPanel6.add(rmtForceDisconnectBtn, gridBagConstraints);
 
             jTabbedPane1.setMinimumSize(new java.awt.Dimension(390, 0));
             jTabbedPane1.setPreferredSize(new java.awt.Dimension(500, 400));
@@ -2264,8 +2340,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPanel5.add(showHiddenFilesFlag, gridBagConstraints);
 
             showJustFilenameFlag.setText("Show Just Filename");
-            showJustFilenameFlag.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            showJustFilenameFlag.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     showJustFilenameFlagActionPerformed(evt);
                 }
             });
@@ -2302,8 +2380,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPanel5.add(jLabel10, gridBagConstraints);
 
             showOwnerFlag.setText("Show Owner");
-            showOwnerFlag.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            showOwnerFlag.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     showOwnerFlagActionPerformed(evt);
                 }
             });
@@ -2343,8 +2423,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
             buttonGroup2.add(tabsLogicOrBtn);
             tabsLogicOrBtn.setText("Or");
-            tabsLogicOrBtn.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            tabsLogicOrBtn.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     tabsLogicOrBtnActionPerformed(evt);
                 }
             });
@@ -2369,8 +2451,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
             useGlobPattern.setMaximumSize(new java.awt.Dimension(900, 23));
             useGlobPattern.setMinimumSize(new java.awt.Dimension(90, 23));
             useGlobPattern.setPreferredSize(new java.awt.Dimension(110, 23));
-            useGlobPattern.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            useGlobPattern.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     useGlobPatternActionPerformed(evt);
                 }
             });
@@ -2397,8 +2481,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
             filePattern.setMinimumSize(new java.awt.Dimension(150, 26));
             filePattern.setPreferredSize(new java.awt.Dimension(300, 26));
-            filePattern.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            filePattern.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     filePatternActionPerformed(evt);
                 }
             });
@@ -2422,8 +2508,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
             maxDepth.setMinimumSize(new java.awt.Dimension(40, 23));
             maxDepth.setPreferredSize(new java.awt.Dimension(40, 23));
-            maxDepth.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            maxDepth.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     maxDepthActionPerformed(evt);
                 }
             });
@@ -2450,8 +2538,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
             minDepth.setMinimumSize(new java.awt.Dimension(40, 23));
             minDepth.setPreferredSize(new java.awt.Dimension(40, 23));
-            minDepth.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            minDepth.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     minDepthActionPerformed(evt);
                 }
             });
@@ -2506,8 +2596,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
             dateLogicOp.setFocusable(false);
             dateLogicOp.setMinimumSize(new java.awt.Dimension(29, 25));
             dateLogicOp.setPreferredSize(new java.awt.Dimension(70, 25));
-            dateLogicOp.addChangeListener(new javax.swing.event.ChangeListener() {
-                public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            dateLogicOp.addChangeListener(new javax.swing.event.ChangeListener()
+            {
+                public void stateChanged(javax.swing.event.ChangeEvent evt)
+                {
                     dateLogicOpStateChanged(evt);
                 }
             });
@@ -2537,8 +2629,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPanel2.add(date2, gridBagConstraints);
 
             jButton2.setText("clear");
-            jButton2.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            jButton2.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     jButton2ActionPerformed(evt);
                 }
             });
@@ -2555,8 +2649,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
             size2.setEnabled(false);
             size2.setMinimumSize(new java.awt.Dimension(6, 23));
             size2.setPreferredSize(new java.awt.Dimension(110, 23));
-            size2.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            size2.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     size2ActionPerformed(evt);
                 }
             });
@@ -2596,8 +2692,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
             sizeLogicOp.setFocusable(false);
             sizeLogicOp.setMinimumSize(new java.awt.Dimension(29, 25));
             sizeLogicOp.setPreferredSize(new java.awt.Dimension(70, 25));
-            sizeLogicOp.addChangeListener(new javax.swing.event.ChangeListener() {
-                public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            sizeLogicOp.addChangeListener(new javax.swing.event.ChangeListener()
+            {
+                public void stateChanged(javax.swing.event.ChangeEvent evt)
+                {
                     sizeLogicOpStateChanged(evt);
                 }
             });
@@ -2642,8 +2740,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPanel3.add(stopFileCount, gridBagConstraints);
 
             stopFolderCount.setPreferredSize(new java.awt.Dimension(110, 23));
-            stopFolderCount.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            stopFolderCount.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     stopFolderCountActionPerformed(evt);
                 }
             });
@@ -2676,8 +2776,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
             startConsoleCmd.setMinimumSize(new java.awt.Dimension(300, 24));
             startConsoleCmd.setPreferredSize(new java.awt.Dimension(300, 24));
-            startConsoleCmd.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            startConsoleCmd.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     startConsoleCmdActionPerformed(evt);
                 }
             });
@@ -2708,13 +2810,17 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
             stdOutFile.setMinimumSize(new java.awt.Dimension(300, 24));
             stdOutFile.setPreferredSize(new java.awt.Dimension(300, 24));
-            stdOutFile.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            stdOutFile.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     stdOutFileActionPerformed(evt);
                 }
             });
-            stdOutFile.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
-                public void propertyChange(java.beans.PropertyChangeEvent evt) {
+            stdOutFile.addPropertyChangeListener(new java.beans.PropertyChangeListener()
+            {
+                public void propertyChange(java.beans.PropertyChangeEvent evt)
+                {
                     stdOutFilePropertyChange(evt);
                 }
             });
@@ -2727,8 +2833,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
             stdErrFile.setMinimumSize(new java.awt.Dimension(300, 24));
             stdErrFile.setPreferredSize(new java.awt.Dimension(300, 24));
-            stdErrFile.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
-                public void propertyChange(java.beans.PropertyChangeEvent evt) {
+            stdErrFile.addPropertyChangeListener(new java.beans.PropertyChangeListener()
+            {
+                public void propertyChange(java.beans.PropertyChangeEvent evt)
+                {
                     stdErrFilePropertyChange(evt);
                 }
             });
@@ -2740,8 +2848,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPanel9.add(stdErrFile, gridBagConstraints);
 
             stopFileWatchTb.setText("Auto");
-            stopFileWatchTb.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            stopFileWatchTb.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     stopFileWatchTbActionPerformed(evt);
                 }
             });
@@ -2761,8 +2871,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPanel9.add(fileWatchLbl, gridBagConstraints);
 
             dumpThreadListToLog.setText("Dump Thread List to Log");
-            dumpThreadListToLog.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            dumpThreadListToLog.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     dumpThreadListToLogActionPerformed(evt);
                 }
             });
@@ -2785,53 +2897,6 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPanel6.add(jTabbedPane1, gridBagConstraints);
             jTabbedPane1.getAccessibleContext().setAccessibleName("Name");
 
-            rmtPasswd.setText("yearly55");
-            rmtPasswd.setMaximumSize(new java.awt.Dimension(80, 25));
-            rmtPasswd.setMinimumSize(new java.awt.Dimension(80, 25));
-            rmtPasswd.setPreferredSize(new java.awt.Dimension(80, 25));
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 8;
-            gridBagConstraints.gridy = 0;
-            jPanel6.add(rmtPasswd, gridBagConstraints);
-
-            rmtSshPort.setText("22");
-            rmtSshPort.setMinimumSize(new java.awt.Dimension(30, 25));
-            rmtSshPort.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    rmtSshPortActionPerformed(evt);
-                }
-            });
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 15;
-            gridBagConstraints.gridy = 0;
-            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-            gridBagConstraints.insets = new java.awt.Insets(0, 7, 0, 5);
-            jPanel6.add(rmtSshPort, gridBagConstraints);
-
-            jLabel20.setText("SSH Port");
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 14;
-            gridBagConstraints.gridy = 0;
-            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-            gridBagConstraints.insets = new java.awt.Insets(0, 7, 0, 0);
-            jPanel6.add(jLabel20, gridBagConstraints);
-
-            rmtDisconnectBtn.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/yellow/disconnect-icon-16.png"))); // NOI18N
-            rmtDisconnectBtn.setMaximumSize(new java.awt.Dimension(45, 25));
-            rmtDisconnectBtn.setMinimumSize(new java.awt.Dimension(45, 25));
-            rmtDisconnectBtn.setPreferredSize(new java.awt.Dimension(45, 25));
-            rmtDisconnectBtn.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    rmtDisconnectBtnActionPerformed(evt);
-                }
-            });
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 12;
-            gridBagConstraints.gridy = 0;
-            gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-            gridBagConstraints.insets = new java.awt.Insets(0, 4, 0, 0);
-            jPanel6.add(rmtDisconnectBtn, gridBagConstraints);
-
             jSplitPane1.setLeftComponent(jPanel6);
 
             jPanel7.setMinimumSize(new java.awt.Dimension(300, 90));
@@ -2839,8 +2904,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPanel7.setLayout(new java.awt.GridBagLayout());
 
             searchBtn.setText("Search");
-            searchBtn.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            searchBtn.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     searchBtnActionPerformed(evt);
                 }
             });
@@ -2859,13 +2926,15 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPanel7.add(jLabel3, gridBagConstraints);
 
             filesTbl.setModel(new javax.swing.table.DefaultTableModel(
-                new Object [][] {
+                new Object [][]
+                {
                     {null, null, null, null},
                     {null, null, null, null},
                     {null, null, null, null},
                     {null, null, null, null}
                 },
-                new String [] {
+                new String []
+                {
                     "Title 1", "Title 2", "Title 3", "Title 4"
                 }
             ));
@@ -2914,8 +2983,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
             upFolder.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/yellow/Folder-Upload-icon-16.png"))); // NOI18N
             upFolder.setText("Up");
-            upFolder.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            upFolder.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     upFolderActionPerformed(evt);
                 }
             });
@@ -2926,8 +2997,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPanel7.add(upFolder, gridBagConstraints);
 
             countBtn.setText("Count");
-            countBtn.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            countBtn.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     countBtnActionPerformed(evt);
                 }
             });
@@ -2938,8 +3011,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPanel7.add(countBtn, gridBagConstraints);
 
             logsBtn.setText("logs");
-            logsBtn.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            logsBtn.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     logsBtnActionPerformed(evt);
                 }
             });
@@ -2953,8 +3028,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
             jButton3.setText("test ssh");
             jButton3.setEnabled(false);
-            jButton3.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            jButton3.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
                     jButton3ActionPerformed(evt);
                 }
             });
@@ -3181,7 +3258,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
             if ( jSplitPane1.getLastDividerLocation() < 0 )
                 {
-                jSplitPane1.setDividerLocation( 180 );  // 150
+                jSplitPane1.setDividerLocation( 150 );  // 150
                 }
             else
                 {

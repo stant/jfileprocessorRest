@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -211,6 +212,10 @@ public class Copier extends SimpleFileVisitor<Path>
 //            //copyOpts[0] = StandardCopyOption.REPLACE_EXISTING;
 //            copyOpts[1] = StandardCopyOption.COPY_ATTRIBUTES;
 //            //copyOpts[2] = LinkOption.NOFOLLOW_LINKS;
+            System.out.println( "copyOptions size =" + copyOptions.size() + "=" );
+            System.out.println( "copyOptions contains? StandardCopyOption.REPLACE_EXISTING =" + copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) + "=" );
+            System.out.println( "copyOptions.toArray( new CopyOption[ copyOptions.size() ] ) =" + copyOptions.toArray( new CopyOption[ copyOptions.size() ] ) + "=" );
+
             if ( copyOptions == null || copyOptions.size() < 1 )
                 {
 //                System.out.println("copy with default options. file =" + file + "=   to =" + toPath.resolve(startingPath.relativize( file ) ) + "=" );

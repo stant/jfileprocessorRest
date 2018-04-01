@@ -140,8 +140,7 @@ public class JFileCopy //  implements Runnable
                 {
                 sftp = new Sftp( connUserInfo.getFromUser(), connUserInfo.getFromPassword(), connUserInfo.getFromHost() );
                 }
-            com.jcraft.jsch.ChannelSftp chanSftp = sftp.getSftp();
-            copierNonWalker = new CopierNonWalker( connUserInfo, chanSftp, isDoingCutFlag, copyOptions, swingWorker );
+            copierNonWalker = new CopierNonWalker( connUserInfo, sftp, isDoingCutFlag, copyOptions, swingWorker );
 
             try {
                 synchronized( dataSyncLock ) 

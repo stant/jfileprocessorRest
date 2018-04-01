@@ -45,7 +45,7 @@ public class JschSftpUtils
 public void sftpIfDiff( String locFile, String user, String password, String rhost, String rmtFile )
     {
     Sftp sftp = new Sftp( user, password, rhost );
-    com.jcraft.jsch.ChannelSftp chanSftp = sftp.getSftp();
+    com.jcraft.jsch.ChannelSftp chanSftp = sftp.getChanSftp();
     boolean doCopy = false;
     
     try {
@@ -363,7 +363,7 @@ public void copyTo( Session session, String lfile, String rfile )
 public void SftpPut( String locFile, String user, String password, String rhost, String rmtFile )
     {
     Sftp sftp = new Sftp( user, password, rhost );
-    com.jcraft.jsch.ChannelSftp chanSftp = sftp.getSftp();
+    com.jcraft.jsch.ChannelSftp chanSftp = sftp.getChanSftp();
 
     try {
         //    sftpChannel.put("C:/source/local/path/file.zip", "/target/remote/path/file.zip");
@@ -378,7 +378,7 @@ public void SftpPut( String locFile, String user, String password, String rhost,
 public void SftpGet( String rmtFile, String user, String password, String rhost, String locFile )
     {
     Sftp sftp = new Sftp( user, password, rhost );
-    com.jcraft.jsch.ChannelSftp chanSftp = sftp.getSftp();
+    com.jcraft.jsch.ChannelSftp chanSftp = sftp.getChanSftp();
 
     try {
         System.out.println( "SftpGet rmtFile =" + rmtFile + "=   to locFile =" + locFile + "=" );
@@ -393,7 +393,7 @@ public void SftpGet( String rmtFile, String user, String password, String rhost,
 public long getRemoteFileSize( String lfile, String user, String password, String rhost, String filename )
     {
     Sftp sftp = new Sftp( user, password, rhost );
-    com.jcraft.jsch.ChannelSftp chanSftp = sftp.getSftp();
+    com.jcraft.jsch.ChannelSftp chanSftp = sftp.getChanSftp();
     SftpATTRS attrs = null;
     long fsize = -1;
     

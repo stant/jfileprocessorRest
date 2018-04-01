@@ -12,6 +12,7 @@ import com.jcraft.jsch.SftpException;
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.Constants;
 import com.towianski.sshutils.JschSftpUtils;
+import com.towianski.sshutils.Sftp;
 import com.towianski.utils.MyLogger;
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,6 +62,7 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
     HashMap<Path,Path> renameDirHm = new HashMap<Path,Path>();
     CopyFrameSwingWorker swingWorker = null;
     ConnUserInfo connUserInfo = null;
+    Sftp sftp = null;
     com.jcraft.jsch.ChannelSftp chanSftp = null;
     JschSftpUtils jschSftpUtils = new JschSftpUtils();
     Session jschSession = null;
@@ -75,10 +78,11 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
 //       }           
 //   }
       
-    public CopierNonWalker( ConnUserInfo connUserInfo, com.jcraft.jsch.ChannelSftp chanSftp, Boolean isDoingCutFlag, ArrayList<CopyOption> copyOptions, CopyFrameSwingWorker swingWorker )
+    public CopierNonWalker( ConnUserInfo connUserInfo, Sftp sftp, Boolean isDoingCutFlag, ArrayList<CopyOption> copyOptions, CopyFrameSwingWorker swingWorker )
     {
         this.connUserInfo = connUserInfo;
-        this.chanSftp = chanSftp;
+        this.sftp = sftp;
+        chanSftp = sftp.getChanSftp();
         this.isDoingCutFlag = isDoingCutFlag;
         this.copyOptions = copyOptions;
         this.swingWorker = swingWorker;
@@ -123,6 +127,7 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
         System.out.println( "relativize =" + this.startingPath.relativize( fromPath ) + "=" );
         System.out.println( "toPath =" + toPath + "   resolve targetPath =" + targetPath + "=" );
 
+        targetPathStr = targetPath.toString();
         if ( connUserInfo.getFromFilesysType() != connUserInfo.getToFilesysType() )
             {
             if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_FILE ) &&
@@ -143,6 +148,7 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
                       connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_FILE )  )
                 {
                     // I would want to change sourceStr and since I am looking at target here it does not need to be changed.
+                System.out.println( "targetPathStr from local path =" + targetPathStr + "=" );
 //                if ( connUserInfo.getFromFilesysType() == Constants.FILESYSTEM_POSIX )
 //                    {
 //                    targetPathStr = targetPath.toString().replace( "\\", "/" );
@@ -161,41 +167,44 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
                 }
             }
         
-        /** FIXXX when doing remote !
-        try {
-            while ( fromPath.toFile().isDirectory() &&
-                    this.toPath.toRealPath().equals( this.startingPath.toRealPath() ) )
-                {
-                if ( ! this.startingPath.equals( this.toPath ) )
-                    {
-                    ans = JOptionPane.showInputDialog( "Folder exists (probably through a symbolic link). New name: ", fromPath.getFileName() );
-                    }
-                else
-                    {
-                    ans = JOptionPane.showInputDialog( "Folder exists. New name: ", fromPath.getFileName() );
-                    }
-                if ( ans == null )
-                    {
-                    cancelFlag = true;
-                    break;
-                    }
-                this.toPath = Paths.get( fromParent + toPathFileSeparator + ans );
-                this.startingPath = fromPath;
-                System.out.println( "new this.startingPath =" + this.startingPath + "   this.fromPath =" + this.fromPath + "=" );
-                System.out.println( "new this.toPath =" + this.toPath + "=" );
-                }
-            
-            if ( this.toPath.toRealPath().startsWith( this.fromPath.toRealPath() ) )
-                {
-                JOptionPane.showMessageDialog( null, "You cannot copy a parent into a child folder." );
-                cancelFlag = true;
-                }
-            } 
-        catch (IOException ex) 
+        // FIXXX when doing remote !
+        if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_FILE ) &&
+             connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_FILE )  )
             {
-            Logger.getLogger(CopierNonWalker.class.getName()).log(Level.SEVERE, null, ex);
+            try {
+                while ( fromPath.toFile().isDirectory() &&
+                        this.toPath.toRealPath().equals( this.startingPath.toRealPath() ) )
+                    {
+                    if ( ! this.startingPath.equals( this.toPath ) )
+                        {
+                        ans = JOptionPane.showInputDialog( "Folder exists (probably through a symbolic link). New name: ", fromPath.getFileName() );
+                        }
+                    else
+                        {
+                        ans = JOptionPane.showInputDialog( "Folder exists. New name: ", fromPath.getFileName() );
+                        }
+                    if ( ans == null )
+                        {
+                        cancelFlag = true;
+                        break;
+                        }
+                    this.toPath = Paths.get( fromParent + toPathFileSeparator + ans );
+                    this.startingPath = fromPath;
+                    System.out.println( "new this.startingPath =" + this.startingPath + "   this.fromPath =" + this.fromPath + "=" );
+                    System.out.println( "new this.toPath =" + this.toPath + "=" );
+                    }
+
+                if ( this.toPath.toRealPath().startsWith( this.fromPath.toRealPath() ) )
+                    {
+                    JOptionPane.showMessageDialog( null, "You cannot copy a parent into a child folder." );
+                    cancelFlag = true;
+                    }
+                } 
+            catch (IOException ex) 
+                {
+                Logger.getLogger(CopierNonWalker.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
-            * **/
     }
 
     public void cancelSearch()
@@ -334,6 +343,8 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
 
     public void copyRecursive( String sourceFolder ) throws IOException
         {
+        System.out.println( "copyRecursive connUserInfo =" + connUserInfo + "=" );
+        System.out.println( "copyRecursive sourceFolder =" + sourceFolder + "=   to targetPathStr =" + targetPathStr + "=" );
         if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_FILE ) &&
              connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_SFTP )  )
             {
@@ -440,7 +451,28 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
             try {
                 //    sftpChannel.put("C:/source/local/path/file.zip", "/target/remote/path/file.zip");
                 System.out.println( "SftpPut locFile =" + sourceFolder + "=   to rmtFile =" + destinationFolderStr + "=" );
-                chanSftp.put( sourceFolderStr, destinationFolderStr );
+                
+//                System.out.println( "copyOptions contains? StandardCopyOption.REPLACE_EXISTING =" + copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) + "=" );
+                    
+                if ( sftp.exists( destinationFolderStr ) )
+                    {
+                    if ( copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) )
+                        {
+                        chanSftp.put( sourceFolderStr, destinationFolderStr );
+                        System.out.println( "File replaced :: " + destinationFolderStr );
+                        numFileMatches++;
+                        }
+                    else
+                        {
+                        System.out.println( "File Not replaced/copied :: " + destinationFolderStr );
+                        }
+                    }
+                else
+                    {
+                    chanSftp.put( sourceFolderStr, destinationFolderStr );
+                    System.out.println( "File copied :: " + destinationFolderStr );
+                    numFileMatches++;
+                    }
 //                jschSftpUtils.copyTo()  does not work with spaces in names off-hand.
 //                jschSftpUtils.copyTo( jschSession, sourceFolderStr, destinationFolderStr );
                 System.out.println( "at 8" );
@@ -455,8 +487,6 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
                 {
                 java.util.logging.Logger.getLogger(JschSftpUtils.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            numFileMatches++;
-            System.out.println("File copied :: " + destinationFolderStr );
             }
         swingWorker.publish2( numTested );
     }
@@ -564,7 +594,25 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
             try {
                 //    sftpChannel.put("C:/source/local/path/file.zip", "/target/remote/path/file.zip");
                 System.out.println( "SftpGet locFile =" + sourceFolder + "=   to rmtFile =" + destinationFolderStr + "=" );
-                chanSftp.get( sourceFolderStr, destinationFolderStr );
+                if ( Files.exists( Paths.get( destinationFolderStr ) ) )
+                    {
+                    if ( copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) )
+                        {
+                        chanSftp.get( sourceFolderStr, destinationFolderStr );
+                        numFileMatches++;
+                        System.out.println( "File replaced :: " + destinationFolderStr );
+                        }
+                    else
+                        {
+                        System.out.println( "File Not replaced/copied :: " + destinationFolderStr );
+                        }
+                    }
+                else
+                    {
+                    chanSftp.get( sourceFolderStr, destinationFolderStr );
+                    numFileMatches++;
+                    System.out.println( "File copied :: " + destinationFolderStr );
+                    }
 //                jschSftpUtils.copyTo()  does not work with spaces in names off-hand.
 //                jschSftpUtils.copyTo( jschSession, sourceFolderStr, destinationFolderStr );
                 System.out.println( "at 8" );
@@ -580,8 +628,6 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
                 {
                 java.util.logging.Logger.getLogger(JschSftpUtils.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            numFileMatches++;
-            System.out.println("File copied :: " + destinationFolderStr );
             }
         swingWorker.publish2( numTested );
     }

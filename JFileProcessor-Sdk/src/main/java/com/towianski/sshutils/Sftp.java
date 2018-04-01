@@ -8,7 +8,12 @@ package com.towianski.sshutils;
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpATTRS;
+import com.jcraft.jsch.SftpException;
+import com.towianski.jfileprocessor.CopierNonWalker;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 /**
@@ -17,7 +22,7 @@ import javax.swing.JOptionPane;
  */
 public class Sftp {
     JSch jsch=new JSch();  
-    com.jcraft.jsch.ChannelSftp sftp = null;
+    com.jcraft.jsch.ChannelSftp chanSftp = null;
     Channel channel = null;
     Session session = null;
             
@@ -60,7 +65,7 @@ public Sftp( String user, String password, String rhost )
 
         channel=session.openChannel( "sftp" );
         channel.connect();
-        sftp = (com.jcraft.jsch.ChannelSftp)channel;
+        chanSftp = (com.jcraft.jsch.ChannelSftp)channel;
         System.out.println( "Sftp done" );
         }
     catch(Exception e)
@@ -69,9 +74,36 @@ public Sftp( String user, String password, String rhost )
         }
     }
     
-public com.jcraft.jsch.ChannelSftp getSftp()
+public com.jcraft.jsch.ChannelSftp getChanSftp()
     {
-    return sftp;
+    return chanSftp;
+    }
+    
+public boolean exists( String path )
+    {
+    try {
+        chanSftp.stat( path );
+        } 
+    catch (SftpException ex)
+        {
+        Logger.getLogger(CopierNonWalker.class.getName()).log(Level.SEVERE, null, ex);
+        return false;
+        }
+    return true;
+    }
+    
+public boolean isDir( String path )
+    {
+    SftpATTRS sourceSftpAttrs = null;
+    try {
+        sourceSftpAttrs = chanSftp.stat( path );
+        } 
+    catch (SftpException ex)
+        {
+        Logger.getLogger(CopierNonWalker.class.getName()).log(Level.SEVERE, null, ex);
+        return false;
+        }
+    return sourceSftpAttrs.isDir();
     }
     
 public void close()

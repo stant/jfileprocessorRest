@@ -25,7 +25,6 @@ import java.nio.file.StandardCopyOption;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.logging.Level;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
