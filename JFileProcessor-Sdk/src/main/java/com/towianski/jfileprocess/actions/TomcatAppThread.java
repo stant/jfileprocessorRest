@@ -50,7 +50,7 @@ public class TomcatAppThread implements Runnable
             System.out.println( "TomcatAppThread.cancelRestServer() thread not null to make rest /jfp/sys/stop call" );
             try
                 {
-                RestTemplate restTemplate = Rest.createNoHostVerifyShortTimeoutRestTemplate();
+                RestTemplate restTemplate = Rest.createNoHostVerifyRestTemplate();
                 restTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.SYS_STOP, String.class );
                 } 
             catch (Exception ex)

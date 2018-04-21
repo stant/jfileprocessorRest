@@ -72,20 +72,28 @@ public class DeleteFrameSwingWorker extends SwingWorker<ResultsData, Long> {
                 msg = resultsData.getMessage();
                 }
             
-            if ( ! resultsData.getProcessStatus().equals( "" ) )
-                {
-                deleteFrame.setProcessStatus( resultsData.getProcessStatus() );
-                }
-            else if ( resultsData.getSearchWasCanceled() )
+            if ( resultsData.getSearchWasCanceled() )
                 {
                 deleteFrame.setProcessStatus( deleteFrame.PROCESS_STATUS_DELETE_CANCELED );
                 msg = msg + " PARTIAL files list.";
                 }
             else
                 {
-                deleteFrame.setProcessStatus( deleteFrame.PROCESS_STATUS_DELETE_COMPLETED );
-                new CloseWinOnTimer( deleteFrame, closeWhenDoneFlag ? 4000 : 0 ){{setRepeats(false);}}.start();
+                if ( resultsData.getProcessStatus().equals( deleteFrame.PROCESS_STATUS_DELETE_COMPLETED ) )
+                    {
+                    new CloseWinOnTimer( deleteFrame, closeWhenDoneFlag ? 4000 : 0 ){{setRepeats(false);}}.start();
+                    }
                 }
+
+            if ( ! resultsData.getProcessStatus().trim().equals( "" ) )
+                {
+                deleteFrame.setProcessStatus( resultsData.getProcessStatus() );
+                }
+            if ( ! resultsData.getMessage().trim().equals( "" ) )
+                {
+                msg = resultsData.getMessage();
+                }
+
             deleteFrame.setMessage( msg + partialMsg );
             deleteFrame.setResultsData( resultsData );
             

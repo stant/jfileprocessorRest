@@ -114,7 +114,7 @@ public class TomcatApp {
 //    @Bean
 //    public UserDetailsService userDetailsService() throws Exception {
 //        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
-//        manager.createUser(User.withUsername("stan").password("peace")
+//        manager.createUser(User.withUsername("").password("")
 //            .roles("USER").build());
 //        return manager;
 //    }
@@ -125,7 +125,7 @@ public class TomcatApp {
 //
 //                @Override
 //                protected void configure(AuthenticationManagerBuilder auth) throws Exception {		
-//                        auth.inMemoryAuthentication().withUser("stan").password("peace").roles("ACTUATOR");
+//                        auth.inMemoryAuthentication().withUser("").password("").roles("ACTUATOR");
 //                }
 //        }
     

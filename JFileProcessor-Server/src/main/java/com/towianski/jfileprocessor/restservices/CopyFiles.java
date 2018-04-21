@@ -10,6 +10,7 @@ import com.towianski.jfileprocessor.CopyFrame;
 import com.towianski.jfileprocessor.JFileCopy;
 import com.towianski.models.CopyModel;
 import com.towianski.models.ResultsData;
+import com.towianski.utils.Rest;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +40,8 @@ public class CopyFiles   //extends SwingWorker<ResultsData, Long>
 //        this.showProgressFlag = showProgressFlag;
 //        this.closeWhenDoneFlag = closeWhenDoneFlag;
 
-        jfilecopy = new JFileCopy( copyModel.getConnUserInfo(), copyModel.getIsDoingCutFlag(), copyModel.getStartingPath(), copyModel.getCopyPaths(), copyModel.getToPath(), copyModel.getFileVisitOptions(), copyModel.getCopyOpts() );
+        Rest.saveObjectToFile( "CopyModel.json", copyModel );
+        jfilecopy = new JFileCopy( copyModel.getConnUserInfo(), copyModel.isDoingCutFlag(), copyModel.getStartingPath(), copyModel.getCopyPaths(), copyModel.getToPath(), copyModel.getFileVisitOptions(), copyModel.getCopyOpts() );
         }
 
 //    @Override

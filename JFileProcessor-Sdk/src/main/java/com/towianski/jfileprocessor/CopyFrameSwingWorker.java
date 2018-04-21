@@ -7,7 +7,6 @@ package com.towianski.jfileprocessor;
 
 import com.towianski.jfileprocess.actions.CloseWinOnTimer;
 import com.towianski.models.ResultsData;
-import java.nio.file.Path;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -85,9 +84,11 @@ public class CopyFrameSwingWorker extends SwingWorker<ResultsData, Long> {
                 }
             else
                 {
-                copyFrame.setProcessStatus( copyFrame.PROCESS_STATUS_COPY_COMPLETED );
-                System.out.println( "do new CloseWinOnTimer( copyFrame, 4000 )" );
-                new CloseWinOnTimer( copyFrame, closeWhenDoneFlag ? 4000 : 0 ){{setRepeats(false);}}.start();
+                if ( resultsData.getProcessStatus().equals( copyFrame.PROCESS_STATUS_COPY_COMPLETED ) )
+                    {
+                    System.out.println( "do new CloseWinOnTimer( copyFrame, 4000 )" );
+                    new CloseWinOnTimer( copyFrame, closeWhenDoneFlag ? 4000 : 0 ){{setRepeats(false);}}.start();
+                    }
                 }
 
             if ( ! resultsData.getProcessStatus().trim().equals( "" ) )

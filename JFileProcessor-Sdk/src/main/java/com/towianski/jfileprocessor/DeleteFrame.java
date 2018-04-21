@@ -9,7 +9,6 @@ import com.towianski.jfileprocess.actions.CloseWinOnTimer;
 import static com.towianski.jfileprocessor.DeleteFrame.PROCESS_STATUS_DELETE_CANCEL;
 import static com.towianski.jfileprocessor.DeleteFrame.PROCESS_STATUS_DELETE_CANCELED;
 import com.towianski.models.ConnUserInfo;
-import com.towianski.models.Constants;
 import com.towianski.models.DeleteModel;
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.models.ResultsData;
@@ -401,20 +400,27 @@ public class DeleteFrame extends javax.swing.JFrame {
                 msg = resultsData.getMessage();
                 }
             
-            if ( ! resultsData.getProcessStatus().equals( "" ) )
-                {
-                this.setProcessStatus( resultsData.getProcessStatus() );
-                }
-            else if ( resultsData.getSearchWasCanceled() )
+            if ( resultsData.getSearchWasCanceled() )
                 {
                 this.setProcessStatus( this.PROCESS_STATUS_DELETE_CANCELED );
                 msg = msg + " PARTIAL files list.";
                 }
             else
                 {
-                this.setProcessStatus( this.PROCESS_STATUS_DELETE_COMPLETED );
-                new CloseWinOnTimer( this, closeWhenDoneTb.isEnabled() ? 4000 : 0 ){{setRepeats(false);}}.start();
+                if ( resultsData.getProcessStatus().equals( this.PROCESS_STATUS_DELETE_COMPLETED ) )
+                    {
+                    new CloseWinOnTimer( this, closeWhenDoneTb.isSelected()? 4000 : 0 ){{setRepeats(false);}}.start();
+                    }
                 }
+            if ( ! resultsData.getProcessStatus().trim().equals( "" ) )
+                {
+                setProcessStatus( resultsData.getProcessStatus() );
+                }
+            if ( ! resultsData.getMessage().trim().equals( "" ) )
+                {
+                msg = resultsData.getMessage();
+                }
+
             this.setMessage( msg + partialMsg );
             this.setResultsData( resultsData );
             

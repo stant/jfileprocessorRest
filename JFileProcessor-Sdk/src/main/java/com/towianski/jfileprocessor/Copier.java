@@ -311,6 +311,7 @@ public class Copier extends SimpleFileVisitor<Path>
              numFolderMatches != numFolderTests )
             {
             processStatus = CopyFrame.PROCESS_STATUS_COPY_INCOMPLETED;
+            System.out.println( "processStatus =" + processStatus + "=  should be incomplete" );
             }
 
 //            for ( Path mpath : matchedPathsList )

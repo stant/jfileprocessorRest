@@ -235,8 +235,10 @@ public class TomcatAppMonitorThread implements Runnable
                 {
                 response = noHostVerifyRestTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.SYS_GET_FILESYS, Integer.class );
                 System.out.println( "RestServerSw.run() SYS_GET_FILESYS response =" + response );
-                connUserInfo.setToFilesysType(response);
-                System.out.println( "connUserInfo.getToFilesysType() =" + connUserInfo.getToFilesysType() );
+//                connUserInfo.setToFilesysType(response);
+//                System.out.println( "connUserInfo.getToFilesysType() =" + connUserInfo.getToFilesysType() );
+                jFileFinderWin.setFilesysType(response);
+                System.out.println( "jFileFinderWin.getFilesysType() =" + jFileFinderWin.getFilesysType() );
                 }
             catch( Exception exc )
                 {

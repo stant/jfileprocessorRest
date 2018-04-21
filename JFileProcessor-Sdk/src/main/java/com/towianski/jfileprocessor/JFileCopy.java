@@ -130,6 +130,7 @@ public class JFileCopy //  implements Runnable
         else
             {
             Sftp sftp = null;
+            Sftp sftpSrc = null;
             if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_FILE ) &&
                  connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_SFTP )  )
                 {
@@ -140,7 +141,14 @@ public class JFileCopy //  implements Runnable
                 {
                 sftp = new Sftp( connUserInfo.getFromUser(), connUserInfo.getFromPassword(), connUserInfo.getFromHost() );
                 }
-            copierNonWalker = new CopierNonWalker( connUserInfo, sftp, isDoingCutFlag, copyOptions, swingWorker );
+            else if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_SFTP ) &&
+                      connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_SFTP )  )
+                {
+                System.out.println( "CopierNonWalker: will do sftp to sftp" );
+                sftpSrc = new Sftp( connUserInfo.getFromUser(), connUserInfo.getFromPassword(), connUserInfo.getFromHost() );
+                sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost() );
+                }
+            copierNonWalker = new CopierNonWalker( connUserInfo, sftp, sftpSrc, isDoingCutFlag, copyOptions, swingWorker );
 
             try {
                 synchronized( dataSyncLock ) 
@@ -169,6 +177,8 @@ public class JFileCopy //  implements Runnable
             finally
                 {
                 sftp.close();
+                if ( sftpSrc != null )
+                    sftpSrc.close();
                 }
             }
         }

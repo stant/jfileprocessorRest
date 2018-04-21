@@ -269,19 +269,21 @@ public class CopyFrame extends javax.swing.JFrame {
                 }
             else
                 {
-                this.setProcessStatus( this.PROCESS_STATUS_COPY_COMPLETED );
-                System.out.println( "do new CloseWinOnTimer( copyFrame, 4000 )" );
-                new CloseWinOnTimer( this, closeWhenDoneTb.isEnabled() ? 4000 : 0 ){{setRepeats(false);}}.start();
+                if ( resultsData.getProcessStatus().equals( this.PROCESS_STATUS_COPY_COMPLETED ) )
+                    {
+                    System.out.println( "do new CloseWinOnTimer( copyFrame, 4000 )" );
+                    new CloseWinOnTimer( this, closeWhenDoneTb.isSelected()? 4000 : 0 ){{setRepeats(false);}}.start();
+                    }
                 }
 
-//            if ( ! resultsData.getProcessStatus().trim().equals( "" ) )
-//                {
-//                copyFrame.setProcessStatus( resultsData.getProcessStatus() );
-//                }
-//            if ( ! resultsData.getMessage().trim().equals( "" ) )
-//                {
-//                msg = resultsData.getMessage();
-//                }
+            if ( ! resultsData.getProcessStatus().trim().equals( "" ) )
+                {
+                setProcessStatus( resultsData.getProcessStatus() );
+                }
+            if ( ! resultsData.getMessage().trim().equals( "" ) )
+                {
+                msg = resultsData.getMessage();
+                }
 
             this.setMessage( msg + partialMsg );
             this.setResultsData( resultsData );
@@ -314,29 +316,32 @@ public class CopyFrame extends javax.swing.JFrame {
         System.out.println("jfilewin extractCopyModel() " );  //searchBtn.getText() =" + searchBtn.getText() + "=" );
         CopyModel copyModel = new CopyModel();
 
-        ArrayList<CopyOption> copyOpts = new ArrayList<CopyOption>();
-        EnumSet<FileVisitOption> fileVisitOptions = EnumSet.noneOf( FileVisitOption.class );
-        if ( replaceExisting.isSelected() )
-            copyOpts.add( StandardCopyOption.REPLACE_EXISTING );
-        if ( copyAttribs.isSelected() )
-            copyOpts.add( StandardCopyOption.COPY_ATTRIBUTES );
-        if ( noFollowLinks.isSelected() )
-            {
-            copyOpts.add( LinkOption.NOFOLLOW_LINKS );
-            }
-        else
-            {
-            fileVisitOptions = EnumSet.of( FOLLOW_LINKS );
-            }
+//        ArrayList<CopyOption> copyOpts = new ArrayList<CopyOption>();
+//        EnumSet<FileVisitOption> fileVisitOptions = EnumSet.noneOf( FileVisitOption.class );
+//        if ( replaceExisting.isSelected() )
+//            copyOpts.add( StandardCopyOption.REPLACE_EXISTING );
+//        if ( copyAttribs.isSelected() )
+//            copyOpts.add( StandardCopyOption.COPY_ATTRIBUTES );
+//        if ( noFollowLinks.isSelected() )
+//            {
+//            copyOpts.add( LinkOption.NOFOLLOW_LINKS );
+//            }
+//        else
+//            {
+//            fileVisitOptions = EnumSet.of( FOLLOW_LINKS );
+//            }
+        copyModel.setReplaceExisting( replaceExisting.isSelected() );
+        copyModel.setCopyAttribs( copyAttribs.isSelected() );
+        copyModel.setNoFollowLinks( noFollowLinks.isSelected() );
 
 //        jfilecopy = new JFileCopy( this, isDoingCutFlag, startingPath, copyPaths, toPath, fileVisitOptions, copyOpts.toArray( new CopyOption[ copyOpts.size() ] ) );
 
-        copyModel.setIsDoingCutFlag( isDoingCutFlag );
+        copyModel.setDoingCutFlag( isDoingCutFlag );
         copyModel.setStartingPath( startingPath );        
         copyModel.setCopyPaths( copyPaths );
         copyModel.setToPath( toPath );
-        copyModel.setFileVisitOptions( fileVisitOptions );
-        copyModel.setCopyOpts( copyOpts );
+//        copyModel.setFileVisitOptions( fileVisitOptions );
+//        copyModel.setCopyOpts( copyOpts );
         copyModel.setConnUserInfo( connUserInfo );
         
 //    int filesysType = FILESYSTEM_DOS;

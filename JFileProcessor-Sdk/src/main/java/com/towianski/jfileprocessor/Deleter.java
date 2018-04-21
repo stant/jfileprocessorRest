@@ -107,20 +107,26 @@ public class Deleter extends SimpleFileVisitor<Path>
             processStatus = "Error";
             if ( fsType == Constants.FILESYSTEM_DOS && Files.isHidden( fpath ) )
                 {
-                JOptionPane.showMessageDialog( null, exAccessDenied.getClass().getSimpleName()
-                                + "\nThis is because of a hidden file: "
-                                + fpath
-                                + "\nEither delete hidden files first, or check \"Delete Read-Only\" which will also delete hidden files."
-                                , "Error", JOptionPane.ERROR_MESSAGE );
-                message = "Handle hidden file first: " + fpath;
+                if ( swingWorker != null )
+                    {
+                    JOptionPane.showMessageDialog( null, exAccessDenied.getClass().getSimpleName()
+                                    + "\nThis is because of a hidden file: "
+                                    + fpath
+                                    + "\nEither delete hidden files first, or check \"Delete Read-Only\" which will also delete hidden files."
+                                    , "Error", JOptionPane.ERROR_MESSAGE );
+                    message = "Handle hidden file first: " + fpath;
+                    }
                 }
             else if ( fsType == Constants.FILESYSTEM_POSIX )
                 {
-                JOptionPane.showMessageDialog( null, exAccessDenied.getClass().getSimpleName()
-                                + "\nThis is because of a file: "
-                                + fpath
-                                + "\nPossibly you have no rwx rights to the folder, or no read rights on the file."
-                                , "Error", JOptionPane.ERROR_MESSAGE );
+                if ( swingWorker != null )
+                    {
+                    JOptionPane.showMessageDialog( null, exAccessDenied.getClass().getSimpleName()
+                                    + "\nThis is because of a file: "
+                                    + fpath
+                                    + "\nPossibly you have no rwx rights to the folder, or no read rights on the file."
+                                    , "Error", JOptionPane.ERROR_MESSAGE );
+                    }
                 message = "Handle rights on file: " + fpath;
                 }
             else
@@ -229,6 +235,14 @@ public class Deleter extends SimpleFileVisitor<Path>
 
     public String getMessage() {
         return message;
+    }
+
+    public void setProcessStatus(String processStatus) {
+        this.processStatus = processStatus;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
         
 }

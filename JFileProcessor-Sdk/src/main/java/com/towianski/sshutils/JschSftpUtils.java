@@ -88,7 +88,7 @@ public void sftpIfDiff( String locFile, String user, String password, String rho
 
     public void copyIfMissing( String lfile, String user, String password, String rhost, String rfile )
         {
-        //scpTo.copyTo( file.toString(), " kids", "hostess", "localhost", "/tmp/" + file.getName().toString() );
+        //scpTo.copyTo( file.toString(), " ", "", "localhost", "/tmp/" + file.getName().toString() );
         FileInputStream fis=null;
 
         try
@@ -250,7 +250,7 @@ public void sftpIfDiff( String locFile, String user, String password, String rho
     
 public void copyTo( Session session, String lfile, String rfile )
         {
-        //scpTo.copyTo( file.toString(), " kids", "hostess", "localhost", "/tmp/" + file.getName().toString() );
+        //scpTo.copyTo( file.toString(), " ", "", "localhost", "/tmp/" + file.getName().toString() );
         FileInputStream fis=null;
 
         try

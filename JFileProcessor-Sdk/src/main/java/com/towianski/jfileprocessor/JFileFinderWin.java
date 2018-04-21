@@ -50,7 +50,6 @@ import static com.towianski.models.Constants.PROCESS_STATUS_FILL_STARTED;
 import static com.towianski.models.Constants.PROCESS_STATUS_SEARCH_CANCELED;
 import static com.towianski.models.Constants.PROCESS_STATUS_SEARCH_COMPLETED;
 import static com.towianski.models.Constants.PROCESS_STATUS_SEARCH_STARTED;
-import static com.towianski.models.Constants.RMT_CONNECT_BTN_CONNECT;
 import static com.towianski.models.Constants.SHOWFILESFOLDERSCB_BOTH;
 import static com.towianski.models.Constants.SHOWFILESFOLDERSCB_FILES_ONLY;
 import static com.towianski.models.Constants.SHOWFILESFOLDERSCB_FOLDERS_ONLY;
@@ -1264,7 +1263,14 @@ public class JFileFinderWin extends javax.swing.JFrame {
             tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setPreferredWidth( 600 );
             tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setCellRenderer( new DefaultTableCellRenderer() );
             }
-        tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_MODIFIEDDATE ).setCellRenderer( FormatRenderer.getDateTimeRenderer() );
+//        if ( connUserInfo.isConnectedFlag() )
+//            {
+//            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_MODIFIEDDATE ).setCellRenderer( FormatRenderer.getSftpDateTimeRenderer() );
+//            }
+//        else
+//            {
+            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_MODIFIEDDATE ).setCellRenderer( FormatRenderer.getDateTimeRenderer() );
+//            }
         tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_SIZE ).setCellRenderer( NumberRenderer.getIntegerRenderer() );
         tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_OWNER ).setCellRenderer( new DefaultTableCellRenderer() );
         tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_GROUP ).setCellRenderer( new DefaultTableCellRenderer() );
@@ -1310,6 +1316,17 @@ public class JFileFinderWin extends javax.swing.JFrame {
             setColumnSizes();
             }
 
+        // debugging
+//        int maxRows = filesTbl.getRowCount();
+//        filesTblModel = (FilesTblModel) filesTbl.getModel();
+//        System.out.println( "maxRows =" + maxRows + "=" );
+//        //loop for jtable rows
+//        for( int i = 0; i < maxRows; i++ )
+//            {
+//            Date tmp = (Date) filesTblModel.getValueAt( i, FilesTblModel.FILESTBLMODEL_MODIFIEDDATE );
+//            System.out.println( "date string =" + tmp + "=" );
+//            }
+        
 //        resultsData = null;  // to free up memory 
                 
         // set up sorting
@@ -1490,6 +1507,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
         //filesList.add( ( isDoingCutFlag ? "CUT" : "COPY" ) );
         stringBuf.append( copyPathStartPath ).append( "?" );
         stringBuf.append( ( isDoingCutFlag ? "CUT" : "COPY" ) ).append( "?" );
+        stringBuf.append( filesysType ).append( "?" );
         if ( connUserInfo.isConnectedFlag() )
             {
             stringBuf.append( Constants.PATH_PROTOCOL_SFTP + "?" + getRmtUser() + "?" + getRmtPasswd() + "?" + getRmtHost() + "?" + getRmtSshPort() ).append( "?" );
@@ -2032,7 +2050,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPopupMenu2.add(savePathsToFile1);
 
             setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-            setTitle("JFileProcessor v1.6.0 - Stan Towianski  (c) 2015-2017");
+            setTitle("JFileProcessor v1.6.0 - Stan Towianski  (c) 2015-2018");
             setIconImage(Toolkit.getDefaultToolkit().getImage( JFileFinderWin.class.getResource("/icons/jfp.png") ));
             setMinimumSize(new java.awt.Dimension(800, 179));
             setPreferredSize(new java.awt.Dimension(970, 502));
@@ -2115,11 +2133,17 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jLabel17.setPreferredSize(new java.awt.Dimension(100, 25));
             topPanel.add(jLabel17);
 
-            rmtUser.setText("stan");
             rmtUser.setMargin(new java.awt.Insets(2, 7, 0, 0));
             rmtUser.setMaximumSize(new java.awt.Dimension(74, 25));
             rmtUser.setMinimumSize(new java.awt.Dimension(74, 25));
             rmtUser.setPreferredSize(new java.awt.Dimension(74, 25));
+            rmtUser.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
+                    rmtUserActionPerformed(evt);
+                }
+            });
             topPanel.add(rmtUser);
 
             jLabel18.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
@@ -2129,10 +2153,16 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jLabel18.setPreferredSize(new java.awt.Dimension(50, 25));
             topPanel.add(jLabel18);
 
-            rmtPasswd.setText("yearly55");
             rmtPasswd.setMaximumSize(new java.awt.Dimension(80, 25));
             rmtPasswd.setMinimumSize(new java.awt.Dimension(80, 25));
             rmtPasswd.setPreferredSize(new java.awt.Dimension(80, 25));
+            rmtPasswd.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent evt)
+                {
+                    rmtPasswdActionPerformed(evt);
+                }
+            });
             topPanel.add(rmtPasswd);
 
             jLabel19.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
@@ -3308,6 +3338,9 @@ public class JFileFinderWin extends javax.swing.JFrame {
             String tmp = StringsList.remove( 0 );
             isDoingCutFlag = tmp.equalsIgnoreCase( "CUT" ) ? true : false;
             System.out.println( "read clipboard isDoingCutFlag =" + isDoingCutFlag );
+            connUserInfo.setFromFilesysType( Integer.parseInt( StringsList.remove( 0 ) ) );
+            System.out.println( "connUserInfo.getFromFilesysType() =" + connUserInfo.getFromFilesysType() ); 
+            connUserInfo.setToFilesysType( filesysType );
             System.out.println( "connUserInfo.getToFilesysType() =" + connUserInfo.getToFilesysType() );
             connUserInfo.setFrom( StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ) );
             if ( connUserInfo.isConnectedFlag() )
@@ -3941,8 +3974,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
             
                 try {
                     String tmp = "../JFileProcessor-Server/build/libs/JFileProcessor-Server-1.5.11.jar";
-                    jschSftpUtils.copyIfMissing( tmp, "stan", "yearly55", "192.168.56.103", "JFileProcessor-Server-1.5.11.jar" );
-            System.out.println( "try scpTo   file =" + tmp + "=   to remote =kids@localhost:" + DesktopUtils.getUserTmp() + System.getProperty( "file.separator") + tmp + "=" );
+                    jschSftpUtils.copyIfMissing( tmp, "", "", "192.168.56.103", "JFileProcessor-Server-1.5.11.jar" );
+            System.out.println( "try scpTo   file =" + tmp + "=   to remote =" + DesktopUtils.getUserTmp() + System.getProperty( "file.separator") + tmp + "=" );
                     } 
                 catch (Exception ex) 
                     {
@@ -3950,16 +3983,16 @@ public class JFileFinderWin extends javax.swing.JFrame {
                     } 
 //                break;  // only do 1 file
 //                }   
-//            scpTo.exec( "kids", "hostess", "localhost" );
-//            scpTo.execX11Forwarding( "kids", "hostess", "localhost" );
-//            scpTo.execX11( "stan", "yearly55", "stan.local" );
+//            scpTo.exec( "", "", "localhost" );
+//            scpTo.execX11Forwarding( "", "", "localhost" );
+//            scpTo.execX11( "", "", "stan.local" );
 //            scpTo.execX11Forwarding( "rmt", "rmt", "192.168.56.102" );
 //              scpTo.execX11( "rmt", "rmt", "192.168.56.102" );
 
-//            scpTo.execX11Forwarding( "stan", "yearly55", "192.168.56.103" );
-//            scpTo.execX11ForwardingOrig( "stan", "yearly55", "192.168.56.103" );
-            jschSftpUtils.exec( "stan", "yearly55", "192.168.56.103", "/opt/jFileProcessor/server.sh" );
-//              scpTo.execX11( "stan", "yearly55", "192.168.56.103" );
+//            scpTo.execX11Forwarding( "", "", "192.168.56.103" );
+//            scpTo.execX11ForwardingOrig( "", "", "192.168.56.103" );
+            jschSftpUtils.exec( "", "", "192.168.56.103", "/opt/jFileProcessor/server.sh" );
+//              scpTo.execX11( "", "", "192.168.56.103" );
             }
         catch( Exception exc )
             {
@@ -3970,7 +4003,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
     private void rmtHostActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_rmtHostActionPerformed
     {//GEN-HEADEREND:event_rmtHostActionPerformed
-        // TODO add your handling code here:
+        rmtConnectBtnActionPerformed( null );
     }//GEN-LAST:event_rmtHostActionPerformed
 
     private void rmtConnectBtnActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_rmtConnectBtnActionPerformed
@@ -3992,6 +4025,11 @@ public class JFileFinderWin extends javax.swing.JFrame {
     }//GEN-LAST:event_rmtConnectBtnActionPerformed
 
     private void rmtForceDisconnectBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rmtForceDisconnectBtnActionPerformed
+        if ( restServerSw == null )
+            {
+            connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_SFTP, getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort() );
+            restServerSw = new RestServerSw( connUserInfo, this );
+            }
         if ( restServerSw != null )
             {
             //rmtConnectBtn.setText( RMT_CONNECT_BTN_CONNECT );
@@ -4029,6 +4067,16 @@ public class JFileFinderWin extends javax.swing.JFrame {
         connUserInfo.setFrom( Constants.PATH_PROTOCOL_FILE, "", "", "localhost", "" );
         calcFilesysType();  // also sets in connUserInfo
     }//GEN-LAST:event_rmtDisconnectBtnActionPerformed
+
+    private void rmtPasswdActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_rmtPasswdActionPerformed
+    {//GEN-HEADEREND:event_rmtPasswdActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_rmtPasswdActionPerformed
+
+    private void rmtUserActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_rmtUserActionPerformed
+    {//GEN-HEADEREND:event_rmtUserActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_rmtUserActionPerformed
 
     /**
      * @param args the command line arguments

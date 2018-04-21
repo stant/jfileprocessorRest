@@ -144,12 +144,18 @@ public class JFileDelete //  implements Runnable
                             {
                             //System.out.println( "up ERROR  " + "my error getSimpleName" + ioex.getClass().getSimpleName() );
                             System.out.println( "delete io ERROR  " + "my error msg" + ioex.getMessage() );
-                            JOptionPane.showMessageDialog( null, ioex.getClass().getSimpleName() + ": " + ioex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE );
+                            if ( ! connUserInfo.isConnectedFlag() )
+                                {
+                                JOptionPane.showMessageDialog( null, ioex.getClass().getSimpleName() + ": " + ioex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE );
+                                }
                             Logger.getLogger(JFileDelete.class.getName()).log(Level.SEVERE, null, ioex);
                             }
                         catch (Exception ex) 
                             {
-                            JOptionPane.showMessageDialog( null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE );
+                            if ( ! connUserInfo.isConnectedFlag() )
+                                {
+                                JOptionPane.showMessageDialog( null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE );
+                                }
                             Logger.getLogger(JFileDelete.class.getName()).log(Level.SEVERE, null, ex);
                             System.out.println( "delete ERROR  " + "my error msg" + ex.getMessage() );
                             }
@@ -159,6 +165,10 @@ public class JFileDelete //  implements Runnable
                     }
 //                }
             deleter.done();
+            if ( deleter.getProcessStatus().equals( "" ) )
+                {
+                deleter.setProcessStatus( DeleteFrame.PROCESS_STATUS_DELETE_COMPLETED );
+                }
 //            }
         }
         

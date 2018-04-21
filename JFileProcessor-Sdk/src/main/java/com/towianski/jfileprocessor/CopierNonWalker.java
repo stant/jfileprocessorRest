@@ -16,6 +16,7 @@ import com.towianski.sshutils.Sftp;
 import com.towianski.utils.MyLogger;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.CopyOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -64,6 +65,7 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
     ConnUserInfo connUserInfo = null;
     Sftp sftp = null;
     com.jcraft.jsch.ChannelSftp chanSftp = null;
+    com.jcraft.jsch.ChannelSftp chanSftpSrc = null;
     JschSftpUtils jschSftpUtils = new JschSftpUtils();
     Session jschSession = null;
     Path targetPath = null;
@@ -78,16 +80,18 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
 //       }           
 //   }
       
-    public CopierNonWalker( ConnUserInfo connUserInfo, Sftp sftp, Boolean isDoingCutFlag, ArrayList<CopyOption> copyOptions, CopyFrameSwingWorker swingWorker )
+    public CopierNonWalker( ConnUserInfo connUserInfo, Sftp sftp, Sftp sftpSrc, Boolean isDoingCutFlag, ArrayList<CopyOption> copyOptions, CopyFrameSwingWorker swingWorker )
     {
         this.connUserInfo = connUserInfo;
         this.sftp = sftp;
-        chanSftp = sftp.getChanSftp();
+        this.sftp = sftpSrc;
         this.isDoingCutFlag = isDoingCutFlag;
         this.copyOptions = copyOptions;
         this.swingWorker = swingWorker;
         System.out.println("Copier this.startingPath (startingPath) =" + this.startingPath + "   this.toPath =" + this.toPath + "=" );
         System.out.println( "isDoingCutFlag =" + isDoingCutFlag );
+        chanSftp = sftp.getChanSftp();
+        chanSftpSrc = sftpSrc.getChanSftp();
         cancelFlag = false;
         
 //        jschSession = jschSftpUtils.createSession( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost() );
@@ -355,6 +359,11 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
             {
             copyRecursiveSftpToLocal( sourceFolder, targetPathStr );
             }
+        else if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_SFTP ) &&
+                  connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_SFTP )  )
+            {
+            copyRecursiveSftpToSftp( sourceFolder, targetPathStr );
+            }
         else
             {
             System.out.println( "Error: not sftp to local or the reverse !" );
@@ -423,6 +432,8 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
                 catch (SftpException ex)
                     {
                     Logger.getLogger(CopierNonWalker.class.getName()).log(Level.SEVERE, null, ex);
+                    processStatus = "Error";
+                    message = ex.getClass().getSimpleName() + ": " + destinationFolderStr;
                     }
                 System.out.println("Directory created :: " + destinationFolderStr );
                 }
@@ -465,6 +476,7 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
                     else
                         {
                         System.out.println( "File Not replaced/copied :: " + destinationFolderStr );
+                        message = "File Not replaced/copied: " + destinationFolderStr;
                         }
                     }
                 else
@@ -486,14 +498,15 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
             catch (Exception ex) 
                 {
                 java.util.logging.Logger.getLogger(JschSftpUtils.class.getName()).log(Level.SEVERE, null, ex);
+                processStatus = "Error";
+                message = ex.getClass().getSimpleName() + ": " + destinationFolderStr;
                 }
             }
         swingWorker.publish2( numTested );
     }
-
     
     public void copyRecursiveSftpToLocal( String sourceFolderStr, String destinationFolderStr ) throws IOException
-    {
+        {
         //Check if sourceFolder is a directory or file
         //If sourceFolder is file; then copy the file directly to new location
         numTested++;
@@ -531,7 +544,7 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
             {
             Logger.getLogger(CopierNonWalker.class.getName()).log(Level.SEVERE, null, ex);
             }
-        if ( sourceSftpAttrs.isDir() )
+        if ( sourceSftpAttrs != null && sourceSftpAttrs.isDir() )
             {
             System.out.println( "copyRecursiveSftpToLocal() - Is Directory" );
             numFolderTests ++;
@@ -564,7 +577,7 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
                 {
                 File srcFile = new File( sourceFolder, lsEntry.getFilename() );
                 File destFile = new File( destinationFolder, lsEntry.getFilename() );
-                System.out.println( "SftpRm srcFile =" + srcFile + "=   destFile =" + destFile + "=" );
+                System.out.println( "copyRecursiveSftpToLocal srcFile =" + srcFile + "=   destFile =" + destFile + "=" );
 
                 //Recursive function call
                 copyRecursiveSftpToLocal( srcFile.toString(), destFile.toString() );
@@ -605,6 +618,7 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
                     else
                         {
                         System.out.println( "File Not replaced/copied :: " + destinationFolderStr );
+                        message = "File Not replaced/copied: " + destinationFolderStr;
                         }
                     }
                 else
@@ -627,9 +641,194 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
             catch (Exception ex) 
                 {
                 java.util.logging.Logger.getLogger(JschSftpUtils.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println( "Error for sourceFolderStr =" + sourceFolderStr + "=    destinationFolderStr =" + destinationFolderStr + "=" );
+                message = "sourceFolderStr =" + sourceFolderStr + "=    destinationFolderStr =" + destinationFolderStr + "=";
                 }
             }
         swingWorker.publish2( numTested );
+    }
+    
+    public void copyRecursiveSftpToSftp( String sourceFolderStr, String destinationFolderStr ) throws IOException
+        {
+        //Check if sourceFolder is a directory or file
+        //If sourceFolder is file; then copy the file directly to new location
+        numTested++;
+        
+        System.out.println( "copyRecursiveSftpToSftp() srcFile =" + sourceFolderStr + "=   destFile =" + destinationFolderStr + "=" );
+
+//        String sourceFolderStr = sourceFolder.toString();
+//        String destinationFolderStr = destinationFolder.toString();
+        File sourceFolder = new File( sourceFolderStr );
+        File destinationFolder = new File( destinationFolderStr );
+        
+        if ( sourceFolderStr.endsWith( "." ) || sourceFolderStr.endsWith( ".." ) )
+            {
+            return;
+            }
+        
+        if ( connUserInfo.getFromFilesysType() != connUserInfo.getToFilesysType() )
+            {
+            if ( connUserInfo.getFromFilesysType() == Constants.FILESYSTEM_DOS )
+                {
+                sourceFolderStr = sourceFolderStr.replace( "/", "\\" );
+                }
+            else
+                {
+                sourceFolderStr = sourceFolderStr.replace( "\\", "/" );
+                }
+
+            if ( connUserInfo.getToFilesysType() == Constants.FILESYSTEM_DOS )
+                {
+                destinationFolderStr = destinationFolderStr.replace( "/", "\\" );
+                }
+            else
+                {
+                destinationFolderStr = destinationFolderStr.replace( "\\", "/" );
+                }
+            }
+        System.out.println( "copyRecursiveSftpToSftp() /or\\ srcFile =" + sourceFolderStr + "=   destFile =" + destinationFolderStr + "=" );
+        
+        SftpATTRS sourceSftpAttrs = null;
+        try {
+            sourceSftpAttrs = chanSftpSrc.stat( sourceFolderStr );
+            } 
+        catch (SftpException ex)
+            {
+            Logger.getLogger(CopierNonWalker.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        if ( sourceSftpAttrs != null && sourceSftpAttrs.isDir() )
+            {
+            System.out.println( "copyRecursiveSftpToSftp() - Is Directory" );
+            numFolderTests ++;
+            //Verify if destinationFolder is already present; If not then create it
+            boolean doMkdir = false;
+            try {
+                chanSftp.stat( destinationFolderStr );
+                } 
+            catch (SftpException ex)
+                {
+                doMkdir = true;
+                Logger.getLogger(CopierNonWalker.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            catch (Exception exc)
+                {
+                System.out.println( "Exception" );
+                doMkdir = true;
+                exc.printStackTrace();
+                }
+            if ( doMkdir )
+                {
+                try
+                    {
+                    //                destinationFolder.mkdir();
+                    chanSftp.mkdir( destinationFolderStr );
+                    System.out.println( "mkdir =" + destinationFolderStr + "=" );
+                    } 
+                catch (SftpException ex)
+                    {
+                    Logger.getLogger(CopierNonWalker.class.getName()).log(Level.SEVERE, null, ex);
+                    processStatus = "Error";
+                    message = ex.getClass().getSimpleName() + ": " + destinationFolderStr;
+                    }
+                System.out.println("Directory created :: " + destinationFolderStr );
+                }
+             
+            //Get all files from source directory
+            Vector vecfiles;
+            ArrayList<ChannelSftp.LsEntry> files = new ArrayList<ChannelSftp.LsEntry>();
+            try {
+                vecfiles = chanSftpSrc.ls( sourceFolderStr );
+                for ( Object obj : vecfiles )
+                    {
+                    if (obj instanceof ChannelSftp.LsEntry) {
+                        files.add( (ChannelSftp.LsEntry) obj );
+                        }
+                    }
+                } 
+            catch (SftpException ex) 
+                {
+                Logger.getLogger(CopierNonWalker.class.getName()).log(Level.SEVERE, null, ex);
+                }
+             
+            //Iterate over all files and copy them to destinationFolder one by one
+            for ( ChannelSftp.LsEntry lsEntry : files )
+                {
+                File srcFile = new File( sourceFolder, lsEntry.getFilename() );
+                File destFile = new File( destinationFolder, lsEntry.getFilename() );
+                System.out.println( "copyRecursiveSftpToSftp srcFile =" + srcFile + "=   destFile =" + destFile + "=" );
+
+                //Recursive function call
+                copyRecursiveSftpToSftp( srcFile.toString(), destFile.toString() );
+                }
+            
+            if ( isDoingCutFlag )
+                {
+                try
+                    {
+                    chanSftpSrc.rmdir( sourceFolderStr );
+                    System.out.println( "would delete sftp folder =" + sourceFolderStr );
+                    //numFoldersDeleted++;
+                    } 
+                catch (SftpException ex)
+                    {
+                    Logger.getLogger(CopierNonWalker.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            numFolderMatches++;
+            }
+        else
+            {
+            System.out.println( "copyRecursiveSftpToSftp() - Is File" );
+            numFileTests ++;
+            //Copy the file content from one place to another
+//            Files.copy(sourceFolder.toPath(), destinationFolder.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            try {
+                //    sftpChannel.put("C:/source/local/path/file.zip", "/target/remote/path/file.zip");
+                System.out.println( "SftpGet locFile =" + sourceFolder + "=   to rmtFile =" + destinationFolderStr + "=" );
+                if ( Files.exists( Paths.get( destinationFolderStr ) ) )
+                    {
+                    if ( copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) )
+                        {
+//                        chanSftp.get( sourceFolderStr, destinationFolderStr );
+                        InputStream inputStream = chanSftpSrc.get( sourceFolderStr );
+                        chanSftp.put( inputStream, destinationFolderStr );
+                        numFileMatches++;
+                        System.out.println( "File replaced :: " + destinationFolderStr );
+                        }
+                    else
+                        {
+                        System.out.println( "File Not replaced/copied :: " + destinationFolderStr );
+                        message = "File Not replaced/copied: " + destinationFolderStr;
+                        }
+                    }
+                else
+                    {
+//                    chanSftp.get( sourceFolderStr, destinationFolderStr );
+                    InputStream inputStream = chanSftpSrc.get( sourceFolderStr );
+//                       File f = new File(file.getName());
+                    chanSftp.put( inputStream, destinationFolderStr );
+                    numFileMatches++;
+                    System.out.println( "File copied :: " + destinationFolderStr );
+                    }
+//                jschSftpUtils.copyTo()  does not work with spaces in names off-hand.
+//                jschSftpUtils.copyTo( jschSession, sourceFolderStr, destinationFolderStr );
+                System.out.println( "at 8" );
+    
+                if ( isDoingCutFlag )
+                    {
+//                    Files.delete( Paths.get( sourceFolderStr ) );
+                    chanSftpSrc.rm( sourceFolderStr );
+                    System.out.println( "would delete file =" + sourceFolderStr );
+                    }
+                } 
+            catch (Exception ex) 
+                {
+                java.util.logging.Logger.getLogger(JschSftpUtils.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println( "Error for sourceFolderStr =" + sourceFolderStr + "=    destinationFolderStr =" + destinationFolderStr + "=" );
+                message = "sourceFolderStr =" + sourceFolderStr + "=    destinationFolderStr =" + destinationFolderStr + "=";
+                }
+            }
+        //swingWorker.publish2( numTested );
     }
 
     public void postVisitDirectory(Path dir)
@@ -675,6 +874,7 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
              numFolderMatches != numFolderTests )
             {
             processStatus = CopyFrame.PROCESS_STATUS_COPY_INCOMPLETED;
+            System.out.println( "processStatus =" + processStatus + "=  should be incomplete" );
             }
 
 //            for ( Path mpath : matchedPathsList )

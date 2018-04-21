@@ -9,6 +9,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import static com.towianski.models.Constants.FILESYSTEM_DOS;
 import java.nio.file.CopyOption;
 import java.nio.file.FileVisitOption;
+import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
+import java.nio.file.LinkOption;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.EnumSet;
 
@@ -21,7 +24,10 @@ public class CopyModel
     {
     int filesysType = FILESYSTEM_DOS;
     String searchBtnText = null;
-    Boolean isDoingCutFlag = false;
+    boolean doingCutFlag = false;
+    boolean replaceExisting = false;
+    boolean copyAttribs = false;
+    boolean noFollowLinks = false;
     String startingPath = null;
     ArrayList<String> copyPaths = null;
     String toPath = null;
@@ -30,7 +36,7 @@ public class CopyModel
     ArrayList<CopyOption> copyOpts = new ArrayList<CopyOption>();
     EnumSet<FileVisitOption> fileVisitOptions = EnumSet.noneOf( FileVisitOption.class );
     ConnUserInfo connUserInfo = null;
-    
+
     public int getFilesysType()
         {
         return filesysType;
@@ -51,14 +57,40 @@ public class CopyModel
         this.searchBtnText = searchBtnText;
         }
 
-    public Boolean getIsDoingCutFlag()
+    public boolean isDoingCutFlag()
         {
-        return isDoingCutFlag;
+        return doingCutFlag;
         }
 
-    public void setIsDoingCutFlag(Boolean isDoingCutFlag)
+    public boolean isReplaceExisting() {
+        return replaceExisting;
+    }
+
+    public boolean isCopyAttribs() {
+        return copyAttribs;
+    }
+
+    public boolean isNoFollowLinks() {
+        return noFollowLinks;
+    }
+
+    public void setDoingCutFlag(boolean doingCutFlag)
         {
-        this.isDoingCutFlag = isDoingCutFlag;
+        this.doingCutFlag = doingCutFlag;
+        }
+    public void setReplaceExisting(boolean replaceExisting)
+        {
+        this.replaceExisting = replaceExisting;
+        }
+
+    public void setCopyAttribs(boolean copyAttribs)
+        {
+        this.copyAttribs = copyAttribs;
+        }
+
+    public void setNoFollowLinks(boolean noFollowLinks)
+        {
+        this.noFollowLinks = noFollowLinks;
         }
 
     public String getStartingPath()
@@ -91,8 +123,30 @@ public class CopyModel
         this.toPath = toPath;
         }
 
+    public ConnUserInfo getConnUserInfo() {
+        return connUserInfo;
+    }
+
+    public void setConnUserInfo(ConnUserInfo connUserInfo) {
+        this.connUserInfo = connUserInfo;
+    }
+
+    //---------- special stuff -------------
+
     public ArrayList<CopyOption> getCopyOpts()
         {
+        if ( replaceExisting )
+            {
+            copyOpts.add( StandardCopyOption.REPLACE_EXISTING );
+            }
+        if ( copyAttribs )
+            {
+            copyOpts.add( StandardCopyOption.COPY_ATTRIBUTES );
+            }
+        if ( noFollowLinks )
+            {
+            copyOpts.add( LinkOption.NOFOLLOW_LINKS );
+            }
         return copyOpts;
         }
 
@@ -104,20 +158,17 @@ public class CopyModel
 
     public EnumSet<FileVisitOption> getFileVisitOptions()
         {
+        if ( ! noFollowLinks )
+            {
+            fileVisitOptions = EnumSet.of( FOLLOW_LINKS );
+            }
         return fileVisitOptions;
         }
 
+    @JsonIgnore
     public void setFileVisitOptions(EnumSet<FileVisitOption> fileVisitOptions)
         {
         this.fileVisitOptions = fileVisitOptions;
         }
-
-    public ConnUserInfo getConnUserInfo() {
-        return connUserInfo;
-    }
-
-    public void setConnUserInfo(ConnUserInfo connUserInfo) {
-        this.connUserInfo = connUserInfo;
-    }
 
     }

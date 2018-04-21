@@ -6,14 +6,13 @@
 package com.towianski.jfileprocessor;
 
 import com.towianski.jfileprocess.actions.TomcatAppMonitorThread;
+import com.towianski.jfileprocess.actions.TomcatAppThread;
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.Constants;
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.utils.Rest;
-import java.awt.Color;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.SwingUtilities;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.web.client.RestTemplate;
 
@@ -65,6 +64,11 @@ public class RestServerSw {
                 ex.printStackTrace();
                 Logger.getLogger(RestServerSw.class.getName()).log(Level.SEVERE, null, ex);
                 }
+            }
+        else   // no thread already running
+            {
+            TomcatAppThread tomcatAppThread = new TomcatAppThread( connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin );
+            tomcatAppThread.cancelRestServer(forceStop);
             }
         System.out.println( "exit RestServerSw.cancelRestServer()" );
         }
@@ -239,8 +243,10 @@ public class RestServerSw {
                 {
                 response = noHostVerifyRestTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.SYS_GET_FILESYS, Integer.class );
                 System.out.println( "RestServerSw.run() SYS_GET_FILESYS response =" + response );
-                connUserInfo.setToFilesysType(response);
-                System.out.println( "connUserInfo.getToFilesysType() =" + connUserInfo.getToFilesysType() );
+//                connUserInfo.setToFilesysType(response);
+//                System.out.println( "connUserInfo.getToFilesysType() =" + connUserInfo.getToFilesysType() );
+                jFileFinderWin.setFilesysType(response);
+                System.out.println( "jFileFinderWin.getFilesysType() =" + jFileFinderWin.getFilesysType() );
                 }
             catch( Exception exc )
                 {

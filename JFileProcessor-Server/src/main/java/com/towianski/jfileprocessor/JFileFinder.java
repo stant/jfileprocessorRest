@@ -9,7 +9,6 @@ import com.towianski.models.ResultsData;
 import com.towianski.models.FilesTblModel;
 import com.towianski.chainfilters.FilterChain;
 import com.towianski.models.Constants;
-import static com.towianski.models.Constants.FILESYSTEM_DOS;
 import com.towianski.utils.FinderFileVisitor;
 import com.towianski.utils.MyLogger;
 import java.io.IOException;

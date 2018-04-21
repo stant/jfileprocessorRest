@@ -26,7 +26,7 @@ public class ScpTo{
     
 public void copyTo( String lfile, String user, String password, String rhost, String rfile )
     {
-    //scpTo.copyTo( file.toString(), " kids", "hostess", "localhost", "/tmp/" + file.getName().toString() );
+    //scpTo.copyTo( file.toString(), " ", "", "localhost", "/tmp/" + file.getName().toString() );
 
     FileInputStream fis=null;
     try{
