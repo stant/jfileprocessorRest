@@ -94,16 +94,18 @@ public class JfpController {
             }
 
         @RequestMapping(value = JfpRestURIConstants.RENAME_FILE, method = RequestMethod.PUT)
-        public ResponseEntity<String> rename(@PathVariable("oldname") String oldname, @PathVariable("newname") String newname) 
-//        public ResponseEntity<String> rename2(@RequestParam("oldname") String oldname, @RequestParam("newname") String newname) {
+//        public ResponseEntity<String> rename(@PathVariable("oldname") String oldname, @PathVariable("newname") String newname) 
+        public ResponseEntity<String> rename(@RequestParam("oldname") String oldname, @RequestParam("newname") String newname)
             {
             logger.info( "rename oldname =" + oldname + "=   newname =" + newname + "=" );
             try
                 {
                 //            FileUtils.FileMove( Paths.get( oldname .replace( "|", "/" )), Paths.get( newname.replace( "|", "/" ) ) );
-                FileUtils.FileMove( new ConnUserInfo(), Paths.get( URLDecoder.decode( oldname, "UTF-8" ) ) , Paths.get( URLDecoder.decode( newname, "UTF-8" ) ) );
+//                FileUtils.FileMove( new ConnUserInfo(), Paths.get( URLDecoder.decode( oldname, "UTF-8" ) ) , Paths.get( URLDecoder.decode( newname, "UTF-8" ) ) );
+                FileUtils.fileMove( new ConnUserInfo(), oldname, newname );
                 } 
-            catch (UnsupportedEncodingException ex)
+//            catch (UnsupportedEncodingException ex)
+            catch (Exception ex)
                 {
                 java.util.logging.Logger.getLogger(JfpController.class.getName()).log(Level.SEVERE, null, ex);
                 }

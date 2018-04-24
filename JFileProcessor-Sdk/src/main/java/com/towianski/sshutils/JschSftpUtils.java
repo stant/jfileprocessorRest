@@ -390,6 +390,22 @@ public void SftpGet( String rmtFile, String user, String password, String rhost,
     sftp.close();
     }
 
+public boolean SftpExists( String rmtFile, String user, String password, String rhost )
+    {
+    Sftp sftp = new Sftp( user, password, rhost );
+
+    try {
+        System.out.println( "SftpExists rmtFile =" + rmtFile + "=" );
+        return sftp.exists( rmtFile );
+        } 
+    catch ( Exception ex )
+        {
+        java.util.logging.Logger.getLogger(JschSftpUtils.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    sftp.close();
+    return false;
+    }
+
 public long getRemoteFileSize( String lfile, String user, String password, String rhost, String filename )
     {
     Sftp sftp = new Sftp( user, password, rhost );

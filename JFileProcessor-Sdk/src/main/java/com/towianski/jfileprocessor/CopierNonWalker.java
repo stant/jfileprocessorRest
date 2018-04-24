@@ -64,6 +64,7 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
     CopyFrameSwingWorker swingWorker = null;
     ConnUserInfo connUserInfo = null;
     Sftp sftp = null;
+    Sftp sftpSrc = null;
     com.jcraft.jsch.ChannelSftp chanSftp = null;
     com.jcraft.jsch.ChannelSftp chanSftpSrc = null;
     JschSftpUtils jschSftpUtils = new JschSftpUtils();
@@ -84,14 +85,17 @@ public class CopierNonWalker extends SimpleFileVisitor<Path>
     {
         this.connUserInfo = connUserInfo;
         this.sftp = sftp;
-        this.sftp = sftpSrc;
+        this.sftpSrc = sftpSrc;
         this.isDoingCutFlag = isDoingCutFlag;
         this.copyOptions = copyOptions;
         this.swingWorker = swingWorker;
         System.out.println("Copier this.startingPath (startingPath) =" + this.startingPath + "   this.toPath =" + this.toPath + "=" );
         System.out.println( "isDoingCutFlag =" + isDoingCutFlag );
         chanSftp = sftp.getChanSftp();
-        chanSftpSrc = sftpSrc.getChanSftp();
+        if ( sftpSrc != null ) 
+            {
+            chanSftpSrc = sftpSrc.getChanSftp();
+            }
         cancelFlag = false;
         
 //        jschSession = jschSftpUtils.createSession( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost() );

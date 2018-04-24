@@ -83,13 +83,24 @@ public boolean exists( String path )
     {
     try {
         chanSftp.stat( path );
+        return true;
         } 
-    catch (SftpException ex)
+    catch (Exception ex)
         {
         Logger.getLogger(CopierNonWalker.class.getName()).log(Level.SEVERE, null, ex);
-        return false;
         }
-    return true;
+    return false;
+    }
+    
+public void mkDir( String path )
+    {
+    try {
+        chanSftp.mkdir( path );
+        } 
+    catch (Exception ex)
+        {
+        Logger.getLogger(CopierNonWalker.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
 public boolean isDir( String path )

@@ -756,13 +756,15 @@ public class JFileFinderWin extends javax.swing.JFrame {
             System.out.println("Column: " + tcl.getColumn());
             System.out.println("Old   : " + tcl.getOldValue());
             System.out.println("New   : " + tcl.getNewValue());
+            String targetPathStr = tcl.getNewValue().toString().trim();
             Path targetPath = Paths.get( tcl.getNewValue().toString().trim() );
-            FilesTblModel filesTblModel = (FilesTblModel) filesTbl.getModel();                
-            if ( Files.exists( targetPath ) )
+            FilesTblModel filesTblModel = (FilesTblModel) filesTbl.getModel();
+            //if ( Files.exists( targetPath ) )
+            if ( FileUtils.exists( connUserInfo, targetPathStr ) )
                 {
                 filesTblModel.setValueAt( tcl.getOldValue(), tcl.getRow(), tcl.getColumn() );
                 JOptionPane.showMessageDialog( null, "That Folder name already exists!", "Error", JOptionPane.ERROR_MESSAGE );
-                System.out.println( "That Folder name already exists! ( " + targetPath + ")" );
+                System.out.println( "That Folder name already exists! (" + targetPath + ")" );
                 setProcessStatus( PROCESS_STATUS_ERROR );
                 processStatus.setText( "Error" );
                 filesTblModel.deleteRowAt( 0 );
@@ -773,14 +775,15 @@ public class JFileFinderWin extends javax.swing.JFrame {
                     if ( tcl.getOldValue() == null )
                         {
                         System.out.println( "try to create dir target =" + targetPath + "=" );
-                        Files.createDirectory( targetPath );
+                        //Files.createDirectory( targetPath );
+                        //RenameActionPerformed( null );
 
-//                        RenameActionPerformed( null );
+                        FileUtils.createDirectory( connUserInfo, targetPathStr );
                         }
                     else
                         {
-                        Path sourcePath = Paths.get( tcl.getOldValue().toString().trim() );
-                        FileUtils.FileMove( connUserInfo, sourcePath, targetPath );
+                        String sourcePath = tcl.getOldValue().toString().trim();
+                        FileUtils.fileMove( connUserInfo, sourcePath, targetPathStr );
 //                        if ( Files.exists( sourcePath ) )
 //                            {
 //                            System.out.println( "try to move dir source =" + sourcePath + "=   target =" + targetPath + "=" );
@@ -788,13 +791,13 @@ public class JFileFinderWin extends javax.swing.JFrame {
 //                            }
                         }
                     }
-                catch( AccessDeniedException ae )
-                    {
-                    setProcessStatus( PROCESS_STATUS_ERROR );
-                    processStatus.setText( "Error" );
-                    message.setText( "Access Denied Exception" );
-                    filesTblModel.deleteRowAt( 0 );
-                    }
+//                catch( AccessDeniedException ae )
+//                    {
+//                    setProcessStatus( PROCESS_STATUS_ERROR );
+//                    processStatus.setText( "Error" );
+//                    message.setText( "Access Denied Exception" );
+//                    filesTblModel.deleteRowAt( 0 );
+//                    }
                 catch (Exception ex) 
                     {
                     System.out.println( "ex.getMessage() =" + ex.getMessage()+ "=" );
@@ -1153,9 +1156,35 @@ public class JFileFinderWin extends javax.swing.JFrame {
         System.out.println( "resultsData.getFilesMatched() =" + resultsData.getFilesMatched() );
         System.out.println( "resultsData.getFilesTblModel() =" + resultsData.getFilesTblModel().toString() );
 
+            NumberFormat numFormat = NumberFormat.getIntegerInstance();
+            String partialMsg = "";
+            if ( resultsData.getSearchWasCanceled() )
+                {
+                jFileFinderWin.setProcessStatus( Constants.PROCESS_STATUS_SEARCH_CANCELED );
+                partialMsg = " PARTIAL files list.";
+                }
+            else
+                {
+                jFileFinderWin.setProcessStatus( Constants.PROCESS_STATUS_SEARCH_COMPLETED );
+                }
+            jFileFinderWin.setMessage( "Matched " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) 
+                    + " folders out of " + numFormat.format( resultsData.getFilesTested() ) + " files and " + numFormat.format( resultsData.getFoldersTested() ) + " folders.  Total "
+                    + numFormat.format( resultsData.getFilesVisited() ) + partialMsg );
+            jFileFinderWin.setResultsData( resultsData );
+            
+            //jFileFinderWin.emptyFilesTable();
+            
+            if ( ! countOnlyFlag )
+                {
+                System.out.println( "call JFileFinderSwingWorker.fillTableModelSwingWorker.execute()" );
+                System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+                //FillTableModelSwingWorker fillTableModelSwingWorker = new FillTableModelSwingWorker( jFileFinderWin, jfilefinder );
+                //fillTableModelSwingWorker.execute();   //doInBackground();
+                fillInFilesTable( resultsData.getFilesTblModel() );
+                }
+
 //        FilesTblModel filesTblModel = restTemplate.postForEntity( SERVER_URI+JfpRestURIConstants.SEARCH, searchModel, FilesTblModel.class).getBody();
 //        System.out.println( "response filesTblModel =" + filesTblModel + "=" );
-        fillInFilesTable( resultsData.getFilesTblModel() );
     }
 
     public SearchModel extractSearchModel()
@@ -3004,12 +3033,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             numFilesInTable.setMaximumSize(new java.awt.Dimension(100, 26));
             numFilesInTable.setMinimumSize(new java.awt.Dimension(100, 26));
             numFilesInTable.setPreferredSize(new java.awt.Dimension(100, 26));
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 4;
-            gridBagConstraints.gridy = 0;
-            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-            gridBagConstraints.insets = new java.awt.Insets(5, 5, 0, 0);
-            jPanel7.add(numFilesInTable, gridBagConstraints);
+            jPanel7.add(numFilesInTable, new java.awt.GridBagConstraints());
 
             upFolder.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/yellow/Folder-Upload-icon-16.png"))); // NOI18N
             upFolder.setText("Up");
