@@ -1,0 +1,73 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.towianski.jfileprocessor.beans;
+
+import com.towianski.jfileprocessor.JFileFinderWin;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
+
+/**
+ *
+ * @author stowians
+ */
+@Component
+@Profile("client")
+//@ Configuration
+public class AppConfig 
+    {
+    static    {
+        System.out.println( "AppConfig static()" );
+        }
+    public AppConfig ()  {}
+
+    @Bean
+    public JFileFinderWin jFileFinderWin()
+        {
+        System.out.println( "AppConfig JFileFinderWin()" );
+        return new JFileFinderWin();
+//        return null;
+        }
+
+//    @Bean
+//    public ProgramMemory programMemory()
+//        {
+//        System.out.println( "AppConfig ProgramMemory()" );
+//        try {
+//            ProgramMemory programMemory = (ProgramMemory) Rest.readObjectFromFile( "ProgramMemory.json", new TypeReference<ProgramMemory>(){} );
+//            if ( programMemory == null )
+//                programMemory = new ProgramMemory();
+//            else
+//                {
+//                programMemory.setJFileFinderWin( jFileFinderWin() );
+//                programMemory.infuseSavedValues();
+//                }
+//    //        if ( jFileFinderWin == null )
+//    //            return;
+//            return programMemory;
+//            }
+//        catch( Exception exc )
+//            {
+//            exc.printStackTrace();
+//            }
+//        return new ProgramMemory();
+//        }
+ 
+//    public void saveToFile( JFileFinderWin jFileFinderWin )
+//        {
+//        if ( jFileFinderWin == null )
+//            return;
+//        Rest.saveObjectToFile( "ProgramMemory.json", this );
+//        }
+//
+//    public void readFromFile( JFileFinderWin jFileFinderWin )
+//        {
+//        if ( jFileFinderWin == null )
+//            return;
+//        Rest.readObjectFromFile( "ProgramMemory.json", new TypeReference<ProgramMemory>(){} );
+//        }
+
+    }

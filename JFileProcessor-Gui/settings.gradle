@@ -1,4 +1,0 @@
-rootProject.name = 'JFileProcessor-Gui'
-
-include ':JFileProcessor-Sdk'
-project(':JFileProcessor-Sdk').projectDir = new File(settingsDir, '../JFileProcessor-Sdk')

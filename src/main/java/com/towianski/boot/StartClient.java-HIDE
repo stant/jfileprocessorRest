@@ -1,0 +1,184 @@
+package com.towianski.boot;
+
+import com.towianski.jfileprocessor.*;
+import com.towianski.utils.MyLogger;
+import java.awt.EventQueue;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import javax.annotation.PreDestroy;
+import javax.net.ssl.SSLContext;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContexts;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.web.client.RestTemplate;
+
+//@ Configuration
+//@ ComponentScan       // This class must be a package level above the controllers !
+@SpringBootApplication
+public class StartClient implements CommandLineRunner
+{
+    private final static MyLogger logger = MyLogger.getLogger( JFileFinderWin.class.getName() );
+    
+    @Autowired
+     JFileFinderWin jFileFinderWin;
+    
+//    @Autowired
+//     ProgramMemory programMemory;
+
+//    @Bean
+//    public JFileFinderWin getJFileFinderWin() 
+//        {
+//        System.out.println( "AppConfig JFileFinderWin()" );
+//        return new JFileFinderWin();
+//        }
+ 
+//    public void saveToFile( JFileFinderWin jFileFinderWin )
+//        {
+//        if ( jFileFinderWin == null )
+//            return;
+//        Rest.saveObjectToFile( "ProgramMemory.json", this );
+//        }
+//
+//    public void readFromFile( JFileFinderWin jFileFinderWin )
+//        {
+//        if ( jFileFinderWin == null )
+//            return;
+//        Rest.readObjectFromFile( "ProgramMemory.json", new TypeReference<ProgramMemory>(){} );
+//        }
+
+//    @Bean
+//    public ProgramMemory getProgramMemory()
+//        {
+//        System.out.println( "AppConfig ProgramMemory()" );
+//        ProgramMemory programMemory = (ProgramMemory) Rest.readObjectFromFile( "ProgramMemory.json", new TypeReference<ProgramMemory>(){} );
+//        if ( programMemory == null )
+//            programMemory = new ProgramMemory();
+//        
+////        if ( jFileFinderWin == null )
+////            return;
+//        return programMemory;
+//        }
+
+        
+    public static void main(String[] args) 
+        {
+//        SpringApplication.run(StartApp.class, args);
+    
+        System.out.println( "" );
+        
+//        //  works
+//        SpringApplicationBuilder builder = new SpringApplicationBuilder( StartApp.class );
+//        builder.headless(false);
+//        ConfigurableApplicationContext context = builder.run(args);
+        
+        ConfigurableApplicationContext ctx = new SpringApplicationBuilder(JFileFinderWin.class)
+                .headless(false).run(args);
+
+        EventQueue.invokeLater(() -> {
+            JFileFinderWin jFileFinderWin = ctx.getBean(JFileFinderWin.class);
+            jFileFinderWin.setVisible(true);
+        });
+        
+        setLookAndFeel();
+        }  
+
+    /**
+     * @param args the command line arguments
+     */
+//    @Override
+    public void run(String... args) throws Exception {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+//        MyLogger logger = MyLogger.getLogger( JFileFinderWin.class.getName() );
+
+        System.out.println( "StartApp run()" );
+        
+        for ( int i = 0; i < args.length; i++ )
+            {
+//            logger.info( "** args [" + i + "] =" + args[i] + "=" );
+            System.out.println( "** args [" + i + "] =" + args[i] + "=" );
+            }
+
+        if ( 1 == 1 )  return;
+        
+//        final JFileFinderWin jffw = new JFileFinderWin();
+        
+        if ( args.length > 0 )
+            {
+//   FIXXX          jffw.startingFolder.setText( args[0] );
+//            jffw.searchBtnActionPerformed( null );
+            }
+        /* Create and display the form */
+        setLookAndFeel();
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                jFileFinderWin.setVisible(true);
+            }
+        });
+        
+    }
+    
+    public static void setLookAndFeel()
+        {
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                System.out.println( "StartApp info.getName() =" + info.getName() );
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    System.out.println( "StartApp setLookAndFeel =" + info.getName() );
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        }
+    
+    @PreDestroy
+    public void destroy() {
+        System.out.println("Inside destroy method - " );
+        }
+   
+    @Bean
+    public RestTemplate noHostVerifyRestTemplate() throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException 
+        {
+        SSLContext sslContext = SSLContexts.custom()
+                .loadTrustMaterial(null, new TrustSelfSignedStrategy())
+                .build();
+
+        SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setSSLSocketFactory(sslConnectionSocketFactory)
+                .build();
+
+        HttpComponentsClientHttpRequestFactory requestFactory =
+                new HttpComponentsClientHttpRequestFactory();
+
+        requestFactory.setHttpClient(httpClient);
+
+        return new RestTemplate(requestFactory);
+        }
+    
+}
+
+

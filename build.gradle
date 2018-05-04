@@ -1,20 +1,137 @@
-import org.gradle.api.artifacts.*
 
-apply plugin: 'base' // To add "clean" task to the root project.
-
-subprojects {
-    apply from: rootProject.file('common.gradle')
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url 'https://repo.spring.io/release' }
+    }
+    dependencies {
+      classpath("org.springframework.boot:spring-boot-gradle-plugin:2.0.1.RELEASE")
+  }
 }
 
-task mergedJavadoc(type: Javadoc, description: 'Creates Javadoc from all the projects.') {
-    title = 'All modules'
-    destinationDir = new File(project.buildDir, 'merged-javadoc')
+group 'com.towianski'
+version '1.6.0'
 
-    // Note: The closures below are executed lazily.
-    source {
-       subprojects*.sourceSets*.main*.allSource
-    }
-    classpath.from {
-        subprojects*.configurations*.compile*.copyRecursive({ !(it instanceof ProjectDependency); })*.resolve()
-    }
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'application'
+
+
+mainClassName = 'com.towianski.boot.StartApp'
+
+jar {
+    baseName = 'JFileProcessor'
+    version =  '1.6.0-beta'
 }
+
+task copy(type: Copy) {
+    from jar // here it automatically reads jar file produced from jar task
+    destinationDir file( '../../programs/jfp2' )
+}
+
+build.dependsOn copy
+
+bootJar {
+//        included = true
+//        mainClassName = 'com.towianski.jfileprocessor.JFileFinderWin'
+        mainClassName = 'com.towianski.boot.StartApp'
+//    executable = 'true'
+}
+
+sourceCompatibility = 1.8
+
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+// NetBeans will automatically add "run" and "debug" tasks relying on the
+// "mainClass" property. You may however define the property prior executing
+// tasks by passing a "-PmainClass=<QUALIFIED_CLASS_NAME>" argument.
+//
+// Note however, that you may define your own "run" and "debug" task if you
+// prefer. In this case NetBeans will not add these tasks but you may rely on
+// your own implementation.
+//if (!hasProperty('mainClass')) {
+//    ext.mainClass = 'com.towianski.jfileprocessor.JFileFinderWin'
+////    ext.mainClass = 'testit.TomcatApp'
+//}
+
+task runApp(type: JavaExec) {
+  classpath = sourceSets.main.runtimeClasspath
+
+  main = 'com.towianski.boot.StartApp'
+//  main = 'testit.TomcatApp'
+
+  // arguments to pass to the application
+//  args 'null -rest'
+//    args = ["--myarg1 with spaces even", "--myarg2"]
+  systemProperties = System.properties
+}
+
+
+//run {
+//    if (project.hasProperty("appArgs")) {
+//        args Eval.me(appArgs)
+//    }
+//}
+//
+//Then to run: gradle run -PappArgs="['arg1', 'args2']"
+
+task generateSources {
+	inputs.property "version", project.version
+	outputs.dir "$buildDir/generated"
+	doFirst {
+		def versionFile = file("$buildDir/generated/foo/Version.java")
+		versionFile.parentFile.mkdirs()
+		versionFile.text = 
+"""
+package foo;
+
+public class Version {
+	public static String getVersion() {
+		return "$project.version";
+	}
+}
+"""
+	}
+}
+
+compileJava.dependsOn generateSources
+
+sourceSets.main.java {
+	srcDir "$buildDir/generated"
+}
+
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://repo.spring.io/libs-milestone'
+    }
+//   flatDir {
+//       dirs 'libs'
+//   }
+}
+
+dependencies {
+    compile("org.springframework.boot:spring-boot-starter:2.0.1.RELEASE")
+    compile("org.springframework.boot:spring-boot-starter-web:2.0.1.RELEASE")
+    compile("org.springframework.boot:spring-boot-starter-security:2.0.1.RELEASE")
+//    compile group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: '2.0.0.RELEASE'
+    compile("org.springframework:spring-web:5.0.4.RELEASE")
+    compile 'org.apache.httpcomponents:httpclient:4.5.5'
+    compile("com.fasterxml.jackson.core:jackson-databind:2.9.4")
+    compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.13'
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.jcraft:jsch:0.1.54'
+//    compile 'org.slf4j:slf4j-api:1.7.25'
+//    compile 'org.slf4j:slf4j-simple:1.7.25'
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+//    compile( "com.fasterxml.jackson.core:jackson-databind:2.9.4")
+//    compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.13'
+//    compile fileTree(dir: 'libs', include: ['*.jar'])
+//    compile 'com.jcraft:jsch:0.1.54'
+//    compile 'org.slf4j:slf4j-api:1.7.24'
+//    compile 'org.slf4j:slf4j-simple:1.7.24'
+//    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+

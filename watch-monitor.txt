@@ -1,0 +1,82 @@
+    public void waitUntilStarted()
+        {
+        System.out.println( "entered TomcatAppMonitor waitUntilStarted()" );
+        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+        RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
+        
+        boolean isRunning = false;
+        boolean firstWaitFlag = true;
+        int response = -9;
+        int waitCount = 15;
+        
+        while ( (response < 0 || ! (response == Constants.FILESYSTEM_DOS || response == Constants.FILESYSTEM_POSIX))  && ! cancelFlag )
+            {
+            System.out.println( "TomcatAppMonitor.run() make rest " + JfpRestURIConstants.SYS_GET_FILESYS + " call" );
+            try
+                {
+                response = noHostVerifyRestTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.SYS_GET_FILESYS, Integer.class );
+                System.out.println( "RestServerSw.run() SYS_GET_FILESYS response =" + response );
+//                connUserInfo.setToFilesysType(response);
+//                System.out.println( "connUserInfo.getToFilesysType() =" + connUserInfo.getToFilesysType() );
+                jFileFinderWin.setFilesysType(response);
+                System.out.println( "jFileFinderWin.getFilesysType() =" + jFileFinderWin.getFilesysType() );
+                }
+            catch( Exception exc )
+                {
+                System.out.println( "TomcatAppMonitor.run() get filesys rest threw Exception !!" );
+                exc.printStackTrace();
+                response = -9;
+                }
+            System.out.println( "TomcatAppMonitor.waitUntilStarted response =" + response + "=" );
+            try
+                {
+                if ( cancelFlag )
+                    {
+                    System.out.println( "cancel so no pause." );
+                    }
+                else if ( response < 0 || ! (response == Constants.FILESYSTEM_DOS || response == Constants.FILESYSTEM_POSIX) )
+                    {
+                    if ( firstWaitFlag )
+                        {
+                        firstWaitFlag = false;
+                        System.out.println( "pause 12 seconds first time. give longer pause to let server start." );
+                        Thread.sleep( 12000 );
+                        }
+                    else
+                        {
+                        Thread.sleep( 4000 );
+                        }
+                    }
+                } 
+            catch (InterruptedException ex)
+                {
+                Logger.getLogger(RestServerSw.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+            if ( --waitCount < 1 )  break;
+            }
+        System.out.println( "TomcatAppMonitor waitUntilStarted() after while loop" );
+
+        if ( response < 0 || cancelFlag || ! (response == Constants.FILESYSTEM_DOS || response == Constants.FILESYSTEM_POSIX) )
+            {
+            System.out.println( "TomcatAppMonitor waitUntilStarted() reset button color" );
+            connUserInfo.setConnectedFlag( false );
+            SwingUtilities.invokeLater(new Runnable() 
+                {
+                public void run() {
+                    jFileFinderWin.setRmtConnectBtnBackgroundReset();
+                    }
+                });
+            }
+        else
+            {
+            System.out.println( "TomcatAppMonitor waitUntilStarted() set button color to green for connected" );
+            connUserInfo.setConnectedFlag( true );
+            SwingUtilities.invokeLater(new Runnable() 
+                {
+                public void run() {
+                    jFileFinderWin.setRmtConnectBtnBackground( Color.green );
+                    }
+                });
+            }
+        }
