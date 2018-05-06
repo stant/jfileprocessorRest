@@ -44,6 +44,10 @@ glob:  */*/whatever                 find whatever folder at 3rd level below star
 ```
 
 
+Remote Host connection:  This uses sftp and also https. 
+the ssh server must have sftp turned on and this assumes port 22 for now.
+it also uses https which assumes port 8443 for now. This gives it ssl security but does not check the validity/certificate of the host itself. You probably would use this on a network you know/trust anyways.
+
 Escape: closes windows
 
 Shift-Escape: close main window
