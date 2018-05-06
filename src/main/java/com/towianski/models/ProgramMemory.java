@@ -20,7 +20,8 @@ public class ProgramMemory {
     boolean showOwnerFlag = false;
     boolean showGroupFlag = false;
     boolean showPermsFlag = false;
-	
+    String checkForUpdateDate = "";   // value is only here, which is better
+    
     public ProgramMemory()
         {
         System.out.println( "ProgramMemory constructor()" );
@@ -67,6 +68,14 @@ public class ProgramMemory {
     public void setShowPermsFlag(boolean showPermsFlag) {
         this.showPermsFlag = showPermsFlag;
     }
+
+    public String getCheckForUpdateDate() {
+        return checkForUpdateDate;
+    }
+
+    public void setCheckForUpdateDate(String checkForUpdateDate) {
+        this.checkForUpdateDate = checkForUpdateDate;
+    }
     
     
     //---------
@@ -86,15 +95,15 @@ public class ProgramMemory {
         {
         System.out.println( "ProgramMemory ExtractCurrentValues()" );
         try {
-        this.showHiddenFilesFlag = jFileFinderWin.getShowHiddenFilesFlag();
-        this.showOwnerFlag = jFileFinderWin.isShowOwnerFlag();
-        this.showGroupFlag = jFileFinderWin.getShowGroupFlag();
-        this.showPermsFlag = jFileFinderWin.isShowPermsFlag();
-        }
+            this.showHiddenFilesFlag = jFileFinderWin.getShowHiddenFilesFlag();
+            this.showOwnerFlag = jFileFinderWin.isShowOwnerFlag();
+            this.showGroupFlag = jFileFinderWin.getShowGroupFlag();
+            this.showPermsFlag = jFileFinderWin.isShowPermsFlag();
+            }
         catch( Exception exc )
-        {
+            {
             exc.printStackTrace();
-        }
+            }
         System.out.println( "ProgramMemory showHiddenFilesFlag =" + showHiddenFilesFlag );
         System.out.println( "ProgramMemory showOwnerFlag =" + showOwnerFlag );
         }

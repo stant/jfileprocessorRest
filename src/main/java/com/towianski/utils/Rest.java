@@ -5,12 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.towianski.models.ProgramMemory;
 import com.towianski.models.ResultsData;
+import static com.towianski.utils.DesktopUtils.getJfpHome;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -35,7 +34,7 @@ public class Rest {
     static File programMemoryFile = null;
 
     static {
-        programMemoryFile = new File( System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + "programMemory.json" );
+        programMemoryFile = getJfpHome( "programMemory.json", "file" );
         }
 
 //    @Override
@@ -55,7 +54,8 @@ public class Rest {
         byte[] jsonData = new byte[0];
 
         try {
-            File fromFile = new File( System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + fileName );
+//            File fromFile = new File( System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + fileName );
+            File fromFile = getJfpHome( fileName, "file" );
             if ( ! fromFile.exists() )
                 {
                 System.out.println( "REST.readObjectFromFile() read file =" + fromFile.toString() + " does not exist." );
@@ -114,7 +114,8 @@ public class Rest {
             objectMapper.configure( SerializationFeature.INDENT_OUTPUT, true);
 
             //writing to console, can write to any output stream such as file
-            toFile = new File( System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + fileName );
+//            toFile = new File( System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + fileName );
+            toFile = getJfpHome( fileName, "file" );
 
     //        StringWriter stringEmp = new StringWriter();
             objectMapper.writeValue( toFile, obj );
@@ -128,7 +129,7 @@ public class Rest {
         {
         //writing to console, can write to any output stream such as file
         try {
-            File toFile = new File( System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + fileName );
+            File toFile = getJfpHome( fileName, "file" );
             PrintWriter out = new PrintWriter( toFile );
 
             out.println( outs );

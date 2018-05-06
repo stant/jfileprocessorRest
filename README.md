@@ -1,5 +1,13 @@
 # jfileprocessor
 
+Place to get the official versions (many sites are behind):
+![github main](https://github.com/stant/jfileprocessorRest)
+![github main](https://github.com/stant/jfileprocessorRest/releases)
+
+made using Java 8.
+
+Report Issues at:  ![github main](https://github.com/stant/jfileprocessorRest/issues)
+
 This is a File and List Manager with search features: 
 
 Does: Copy, Cut, Paste, Delete, New Folder,...
@@ -13,12 +21,13 @@ Alt-Left, Alt-Right in Starting Folder: cycles thru previous search paths
 
 has Bookmarks
 
+* Works with Lists of Strings, which can be filenames.
 Lets you save file lists to a "List Window" or a File.
 You can add or subtract 1 list window to/from another.
 Save the list window.
 Read in a list to a window (adds items to existing list).
 
-has pretty good search ability.
+* has pretty good search ability.
 
 ```java
 search automatically prepends your starting Folder to your search pattern
@@ -48,6 +57,7 @@ Remote Host connection:  This uses sftp and also https.
 the ssh server must have sftp turned on and this assumes port 22 for now.
 it also uses https which assumes port 8443 for now. This gives it ssl security but does not check the validity/certificate of the host itself. You probably would use this on a network you know/trust anyways.
 
+
 Escape: closes windows
 
 Shift-Escape: close main window
@@ -56,6 +66,19 @@ Shift-Escape: close main window
 
 ![jfileprocess-1 4 9-search](https://user-images.githubusercontent.com/1928413/29250304-7ed32dea-800e-11e7-80dc-baefc0c47cb3.png)
 
+* "Open Folder Containing Files" or "Open Terminal here" 
+
+For each file you have selected, it will open a new window or a terminal
+for the parent path of each.
+If nothing is selected it uses the "Folder:" you are in.
+
+* Install-Folder/   groovy   or   menu-scripts
+
+groovy: folder for groovy scripts. 
+menu-scripts: special groovy scripts folder. Place scripts in here to make them show up in the right-click "Scripts" menu.
+This is a short cut. It will run the script without a code window on the files you have selected.
+Most of the groovy scripts I include as examples write to the same file system-temp-folder/NewFile.txt so be sure to modify as needed.
+You can output to a window or a file as you want to.
 
 Here is an example groovy code file:
 

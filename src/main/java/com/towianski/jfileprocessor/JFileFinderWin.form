@@ -175,6 +175,8 @@
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="startCmdWin1ActionPerformed"/>
           </Events>
         </MenuItem>
+        <Component class="javax.swing.JPopupMenu$Separator" name="jSeparator4">
+        </Component>
         <MenuItem class="javax.swing.JMenuItem" name="savePathsToFile1">
           <Properties>
             <Property name="text" type="java.lang.String" value="Save Paths to File"/>
@@ -183,6 +185,40 @@
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="savePathsToFile1ActionPerformed"/>
           </Events>
         </MenuItem>
+        <MenuItem class="javax.swing.JMenuItem" name="openListWindow1">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Open List Window"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="openListWindow1ActionPerformed"/>
+          </Events>
+        </MenuItem>
+        <MenuItem class="javax.swing.JMenuItem" name="readFileIntoListWin1">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Read File into List Window"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="readFileIntoListWin1ActionPerformed"/>
+          </Events>
+        </MenuItem>
+        <MenuItem class="javax.swing.JMenuItem" name="openCodeWin1">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Open Code Window"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="openCodeWin1ActionPerformed"/>
+          </Events>
+        </MenuItem>
+        <Component class="javax.swing.JPopupMenu$Separator" name="jSeparator5">
+        </Component>
+        <Menu class="javax.swing.JMenu" name="scriptsMenu1">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Scripts"/>
+          </Properties>
+          <Events>
+            <EventHandler event="menuSelected" listener="javax.swing.event.MenuListener" parameters="javax.swing.event.MenuEvent" handler="scriptsMenu1MenuSelected"/>
+          </Events>
+        </Menu>
       </SubComponents>
     </Container>
   </NonVisualComponents>
@@ -196,7 +232,7 @@
       <Dimension value="[800, 179]"/>
     </Property>
     <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-      <Dimension value="[970, 502]"/>
+      <Dimension value="[1000, 502]"/>
     </Property>
   </Properties>
   <SyntheticProperties>
@@ -237,7 +273,7 @@
               <Dimension value="[0, 0]"/>
             </Property>
             <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-              <Dimension value="[150, 500]"/>
+              <Dimension value="[170, 500]"/>
             </Property>
           </Properties>
           <Constraints>
@@ -254,7 +290,7 @@
                   <Dimension value="[0, 0]"/>
                 </Property>
                 <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-                  <Dimension value="[150, 500]"/>
+                  <Dimension value="[170, 500]"/>
                 </Property>
               </Properties>
               <AuxValues>
@@ -274,7 +310,7 @@
                       <Connection code="new DefaultListModel() " type="code"/>
                     </Property>
                     <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-                      <Dimension value="[100, 500]"/>
+                      <Dimension value="[120, 500]"/>
                     </Property>
                   </Properties>
                   <Events>
@@ -340,6 +376,9 @@
         </Container>
         <Container class="javax.swing.JPanel" name="jPanel10">
           <Properties>
+            <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+              <Dimension value="[800, 172]"/>
+            </Property>
             <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
               <Dimension value="[800, 500]"/>
             </Property>
