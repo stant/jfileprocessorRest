@@ -278,8 +278,8 @@ public class SearchFiles
         jfilefinder.run();  // this );
         ResultsData resultsData = jfilefinder.getResultsData();   //get();
         jfilefinder.getFilesTableModel();
-        Rest.saveObjectToFile( "resultsData.getFilesTblModel.json", resultsData.getFilesTblModel() );
-        Rest.saveObjectToFile( "resultsData.json", resultsData );
+//        Rest.saveObjectToFile( "resultsData.getFilesTblModel.json", resultsData.getFilesTblModel() );
+//        Rest.saveObjectToFile( "resultsData.json", resultsData );
 
         //publish("Listing all text files under the directory: ");
 //        return jfilefinder.getResultsData();

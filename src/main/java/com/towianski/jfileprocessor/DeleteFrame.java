@@ -375,7 +375,7 @@ public class DeleteFrame extends javax.swing.JFrame {
         stopDirWatcher();
 
         DeleteModel deleteModel = extractDeleteModel();
-        Rest.saveObjectToFile( "DeleteModel.json", deleteModel );
+//        Rest.saveObjectToFile( "DeleteModel.json", deleteModel );
 //        RestTemplate restTemplate = new RestTemplate();
         RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
         //we can't get List<Employee> because JSON convertor doesn't know the type of

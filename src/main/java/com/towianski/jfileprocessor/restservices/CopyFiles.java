@@ -40,7 +40,7 @@ public class CopyFiles   //extends SwingWorker<ResultsData, Long>
 //        this.showProgressFlag = showProgressFlag;
 //        this.closeWhenDoneFlag = closeWhenDoneFlag;
 
-        Rest.saveObjectToFile( "CopyModel.json", copyModel );
+//        Rest.saveObjectToFile( "CopyModel.json", copyModel );
         jfilecopy = new JFileCopy( copyModel.getConnUserInfo(), copyModel.isDoingCutFlag(), copyModel.getStartingPath(), copyModel.getCopyPaths(), copyModel.getToPath(), copyModel.getFileVisitOptions(), copyModel.getCopyOpts() );
         }
 

@@ -17,10 +17,10 @@ import java.util.regex.Pattern;
  * */
 public class VersionCk {
 
-    private static boolean isVersionHigher( String baseVersion, String testVersion )
+    public static boolean isVersionHigher( String baseVersion, String testVersion )
         {
         System.out.println( "versionToComparable( baseVersion ) =" + versionToComparable( baseVersion ) );
-        System.out.println( "versionToComparable( testVersion ) =" + versionToComparable( testVersion ) + " is this higher ?" );
+        System.out.println( "versionToComparable( testVersion ) =" + versionToComparable( testVersion ) + " is this higher ? " + (versionToComparable( testVersion ).compareTo( versionToComparable( baseVersion ) ) > 0) );
         return versionToComparable( testVersion ).compareTo( versionToComparable( baseVersion ) ) > 0;
         }
 
@@ -102,6 +102,8 @@ public class VersionCk {
         checkVersion( "5.10.12-Alpha-1", "5.10.12-alpha-2");
         checkVersion( "5.10.13-release-1", "5.10.13-release2");
         checkVersion( "10-rc42", "10.0.0-rc53");
+        checkVersion( "1.6", "1.6.0-rc99");
+        checkVersion( "1.6.0-rc99", "1.6.0");
         }
 
     private static void checkVersion(String baseVersion, String testVersion) 

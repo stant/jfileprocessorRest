@@ -240,7 +240,7 @@ public class CopyFrame extends javax.swing.JFrame {
         stopDirWatcher();
 
         CopyModel copyModel = extractCopyModel();
-        Rest.saveObjectToFile( "CopyModel.json", copyModel );
+//        Rest.saveObjectToFile( "CopyModel.json", copyModel );
 //        RestTemplate restTemplate = new RestTemplate();
         RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
         //we can't get List<Employee> because JSON convertor doesn't know the type of

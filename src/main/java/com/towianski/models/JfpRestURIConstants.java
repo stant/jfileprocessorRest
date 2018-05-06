@@ -10,5 +10,5 @@ public class JfpRestURIConstants {
 	public static final String DELETE = "/jfp/rest/delete";
 //	public static final String RENAME_FILE = "/jfp/rest/rename/oldname/{oldname}/newname/{newname}";
 	public static final String RENAME_FILE = "/jfp/rest/rename";
-	public static final String RENAME_FILE2 = "/jfp/rest/rename2";
+	public static final String GET_LATEST_GITHUB_VERSION_NUMBER = "/repos/stant/jfileprocessorRest/releases/latest";
 }

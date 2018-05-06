@@ -211,7 +211,7 @@ public class JFileFinder //  implements Runnable
 //                    if ( jFileFinderWin.isShowOwnerFlag() )
                     {
                     rowList.add( fsattr.owner() );
-                    System.out.println( "JFIleFinder set owner =" + fsattr.owner() + "=" );
+//                    System.out.println( "JFIleFinder set owner =" + fsattr.owner() + "=" );
                     }
 //                    if ( jFileFinderWin.isShowGroupFlag() )
                     {

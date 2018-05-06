@@ -27,7 +27,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 /**
- * Handles requests for the Employee service.
+ *
+ * @author Stan Towianski
+ * 
  */
 @Controller
 @EnableAutoConfiguration

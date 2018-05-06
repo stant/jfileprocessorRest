@@ -1,5 +1,6 @@
 package com.towianski.jfileprocess.actions;
 
+import com.towianski.boot.JFileProcessorVersion;
 import com.towianski.jfileprocessor.JFileFinderWin;
 import com.towianski.jfileprocessor.RestServerSw;
 import com.towianski.models.ConnUserInfo;
@@ -109,7 +110,7 @@ public class TomcatAppThread implements Runnable
                     String fpath = System.getProperty( "user.dir" ) + System.getProperty( "file.separator" );
 //                    fpath = fpath.replace( "-Gui", "-Server" );
 //                    System.out.println( "jfpFilename =" + jfpFilename + "=" );
-                    jfpFilename = "JFileProcessor-1.6.0.jar";
+                    jfpFilename = JFileProcessorVersion.getName() + "-" + JFileProcessorVersion.getVersion() + ".jar";  //"JFileProcessor-1.6.0.jar";
                     System.out.println( "set jfpFilename =" + jfpFilename + "=" );
                     System.out.println( "try jschSftpUtils   file =" + fpath + jfpFilename + "=   to remote =" + user + "@" + rmtHost + ":" + jfpFilename + "=" );
 
