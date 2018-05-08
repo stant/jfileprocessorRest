@@ -264,20 +264,21 @@ public class ConnUserInfo
     public String toString()
         {
         return  "  connectedFlag =" + connectedFlag + "="
-+ "  fromUri =" + fromUri + "="
++ "  \nfromUri =" + fromUri + "="
 + "  fromProtocol =" + fromProtocol + "="
 + "  fromUser =" + fromUser + "="
 + "  fromPassword =" + fromPassword + "="
 + "  fromHost =" + fromHost + "="
 + "  fromSshPort =" + fromSshPort + "="
 + "  fromFilesysType =" + fromFilesysType + "="
-+ "  ToUri =" + ToUri + "="
++ "  \nToUri =" + ToUri + "="
 + "  toProtocol =" + toProtocol + "="
 + "  toUser =" + toUser + "="
 + "  toPassword =" + toPassword + "="
 + "  toHost =" + toHost + "="
 + "  toSshPort =" + toSshPort + "="
-+ "  toFilesysType =" + toFilesysType + "=";
++ "  toFilesysType =" + toFilesysType + "="
++ "  \nisRunCopyOnRemote() = " + isRunCopyOnRemote() + "=    getCopyProcotol() = " + getCopyProcotol();
         }
         
     }

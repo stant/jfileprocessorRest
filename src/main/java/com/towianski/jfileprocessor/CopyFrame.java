@@ -199,7 +199,7 @@ public class CopyFrame extends javax.swing.JFrame {
 
     public void copyBtnActionSwing( java.awt.event.ActionEvent evt )
         {
-        System.out.println( "entered copyBtnActionSwing()" );
+        System.out.println( "----  entered copyBtnActionSwing()  ----" );
         try {
             ArrayList<CopyOption> copyOpts = new ArrayList<CopyOption>();
             EnumSet<FileVisitOption> fileVisitOptions = EnumSet.noneOf( FileVisitOption.class );
@@ -234,7 +234,7 @@ public class CopyFrame extends javax.swing.JFrame {
 
     public void copyBtnActionRest( java.awt.event.ActionEvent evt )
         {
-        System.out.println( "entered copyBtnActionRest()" );
+        System.out.println( "----  entered copyBtnActionRest()  ----" );
 //        System.out.println("jfilewin searchBtn() searchBtn.getText() =" + searchBtn.getText() + "=" );
 //        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
         stopDirWatcher();

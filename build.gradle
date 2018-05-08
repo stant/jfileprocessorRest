@@ -140,7 +140,7 @@ task generateRunScriptWindows {
         def runFile = file("../../programs/jfp/run.bat")
         runFile.text = 
 """
-java -jar ${rootProject.name}-${version}.jar
+start \"\" javaw -jar ${rootProject.name}-${version}.jar
 """
         }
 }

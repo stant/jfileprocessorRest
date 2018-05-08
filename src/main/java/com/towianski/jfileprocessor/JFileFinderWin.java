@@ -66,7 +66,6 @@ import com.towianski.sshutils.JschSftpUtils;
 import static com.towianski.utils.ClipboardUtils.getClipboardStringsList;
 import static com.towianski.utils.ClipboardUtils.setClipboardContents;
 import com.towianski.utils.DesktopUtils;
-import static com.towianski.utils.DesktopUtils.getJfpHome;
 import com.towianski.utils.FileUtils;
 import com.towianski.utils.GithubClient;
 import com.towianski.utils.MyLogger;
@@ -75,7 +74,9 @@ import com.towianski.utils.VersionCk;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Desktop;
+import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -83,7 +84,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
+import java.awt.font.TextAttribute;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -91,6 +95,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -106,6 +112,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -221,7 +228,32 @@ public class JFileFinderWin extends javax.swing.JFrame {
             String latest = GithubClient.findLatestReleaseVersion();
             if ( VersionCk.isVersionHigher( JFileProcessorVersion.getVersion(), latest ) )
                 {
-                this.setTitle( this.getTitle() + " - " + "newer version (" + latest + ") at https://github.com/stant/jfileprocessorRest" );
+//                newerVersionLbl.setText( "  newer version <a href=\"\">(" + latest + ")</a></html> " );
+                newerVersionLbl.setText( " newer version (" + latest + ") " );
+                newerVersionLbl.setToolTipText( "browse there" );
+//                newerVersionLbl.setMinimumSize( new Dimension( 100, 23 ) );
+                newerVersionLbl.setPreferredSize( new Dimension( 140, 23 ) );
+                newerVersionLbl.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+                Font font = newerVersionLbl.getFont();
+                Map attributes = font.getAttributes();
+                attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
+                newerVersionLbl.setFont(font.deriveFont(attributes));
+                newerVersionLbl.addMouseListener(new MouseAdapter()  
+                    {  
+                        public void mouseClicked(MouseEvent e)  
+                        {  
+                        System.out.println( "newerVersionLblMouseClicked" );
+                        Desktop desktop = Desktop.getDesktop();
+                            try {
+                                desktop.browse( new URI( "https://github.com/stant/jfileprocessorRest/releases" ) );
+                            } catch (URISyntaxException ex) {
+                                Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+                            } catch (IOException ex) {
+                                Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }  
+                    }); 
+                newerVersionLbl.validate();
                 }
             //programMemory.extractCurrentValues();
             Rest.saveObjectToFile( "ProgramMemory.json", programMemory );
@@ -614,10 +646,6 @@ public class JFileFinderWin extends javax.swing.JFrame {
         this.showPermsFlag.setSelected( showPermsFlag );
     }
 
-    public int getFilesysType() {
-        return filesysType;
-    }
-
     public boolean getShowHiddenFilesFlag() {
         return showHiddenFilesFlag.isSelected();
     }
@@ -626,19 +654,35 @@ public class JFileFinderWin extends javax.swing.JFrame {
         this.showHiddenFilesFlag.setSelected( showHiddenFilesFlag );
     }
 
+    public int getFilesysType() {
+        return filesysType;
+    }
+
     public void setFilesysType(int filesysType) {
         this.filesysType = filesysType;
+        switch( filesysType )
+            {
+            case Constants.FILESYSTEM_DOS:
+                fsTypeLbl.setText( "win" );
+                break;
+            case Constants.FILESYSTEM_POSIX:
+                fsTypeLbl.setText( "posix" );
+                break;
+            default:
+                fsTypeLbl.setText( "?" );
+                break;
+            }
     }
 
     public void calcFilesysType()
         {
         if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
             {
-            filesysType = FILESYSTEM_DOS;
+            setFilesysType( FILESYSTEM_DOS );
             }
         else
             {
-            filesysType = Constants.FILESYSTEM_POSIX;
+            setFilesysType( Constants.FILESYSTEM_POSIX );
             }
         connUserInfo.setFromFilesysType( filesysType );
         connUserInfo.setToFilesysType( filesysType );
@@ -1571,7 +1615,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             }
 //        System.out.println( "filestr              =" + filestr + "=" );
 //        System.out.println( "stdOutFile.getText() =" + stdOutFile.getText() + "=" );
-        
+
         Desktop desktop = Desktop.getDesktop();
         try {
             if ( connUserInfo.isConnectedFlag()  &&   //rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) &&
@@ -2038,6 +2082,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
         stopFileWatchTb = new javax.swing.JToggleButton();
         fileWatchLbl = new javax.swing.JLabel();
         dumpThreadListToLog = new javax.swing.JButton();
+        testSshBtn = new javax.swing.JButton();
         jPanel7 = new javax.swing.JPanel();
         searchBtn = new javax.swing.JButton();
         jLabel3 = new javax.swing.JLabel();
@@ -2059,7 +2104,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
             upFolder = new javax.swing.JButton();
             countBtn = new javax.swing.JButton();
             logsBtn = new javax.swing.JButton();
-            jButton3 = new javax.swing.JButton();
+            fsTypeLbl = new javax.swing.JLabel();
+            newerVersionLbl = new javax.swing.JLabel();
             botPanel = new javax.swing.JPanel();
 
             Copy.setText("Copy   (Ctrl-C)");
@@ -3061,6 +3107,18 @@ public class JFileFinderWin extends javax.swing.JFrame {
             gridBagConstraints.insets = new java.awt.Insets(0, 5, 0, 5);
             jPanel9.add(dumpThreadListToLog, gridBagConstraints);
 
+            testSshBtn.setText("test ssh");
+            testSshBtn.setEnabled(false);
+            testSshBtn.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    testSshBtnActionPerformed(evt);
+                }
+            });
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.gridx = 14;
+            gridBagConstraints.gridy = 0;
+            jPanel9.add(testSshBtn, gridBagConstraints);
+
             jTabbedPane1.addTab("Settings", jPanel9);
 
             gridBagConstraints = new java.awt.GridBagConstraints();
@@ -3089,7 +3147,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridx = 1;
             gridBagConstraints.gridy = 0;
-            gridBagConstraints.insets = new java.awt.Insets(0, 4, 0, 0);
+            gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
             jPanel7.add(searchBtn, gridBagConstraints);
 
             jLabel3.setText("Files in Table:");
@@ -3129,12 +3187,13 @@ public class JFileFinderWin extends javax.swing.JFrame {
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridx = 0;
             gridBagConstraints.gridy = 1;
+            gridBagConstraints.gridwidth = 2;
             gridBagConstraints.insets = new java.awt.Insets(5, 5, 0, 0);
             jPanel7.add(processStatus, gridBagConstraints);
 
             message.setText(" ");
             gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 1;
+            gridBagConstraints.gridx = 2;
             gridBagConstraints.gridy = 1;
             gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
             gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
@@ -3159,7 +3218,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridx = 0;
             gridBagConstraints.gridy = 0;
-            gridBagConstraints.insets = new java.awt.Insets(0, 3, 0, 0);
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+            gridBagConstraints.insets = new java.awt.Insets(0, 7, 0, 0);
             jPanel7.add(upFolder, gridBagConstraints);
 
             countBtn.setText("Count");
@@ -3171,7 +3231,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridx = 2;
             gridBagConstraints.gridy = 0;
-            gridBagConstraints.insets = new java.awt.Insets(0, 4, 0, 0);
+            gridBagConstraints.insets = new java.awt.Insets(0, 5, 0, 0);
             jPanel7.add(countBtn, gridBagConstraints);
 
             logsBtn.setText("logs");
@@ -3181,24 +3241,28 @@ public class JFileFinderWin extends javax.swing.JFrame {
                 }
             });
             gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 13;
+            gridBagConstraints.gridx = 12;
             gridBagConstraints.gridy = 0;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
             gridBagConstraints.weightx = 0.3;
             gridBagConstraints.insets = new java.awt.Insets(0, 12, 0, 0);
             jPanel7.add(logsBtn, gridBagConstraints);
 
-            jButton3.setText("test ssh");
-            jButton3.setEnabled(false);
-            jButton3.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    jButton3ActionPerformed(evt);
-                }
-            });
+            fsTypeLbl.setText("       ");
+            fsTypeLbl.setMaximumSize(new java.awt.Dimension(30, 23));
+            fsTypeLbl.setMinimumSize(new java.awt.Dimension(30, 23));
+            fsTypeLbl.setPreferredSize(new java.awt.Dimension(30, 23));
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.gridx = 13;
+            gridBagConstraints.gridy = 0;
+            jPanel7.add(fsTypeLbl, gridBagConstraints);
+
+            newerVersionLbl.setText(" ");
+            newerVersionLbl.setMaximumSize(new java.awt.Dimension(120, 23));
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridx = 14;
             gridBagConstraints.gridy = 0;
-            jPanel7.add(jButton3, gridBagConstraints);
+            jPanel7.add(newerVersionLbl, gridBagConstraints);
 
             jSplitPane1.setRightComponent(jPanel7);
 
@@ -3867,7 +3931,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             else if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
                 {
                 startConsoleCmd.setText( "cmd.exe /C start" );
-                filesysType = FILESYSTEM_DOS;
+                setFilesysType( Constants.FILESYSTEM_DOS );
                 }
             else if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "linux" ) )
                 {
@@ -4098,8 +4162,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
             }
     }//GEN-LAST:event_openFolderOfFilesActionPerformed
 
-    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_jButton3ActionPerformed
-    {//GEN-HEADEREND:event_jButton3ActionPerformed
+    private void testSshBtnActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_testSshBtnActionPerformed
+    {//GEN-HEADEREND:event_testSshBtnActionPerformed
         try
             {
             JschSftpUtils jschSftpUtils = new JschSftpUtils();
@@ -4131,7 +4195,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             exc.printStackTrace();
             }
         
-    }//GEN-LAST:event_jButton3ActionPerformed
+    }//GEN-LAST:event_testSshBtnActionPerformed
 
     private void rmtHostActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_rmtHostActionPerformed
     {//GEN-HEADEREND:event_rmtHostActionPerformed
@@ -4370,7 +4434,12 @@ public class JFileFinderWin extends javax.swing.JFrame {
         EventQueue.invokeLater(() -> {
             JFileFinderWin jFileFinderWin = context.getBean(JFileFinderWin.class);
             jFileFinderWin.setVisible(true);
-        });   
+            if ( args.length > 0 )
+                {
+                jFileFinderWin.startingFolder.setText( args[0] );
+                jFileFinderWin.searchBtnActionPerformed( null );
+                }
+            });   
         
         context.close();
     }
@@ -4428,9 +4497,9 @@ public class JFileFinderWin extends javax.swing.JFrame {
     private javax.swing.JTextField filePattern;
     private javax.swing.JLabel fileWatchLbl;
     private javax.swing.JTable filesTbl;
+    private javax.swing.JLabel fsTypeLbl;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
@@ -4480,6 +4549,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
     private javax.swing.JTextField maxDepth;
     private javax.swing.JLabel message;
     private javax.swing.JTextField minDepth;
+    private javax.swing.JLabel newerVersionLbl;
     private javax.swing.JLabel numFilesInTable;
     private javax.swing.JMenuItem openCodeWin;
     private javax.swing.JMenuItem openCodeWin1;
@@ -4528,6 +4598,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
     private javax.swing.JTextField stopFolderCount;
     private javax.swing.JRadioButton tabsLogicAndBtn;
     private javax.swing.JRadioButton tabsLogicOrBtn;
+    private javax.swing.JButton testSshBtn;
     private javax.swing.JPanel topPanel;
     private javax.swing.JButton upFolder;
     private javax.swing.JRadioButton useGlobPattern;

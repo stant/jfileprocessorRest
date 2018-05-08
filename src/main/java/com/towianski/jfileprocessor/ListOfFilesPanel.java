@@ -159,6 +159,19 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
         this.selectedPathPiece = selectedPathPiece;
         }
     
+    public String findPathSeparator(DefaultComboBoxModel listModel)
+        {
+        int numItems = listModel.getSize();
+        for( int i = 0; i < numItems; i++ )
+            {
+            if ( listModel.getElementAt( i ).toString().indexOf( '/' ) >= 0 )
+                return "/";
+            if ( listModel.getElementAt( i ).toString().indexOf( '\\' ) >= 0 )
+                return "\\";
+            }
+        return null;
+        }
+        
     public static void addEscapeListener(final JFrame win) {
         ActionListener escListener = new ActionListener() {
 
@@ -363,15 +376,17 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
             {
             String str = "";
             boolean negateMatching = false;
-            
+            String thisPathSepar = findPathSeparator( thisListModel );
+            String otherPathSepar = findPathSeparator( otherListModel );
             if ( cmdCb.getSelectedItem().equals( "Files Exist Only in This List" ) )
                 {
                 negateMatching = true;
                 }
-            
+
             str = thisListModel.getElementAt( 0 ).toString();
-            String[] filepathArr = str.split( thisFileSepar == "\\" ? "\\\\" : "/" );
-            String[] rowArr = filepathArr;
+            str = str.startsWith( "/" ) ? str : "/" + str;
+            str = str.replace( "\\", "/" );
+            String[] filepathArr = str.split( "/" );
 
             String[] reverseArr = Arrays.copyOf (filepathArr, filepathArr.length);
             if ( reverseArr[0].equals( "" ) )
@@ -382,6 +397,11 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
             if ( ! System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
                 {
                 Collections.reverse(list);
+                }
+            int max = list.size();
+            for ( int i = 0; i < max; i++ )
+                {
+                list.set( i,  i + " " + list.get(i) );
                 }
 
             int n = JOptionPane.showOptionDialog( this,
@@ -398,21 +418,20 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
                 {
                 thisPathIdx = (filepathArr.length - n - 1);
                 }
-            System.out.println( "got selected path index =" + thisPathIdx + "=" );
+            System.out.println( "got selected n = " + n + "  to become thisPathIdx =" + thisPathIdx + "=" );
             String thisBasePath = filepathArr[0];
             for ( int i = 1; i <= thisPathIdx; i++ )
                 {
-                thisBasePath += thisFileSepar + filepathArr[i] ;
+                thisBasePath += "/" + filepathArr[i] ;
                 }
-            if ( thisBasePath.equals( "" ) )
-                {
-                thisBasePath = "/";
-                }
+//            thisBasePath = thisBasePath.startsWith( "/" ) ? thisBasePath : "/" + thisBasePath;
+//            thisBasePath = thisBasePath.replace( "\\", "/" );
             
             //-----------------------------------------
             str = otherListModel.getElementAt( 0 ).toString();
-            filepathArr = str.split( otherFileSepar == "\\" ? "\\\\" : "/" );
-            rowArr = filepathArr;
+            str = str.startsWith( "/" ) ? str : "/" + str;
+            str = str.replace( "\\", "/" );
+            filepathArr = str.split( "/" );
 
             reverseArr = Arrays.copyOf (filepathArr, filepathArr.length);
             if ( reverseArr[0].equals( "" ) )
@@ -423,6 +442,11 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
             if ( ! System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
                 {
                 Collections.reverse(list);
+                }
+            max = list.size();
+            for ( int i = 0; i < max; i++ )
+                {
+                list.set( i,  i + " " + list.get(i) );
                 }
 
             n = JOptionPane.showOptionDialog( this,
@@ -439,19 +463,19 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
                 {
                 otherPathIdx = (filepathArr.length - n - 1);
                 }
-            System.out.println( "got selected path index =" + otherPathIdx + "=" );
+            System.out.println( "got selected n = " + n + "  to become otherPathIdx =" + otherPathIdx + "=" );
             String otherBasePath = filepathArr[0];
             for ( int i = 1; i <= otherPathIdx; i++ )
                 {
-                otherBasePath += otherFileSepar + filepathArr[i] ;
+                otherBasePath += "/" + filepathArr[i] ;
                 }
-            if ( otherBasePath.equals( "" ) )
-                {
-                otherBasePath = "/";
-                }
+//            otherBasePath = otherBasePath.startsWith( "/" ) ? otherBasePath : "/" + otherBasePath;
+//            otherBasePath = otherBasePath.replace( "\\", "/" );
+
 
             System.out.println( "got thisBasePath =" + thisBasePath + "=" );
             System.out.println( "got otherBasePath =" + otherBasePath + "=" );
+            System.out.println( "==================================" );
 
             //---- Do List Matching ---
             HashMap<String,Integer> otherHm = new HashMap<String,Integer>();
@@ -461,9 +485,12 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
             for( int i = 0; i < numItems; i++ )
                 {
                 String tmp = otherListModel.getElementAt( i ).toString();
+                tmp = tmp.startsWith( "/" ) ? tmp : "/" + tmp;
+                tmp = tmp.replace( "\\", "/" );
                 otherHm.put( tmp.substring( otherBaseLen ), i );
                 System.out.println( "cut otherBasePath =" + tmp.substring( otherBaseLen ) + "=" );
                 }
+            System.out.println( "===========  cut otherBasePath done  =======================" );
 
             ArrayList<String> newCbList = new ArrayList<String>();
 
@@ -472,37 +499,40 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
             for( int i = 0; i < numItems; i++ )
                 {
                 String tmp = thisListModel.getElementAt( i ).toString();
+                tmp = tmp.startsWith( "/" ) ? tmp : "/" + tmp;
+                tmp = tmp.replace( "\\", "/" );
                 System.out.println( "cut thisListModel =" + tmp.substring( thisBaseLen ) + "=" );
-                if ( ! otherFileSepar.equals( thisFileSepar ) )
-                    {
-                    String cutAndChgFileSeparStr = tmp.substring( thisBaseLen ).replace( thisFileSepar, otherFileSepar );
-                    System.out.println( "cut thisListModel =" + cutAndChgFileSeparStr + "=" );
-                    if ( ! negateMatching && otherHm.containsKey( cutAndChgFileSeparStr ) )
-                        {
-                        int idx = otherHm.get( cutAndChgFileSeparStr );
-                        newCbList.add( tmp + " " + otherListModel.getElementAt( idx ).toString() );
-                        System.out.println( "Match: " + tmp + " " + otherHm.get( cutAndChgFileSeparStr ) + "=" );
-                        }
-                    else if ( negateMatching && ! otherHm.containsKey( cutAndChgFileSeparStr ) )
-                        {
-                        System.out.println( "Missing: " + tmp + "=" );
-                        newCbList.add( tmp );
-                        }
-                    }
-                else 
-                    {
+//                if ( ! otherFileSepar.equals( thisFileSepar ) )
+//                    {
+//                    String cutAndChgFileSeparStr = tmp.substring( thisBaseLen ).replace( thisFileSepar, otherFileSepar );
+//                    System.out.println( "   cut thisListModel =" + cutAndChgFileSeparStr + "=" );
+//                    if ( ! negateMatching && otherHm.containsKey( cutAndChgFileSeparStr ) )
+//                        {
+//                        int idx = otherHm.get( cutAndChgFileSeparStr );
+//                        newCbList.add( tmp + " " + otherListModel.getElementAt( idx ).toString() );
+//                        System.out.println( "      Match: " + tmp + " " + otherHm.get( cutAndChgFileSeparStr ) + "=" );
+//                        }
+//                    else if ( negateMatching && ! otherHm.containsKey( cutAndChgFileSeparStr ) )
+//                        {
+//                        System.out.println( "      Missing: " + tmp + "=" );
+//                        newCbList.add( tmp );
+//                        }
+//                    }
+//                else 
+//                    {
                     if ( ! negateMatching && otherHm.containsKey( tmp.substring( thisBaseLen ) ) )
                         {
                         int idx = otherHm.get( tmp.substring( thisBaseLen ) );
-                        newCbList.add( tmp + " " + otherListModel.getElementAt( idx ).toString() );
-                        System.out.println( "Match: " + tmp + " " + otherHm.get( tmp.substring( thisBaseLen ) ) + "=" );
+                        newCbList.add( thisListModel.getElementAt( i ).toString() + " " + otherListModel.getElementAt( idx ).toString() );
+                        System.out.println( "      Match: " + tmp + " " + otherHm.get( tmp.substring( thisBaseLen ) ) + "=" );
                         }
                     else if ( negateMatching && ! otherHm.containsKey( tmp.substring( thisBaseLen ) )  )
                         {
-                        System.out.println( "Missing: " + tmp + "=" );
-                        newCbList.add( tmp );
+                        System.out.println( "      Missing: " + thisListModel.getElementAt( i ).toString() + "=" );
+                        newCbList.add( thisListModel.getElementAt( i ).toString() );
                         }
-                    }
+//                    }
+                System.out.println( "---------------------------------------------" );
                 }
 
             System.out.println( "newCbList.size() =" + newCbList.size() + "=" );

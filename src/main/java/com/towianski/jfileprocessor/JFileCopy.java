@@ -97,6 +97,7 @@ public class JFileCopy //  implements Runnable
         {
         System.out.println( "JFileCopy.run() toPath =" + toPath + "=" );
         System.out.println( "connUserInfo() =" + connUserInfo );
+        System.out.println( "connUserInfo.getCopyProcotol() =" + connUserInfo.getCopyProcotol() );
         
         if ( connUserInfo.getCopyProcotol() == Constants.COPY_PROTOCOL_LOCAL )
             {
@@ -144,9 +145,10 @@ public class JFileCopy //  implements Runnable
             else if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_SFTP ) &&
                       connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_SFTP )  )
                 {
-                System.out.println( "CopierNonWalker: will do sftp to sftp" );
-                sftpSrc = new Sftp( connUserInfo.getFromUser(), connUserInfo.getFromPassword(), connUserInfo.getFromHost() );
-                sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost() );
+                System.out.println( "CopierNonWalker: will do sftp to sftp -- like sftp to local" );
+                sftp = new Sftp( connUserInfo.getFromUser(), connUserInfo.getFromPassword(), connUserInfo.getFromHost() );
+//                sftpSrc = new Sftp( connUserInfo.getFromUser(), connUserInfo.getFromPassword(), connUserInfo.getFromHost() );
+//                sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost() );
                 }
             copierNonWalker = new CopierNonWalker( connUserInfo, sftp, sftpSrc, isDoingCutFlag, copyOptions, swingWorker );
 
