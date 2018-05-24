@@ -8,13 +8,14 @@ package com.towianski.jfileprocessor;
 import com.towianski.models.Constants;
 import com.towianski.models.ResultsData;
 import java.text.NumberFormat;
+import java.util.List;
 import javax.swing.SwingWorker;
 
 /**
  *
  * @author Stan Towianski - June 2015
  */
-public class JFileFinderSwingWorker extends SwingWorker<ResultsData, String> 
+public class JFileFinderSwingWorker extends SwingWorker<ResultsData, Long> 
 {
     private JFileFinderWin jFileFinderWin = null;
     private String startingPath = null;
@@ -51,11 +52,26 @@ public class JFileFinderSwingWorker extends SwingWorker<ResultsData, String>
         jFileFinderWin.stopDirWatcher();
         jFileFinderWin.setProcessStatus( Constants.PROCESS_STATUS_SEARCH_STARTED );
         System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
-        jfilefinder.run(  );
+        jfilefinder.run( this );
         //publish("Listing all text files under the directory: ");
         return jfilefinder.getResultsData();
     }
 
+    public void publish2( Long num ) {
+//        if ( showProgressFlag )
+            {
+            publish( num );
+            }
+        }
+
+    protected void process( List<Long> numList ) {
+//        if ( showProgressFlag )
+            {
+            Long lastNum = numList.get( numList.size() - 1 );
+            jFileFinderWin.setMessage( "" + lastNum );
+            }
+        }
+     
     @Override
     public void done() {
         try {

@@ -168,7 +168,7 @@ public class DeleterNonWalker extends SimpleFileVisitor<Path>
         }
 
     /**
-     * This function recursively copy all the sub folder and files from sourceFolder to destinationFolder
+     * This function recursively deletes all the sub folder and files from sourceFolder to destinationFolder
      * */
 
     public void deleteRecursiveRemote( String filename ) throws IOException

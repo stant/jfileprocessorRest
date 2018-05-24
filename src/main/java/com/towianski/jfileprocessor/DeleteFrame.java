@@ -46,6 +46,7 @@ public class DeleteFrame extends javax.swing.JFrame {
     public static final String PROCESS_STATUS_DELETE_STARTED = "Delete Started . . .";
     public static final String PROCESS_STATUS_DELETE_CANCELED = "Delete canceled";
     public static final String PROCESS_STATUS_DELETE_COMPLETED = "Delete completed";
+    public static final String PROCESS_STATUS_DELETE_INCOMPLETE = "Delete Incomplete";
     public static final String PROCESS_STATUS_DELETE_CANCEL = "Cancel Delete";
     public static final String PROCESS_STATUS_DELETE_READY = "Delete";
 

@@ -5,6 +5,8 @@
  */
 package com.towianski.models;
 
+import java.util.ArrayList;
+
 /**
  *
  * @author Stan Towianski - June 2015
@@ -21,6 +23,7 @@ public class ResultsData {
     private String message = "";
     private FilesTblModel filesTblModel = null;
     private int filesysType = -1;
+    private ArrayList<String> errorList = new ArrayList<String>();
     
     public ResultsData()
         {
@@ -48,7 +51,7 @@ public class ResultsData {
         this.foldersMatched = foldersMatched;
         }
     
-    public ResultsData( Boolean searchWasCanceledArg, String processStatus, String message, long filesVisitedArg, long filesMatchedArg, long foldersMatched, long filesTested, long foldersTested )
+    public ResultsData( Boolean searchWasCanceledArg, String processStatus, String message, long filesVisitedArg, long filesMatchedArg, long foldersMatched, long filesTested, long foldersTested, ArrayList<String> errorList )
         {
         this.searchWasCanceled = searchWasCanceledArg;
         this.processStatus = processStatus;
@@ -58,6 +61,7 @@ public class ResultsData {
         this.foldersMatched = foldersMatched;
         this.filesTested = filesTested;
         this.foldersTested = foldersTested;
+        this.errorList = errorList;
         }
     
     public ResultsData( Boolean searchWasCanceledArg, String processStatus, String message )
@@ -155,6 +159,14 @@ public class ResultsData {
 
     public void setFilesysType(int filesysType) {
         this.filesysType = filesysType;
+    }
+
+    public ArrayList<String> getErrorList() {
+        return errorList;
+    }
+
+    public void setErrorList(ArrayList<String> errorList) {
+        this.errorList = errorList;
     }
 
 }

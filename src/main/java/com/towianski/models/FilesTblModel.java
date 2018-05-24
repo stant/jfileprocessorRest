@@ -23,12 +23,15 @@ public class FilesTblModel extends AbstractTableModel
     public static int FILETYPE_NORMAL = 0;
     public static int FILETYPE_LINK = 1;
     public static int FILETYPE_OTHER = 2;
+    
 //    public static int FILESTBLMODEL_ISDIR = 1;
     public static int FILESTBLMODEL_FOLDERTYPE = 1;
+    public static int FOLDERTYPE_FILE_NOACCESS = -1;
     public static int FOLDERTYPE_FILE = 0;
     public static int FOLDERTYPE_FILE_NOT_FOUND = 1;
     public static int FOLDERTYPE_FOLDER = 2;
     public static int FOLDERTYPE_FOLDER_NOACCESS = 3;
+    
     public static int FILESTBLMODEL_PATH = 2;
     public static int FILESTBLMODEL_MODIFIEDDATE = 3;
     public static int FILESTBLMODEL_SIZE = 4;

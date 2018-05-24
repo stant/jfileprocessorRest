@@ -275,7 +275,7 @@ public class SearchFiles
 //        stopDirWatcher();
 //        jFileFinderWin.setProcessStatus( jFileFinderWin.PROCESS_STATUS_SEARCH_STARTED );
 //        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
-        jfilefinder.run();  // this );
+        jfilefinder.run( null );
         ResultsData resultsData = jfilefinder.getResultsData();   //get();
         jfilefinder.getFilesTableModel();
 //        Rest.saveObjectToFile( "resultsData.getFilesTblModel.json", resultsData.getFilesTblModel() );

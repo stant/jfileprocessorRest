@@ -93,129 +93,130 @@ public void sftpIfDiff( String locFile, String user, String password, String rho
 
         try
             {
-        BasicFileAttributes attr = Files.readAttributes( Paths.get( lfile ), BasicFileAttributes.class );
+            BasicFileAttributes attr = Files.readAttributes( Paths.get( lfile ), BasicFileAttributes.class );
 
-        System.out.println( "try scpTo   user =" + user + "=   to password =" + password + "=" );
-        System.out.println( "try scpTo   rhost =" + rhost + "=  to remoteFile =" + rfile + "=" );
-        System.out.println( "try scpTo   lfilesize =" + attr.size() + "=   remote fsize =" + getRemoteFileSize( lfile, user, password, rhost, rfile ) + "=" );
-        if ( getRemoteFileSize( lfile, user, password, rhost, rfile ) == attr.size() )
-            {
-            System.out.println( "files are same size to return" );
-            return;
-            }
+            System.out.println( "try scpTo   user =" + user + "=   to password =" + password + "=" );
+            System.out.println( "try scpTo   rhost =" + rhost + "=  to remoteFile =" + rfile + "=" );
+            System.out.println( "try scpTo   lfilesize =" + attr.size() + "=   remote fsize =" + getRemoteFileSize( lfile, user, password, rhost, rfile ) + "=" );
+            if ( getRemoteFileSize( lfile, user, password, rhost, rfile ) == attr.size() )
+                {
+                System.out.println( "files are same size to return" );
+                return;
+                }
 
-    //      String lfile=arg[0];
-    //      String user=remoteFile.substring(0, remoteFile.indexOf('@')).trim();
-    //      remoteFile=remoteFile.substring(remoteFile.indexOf('@')+1);
-    //      String host=remoteFile.substring(0, remoteFile.indexOf(':'));
-    //      String rfile=remoteFile.substring(remoteFile.indexOf(':')+1);
+        //      String lfile=arg[0];
+        //      String user=remoteFile.substring(0, remoteFile.indexOf('@')).trim();
+        //      remoteFile=remoteFile.substring(remoteFile.indexOf('@')+1);
+        //      String host=remoteFile.substring(0, remoteFile.indexOf(':'));
+        //      String rfile=remoteFile.substring(remoteFile.indexOf(':')+1);
 
-          session=jsch.getSession(user, rhost, 22);
-        System.out.println( "at 2" );
+            session=jsch.getSession(user, rhost, 22);
+            System.out.println( "at 2" );
 
-          session.setPassword( password );
+            session.setPassword( password );
 
-          Properties config = new Properties();
-          config.put("StrictHostKeyChecking","no");
-        System.out.println( "at 3" );
-          session.setConfig(config);
+            Properties config = new Properties();
+            config.put("StrictHostKeyChecking","no");
+            System.out.println( "at 3" );
+            session.setConfig(config);
 
-          // username and password will be given via UserInfo interface.
-    //      UserInfo ui=new MyUserInfo();
-    //    System.out.println( "at 3" );
-    //      session.setUserInfo(ui);
+              // username and password will be given via UserInfo interface.
+        //      UserInfo ui=new MyUserInfo();
+        //    System.out.println( "at 3" );
+        //      session.setUserInfo(ui);
 
-        System.out.println( "at 4" );
-          session.connect();
-        System.out.println( "at 5" );
+            System.out.println( "at 4" );
+            session.connect();
+            System.out.println( "at 5" );
 
-          boolean ptimestamp = true;
+            boolean ptimestamp = true;
 
-          // exec 'scp -t rfile' remotely
-          String command="scp " + (ptimestamp ? "-p" :"") +" -t "+rfile;
-        System.out.println( "at 6" );
-          Channel channel=session.openChannel("exec");
-        System.out.println( "at 7" );
-          ((ChannelExec)channel).setCommand(command);
-        System.out.println( "at 8" );
+            // exec 'scp -t rfile' remotely
+            String command="scp " + (ptimestamp ? "-p" :"") +" -t "+rfile;
+            System.out.println( "at 6" );
+            Channel channel=session.openChannel("exec");
+            System.out.println( "at 7" );
+            ((ChannelExec)channel).setCommand(command);
+            System.out.println( "at 8" );
 
-          // get I/O streams for remote scp
-          OutputStream out=channel.getOutputStream();
-        System.out.println( "at 9" );
-          InputStream in=channel.getInputStream();
-        System.out.println( "at 10" );
+            // get I/O streams for remote scp
+            OutputStream out=channel.getOutputStream();
+            System.out.println( "at 9" );
+            InputStream in=channel.getInputStream();
+            System.out.println( "at 10" );
 
-          channel.connect();
-        System.out.println( "at 11" );
+            channel.connect();
+            System.out.println( "at 11" );
 
-          if(checkAck(in)!=0){
-            return;
-          }
-
-          File _lfile = new File(lfile);
-        System.out.println( "at 12" );
-
-          if(ptimestamp){
-            command="T"+(_lfile.lastModified()/1000)+" 0";
-            // The access time should be sent here,
-            // but it is not accessible with JavaAPI ;-<
-            command+=(" "+(_lfile.lastModified()/1000)+" 0\n"); 
-        System.out.println( "at 13" );
-            out.write(command.getBytes()); out.flush();
-        System.out.println( "at 14" );
             if(checkAck(in)!=0){
-                    return;
+                return;
             }
-          }
 
-          // send "C0644 filesize filename", where filename should not include '/'
-          long filesize=_lfile.length();
-          command="C0644 "+filesize+" ";
-        System.out.println( "at 15" );
-          if(lfile.lastIndexOf('/')>0){
-            command+=lfile.substring(lfile.lastIndexOf('/')+1);
-          }
-          else{
-            command+=lfile;
-          }
-          command+="\n";
-        System.out.println( "at 16" );
-          out.write(command.getBytes()); out.flush();
-        System.out.println( "at 17" );
-          if(checkAck(in)!=0){
+            File _lfile = new File(lfile);
+            System.out.println( "at 12" );
+
+            if(ptimestamp){
+                command="T"+(_lfile.lastModified()/1000)+" 0";
+                // The access time should be sent here,
+                // but it is not accessible with JavaAPI ;-<
+                command+=(" "+(_lfile.lastModified()/1000)+" 0\n"); 
+                System.out.println( "at 13" );
+                out.write(command.getBytes()); out.flush();
+                System.out.println( "at 14" );
+                if(checkAck(in)!=0){
+                    return;
+                    }
+                }
+
+              // send "C0644 filesize filename", where filename should not include '/'
+            long filesize=_lfile.length();
+            command="C0644 "+filesize+" ";
+            System.out.println( "at 15" );
+            if(lfile.lastIndexOf('/')>0){
+                command+=lfile.substring(lfile.lastIndexOf('/')+1);
+            }
+            else{
+                command+=lfile;
+            }
+            command+="\n";
+            System.out.println( "at 16" );
+            out.write(command.getBytes()); out.flush();
+            System.out.println( "at 17" );
+            if(checkAck(in)!=0){
+                return;
+            }
+
+            // send a content of lfile
+            fis=new FileInputStream(lfile);
+            byte[] buf=new byte[1024];
+            System.out.println( "at 17" );
+            while(true){
+                int len=fis.read(buf, 0, buf.length);
+                if(len<=0) break;
+                out.write(buf, 0, len); //out.flush();
+            }
+            System.out.println( "at 18" );
+            fis.close();
+            fis=null;
+            // send '\0'
+            buf[0]=0; out.write(buf, 0, 1); out.flush();
+            if(checkAck(in)!=0){
+                return;
+            }
+            out.close();
+            System.out.println( "at 19" );
+
+            channel.disconnect();
+            session.disconnect();
+
+            System.out.println( "DONE." );
             return;
-          }
-
-          // send a content of lfile
-          fis=new FileInputStream(lfile);
-          byte[] buf=new byte[1024];
-        System.out.println( "at 17" );
-          while(true){
-            int len=fis.read(buf, 0, buf.length);
-            if(len<=0) break;
-            out.write(buf, 0, len); //out.flush();
-          }
-        System.out.println( "at 18" );
-          fis.close();
-          fis=null;
-          // send '\0'
-          buf[0]=0; out.write(buf, 0, 1); out.flush();
-          if(checkAck(in)!=0){
-            return;
-          }
-          out.close();
-        System.out.println( "at 19" );
-
-          channel.disconnect();
-          session.disconnect();
-
-        System.out.println( "DONE." );
-            return;
-        }
-        catch(Exception e){
-          System.out.println(e);
-          try{if(fis!=null)fis.close();}catch(Exception ee){}
-        }
+            }
+        catch(Exception e)
+            {
+            System.out.println(e);
+            try{if(fis!=null)fis.close();}catch(Exception ee){}
+            }
       }
 
     public Session createSession( String user, String password, String rhost )

@@ -56,7 +56,7 @@ public class CopyFrameSwingWorker extends SwingWorker<ResultsData, Long> {
             }
         }
 
-    protected void process(List<Long> numList ) {
+    protected void process( List<Long> numList ) {
         if ( showProgressFlag )
             {
             Long lastNum = numList.get( numList.size() - 1 );
@@ -102,7 +102,8 @@ public class CopyFrameSwingWorker extends SwingWorker<ResultsData, Long> {
 
             copyFrame.setMessage( msg + partialMsg );
             copyFrame.setResultsData( resultsData );
-            
+            copyFrame.showCopyErrors();
+                    
             // clean up
             resultsData = null;
             jfilecopy = null;

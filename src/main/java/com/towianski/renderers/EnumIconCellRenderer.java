@@ -30,6 +30,7 @@ public EnumIconCellRenderer() {
         ImageIcon fileLinkIcon = new ImageIcon(ImageIO.read(getClass().getResource("/icons/yellow/file-link-icon-16.png")));
         ImageIcon normalIcon = new ImageIcon(ImageIO.read(getClass().getResource("/icons/yellow/blank-icon-16.png")));
         ImageIcon questionIcon = new ImageIcon(ImageIO.read(getClass().getResource("/icons/yellow/question-icon-16.png")));
+
         this.icons.put( FilesTblModel.FILETYPE_NORMAL, normalIcon );
         this.icons.put( FilesTblModel.FILETYPE_LINK, fileLinkIcon );
         this.icons.put( FilesTblModel.FILETYPE_OTHER, questionIcon );

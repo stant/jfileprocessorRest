@@ -318,6 +318,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
     readInBookmarks();
     
     checkForUpdate();
+    setupReportIssueLink();
     
     System.out.println( "read scriptsFile/menu-scripts from  =" + scriptsFile + "=" );
     
@@ -927,6 +928,30 @@ public class JFileFinderWin extends javax.swing.JFrame {
         this.rmtSshPort.setText(str);
         }
 
+    public void setupReportIssueLink()
+        {
+        reportIssueLbl.setPreferredSize( new Dimension( 140, 23 ) );
+        reportIssueLbl.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        Font font = reportIssueLbl.getFont();
+        Map attributes = font.getAttributes();
+        attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
+        reportIssueLbl.setFont(font.deriveFont(attributes));
+        reportIssueLbl.addMouseListener(new MouseAdapter()  
+            {  
+                public void mouseClicked(MouseEvent e)  
+                {  
+                Desktop desktop = Desktop.getDesktop();
+                    try {
+                        desktop.browse( new URI( "https://github.com/stant/jfileprocessorRest/issues" ) );
+                    } catch (URISyntaxException ex) {
+                        Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (IOException ex) {
+                        Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }  
+            }); 
+        }
+    
     ActionListener menuActionListener = new ActionListener()
         {
         @Override
@@ -1907,6 +1932,36 @@ public class JFileFinderWin extends javax.swing.JFrame {
             }
         }
 
+    public void openStringsToList( ListOfFilesPanel listOfFilesPanel, String winName, ArrayList<String> strList )
+        {
+        try
+            {
+            if ( listOfFilesPanel == null )
+                {
+                listOfFilesPanel = getListOfFilesPanel( winName );
+                if ( listOfFilesPanel == null )
+                    {
+                    return;
+                    }
+                }
+            int maxRows = strList.size();
+            DefaultComboBoxModel listModel = (DefaultComboBoxModel) listOfFilesPanel.getModel();
+            
+            System.out.println( "add list path() num of items =" + maxRows + "=" );
+            
+            //loop for jtable rows
+            for( String str : strList )
+                {
+                listModel.addElement( str );
+                }
+            listOfFilesPanel.setCount();
+            }
+        catch( Exception exc )
+            {
+            exc.printStackTrace();
+            }
+        }
+
     public DefaultComboBoxModel getSelectedItemsAsComboBoxModel()
         {
         DefaultComboBoxModel listModel = new DefaultComboBoxModel();
@@ -2009,7 +2064,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
         jLabel17 = new javax.swing.JLabel();
         rmtUser = new javax.swing.JTextField();
         jLabel18 = new javax.swing.JLabel();
-        rmtPasswd = new javax.swing.JTextField();
+        rmtPasswd = new javax.swing.JPasswordField();
         jLabel19 = new javax.swing.JLabel();
         rmtHost = new javax.swing.JTextField();
         rmtConnectBtn = new javax.swing.JButton();
@@ -2082,6 +2137,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
         stopFileWatchTb = new javax.swing.JToggleButton();
         fileWatchLbl = new javax.swing.JLabel();
         dumpThreadListToLog = new javax.swing.JButton();
+        webSiteLink = new javax.swing.JLabel();
+        reportIssueLbl = new javax.swing.JLabel();
         testSshBtn = new javax.swing.JButton();
         jPanel7 = new javax.swing.JPanel();
         searchBtn = new javax.swing.JButton();
@@ -2385,9 +2442,9 @@ public class JFileFinderWin extends javax.swing.JFrame {
             topPanel.add(jLabel17);
 
             rmtUser.setMargin(new java.awt.Insets(2, 7, 0, 0));
-            rmtUser.setMaximumSize(new java.awt.Dimension(74, 25));
-            rmtUser.setMinimumSize(new java.awt.Dimension(74, 25));
-            rmtUser.setPreferredSize(new java.awt.Dimension(74, 25));
+            rmtUser.setMaximumSize(new java.awt.Dimension(100, 25));
+            rmtUser.setMinimumSize(new java.awt.Dimension(100, 25));
+            rmtUser.setPreferredSize(new java.awt.Dimension(100, 25));
             rmtUser.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     rmtUserActionPerformed(evt);
@@ -3103,180 +3160,211 @@ public class JFileFinderWin extends javax.swing.JFrame {
             });
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridx = 2;
-            gridBagConstraints.gridy = 1;
+            gridBagConstraints.gridy = 2;
             gridBagConstraints.insets = new java.awt.Insets(0, 5, 0, 5);
             jPanel9.add(dumpThreadListToLog, gridBagConstraints);
 
-            testSshBtn.setText("test ssh");
-            testSshBtn.setEnabled(false);
-            testSshBtn.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    testSshBtnActionPerformed(evt);
-                }
-            });
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 14;
-            gridBagConstraints.gridy = 0;
-            jPanel9.add(testSshBtn, gridBagConstraints);
+            webSiteLink.setText("Web Site");
+            webSiteLink.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+            Font font = webSiteLink.getFont();
+            Map attributes = font.getAttributes();
+            attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
+            webSiteLink.setFont(font.deriveFont(attributes));
+            webSiteLink.addMouseListener(new MouseAdapter()
+                {
+                    public void mouseClicked(MouseEvent e)
+                    {
+                        Desktop desktop = Desktop.getDesktop();
+                        try {
+                            desktop.browse( new URI( "https://github.com/stant/jfileprocessorRest" ) );
+                        } catch (URISyntaxException ex) {
+                            Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (IOException ex) {
+                            Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                });
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridx = 2;
+                gridBagConstraints.gridy = 0;
+                jPanel9.add(webSiteLink, gridBagConstraints);
 
-            jTabbedPane1.addTab("Settings", jPanel9);
+                reportIssueLbl.setText("Report Issue");
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridx = 2;
+                gridBagConstraints.gridy = 1;
+                jPanel9.add(reportIssueLbl, gridBagConstraints);
 
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 0;
-            gridBagConstraints.gridy = 2;
-            gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-            gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-            gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
-            gridBagConstraints.weightx = 1.0;
-            gridBagConstraints.weighty = 4.0;
-            jPanel6.add(jTabbedPane1, gridBagConstraints);
-            jTabbedPane1.getAccessibleContext().setAccessibleName("Name");
+                testSshBtn.setText("test ssh");
+                testSshBtn.setEnabled(false);
+                testSshBtn.addActionListener(new java.awt.event.ActionListener() {
+                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                        testSshBtnActionPerformed(evt);
+                    }
+                });
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridx = 3;
+                gridBagConstraints.gridy = 0;
+                jPanel9.add(testSshBtn, gridBagConstraints);
 
-            jSplitPane1.setLeftComponent(jPanel6);
+                jTabbedPane1.addTab("Settings", jPanel9);
 
-            jPanel7.setMinimumSize(new java.awt.Dimension(300, 90));
-            jPanel7.setPreferredSize(new java.awt.Dimension(500, 400));
-            jPanel7.setLayout(new java.awt.GridBagLayout());
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridx = 0;
+                gridBagConstraints.gridy = 2;
+                gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+                gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+                gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
+                gridBagConstraints.weightx = 1.0;
+                gridBagConstraints.weighty = 4.0;
+                jPanel6.add(jTabbedPane1, gridBagConstraints);
+                jTabbedPane1.getAccessibleContext().setAccessibleName("Name");
 
-            searchBtn.setText("Search");
-            searchBtn.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    searchBtnActionPerformed(evt);
-                }
-            });
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 1;
-            gridBagConstraints.gridy = 0;
-            gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
-            jPanel7.add(searchBtn, gridBagConstraints);
+                jSplitPane1.setLeftComponent(jPanel6);
 
-            jLabel3.setText("Files in Table:");
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 3;
-            gridBagConstraints.gridy = 0;
-            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-            gridBagConstraints.insets = new java.awt.Insets(5, 5, 0, 0);
-            jPanel7.add(jLabel3, gridBagConstraints);
+                jPanel7.setMinimumSize(new java.awt.Dimension(300, 90));
+                jPanel7.setPreferredSize(new java.awt.Dimension(500, 400));
+                jPanel7.setLayout(new java.awt.GridBagLayout());
 
-            filesTbl.setModel(new javax.swing.table.DefaultTableModel(
-                new Object [][] {
-                    {null, null, null, null},
-                    {null, null, null, null},
-                    {null, null, null, null},
-                    {null, null, null, null}
-                },
-                new String [] {
-                    "Title 1", "Title 2", "Title 3", "Title 4"
-                }
-            ));
-            jScrollPane1.setViewportView(filesTbl);
+                searchBtn.setText("Search");
+                searchBtn.addActionListener(new java.awt.event.ActionListener() {
+                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                        searchBtnActionPerformed(evt);
+                    }
+                });
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridx = 1;
+                gridBagConstraints.gridy = 0;
+                gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
+                jPanel7.add(searchBtn, gridBagConstraints);
 
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 0;
-            gridBagConstraints.gridy = 2;
-            gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-            gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-            gridBagConstraints.weighty = 1.0;
-            jPanel7.add(jScrollPane1, gridBagConstraints);
+                jLabel3.setText("Files in Table:");
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridx = 3;
+                gridBagConstraints.gridy = 0;
+                gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+                gridBagConstraints.insets = new java.awt.Insets(5, 5, 0, 0);
+                jPanel7.add(jLabel3, gridBagConstraints);
 
-            processStatus.setText(" ");
-            processStatus.setMaximumSize(new java.awt.Dimension(999, 23));
-            processStatus.setMinimumSize(new java.awt.Dimension(115, 23));
-            processStatus.setOpaque(true);
-            processStatus.setPreferredSize(new java.awt.Dimension(140, 23));
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 0;
-            gridBagConstraints.gridy = 1;
-            gridBagConstraints.gridwidth = 2;
-            gridBagConstraints.insets = new java.awt.Insets(5, 5, 0, 0);
-            jPanel7.add(processStatus, gridBagConstraints);
+                filesTbl.setModel(new javax.swing.table.DefaultTableModel(
+                    new Object [][] {
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null}
+                    },
+                    new String [] {
+                        "Title 1", "Title 2", "Title 3", "Title 4"
+                    }
+                ));
+                jScrollPane1.setViewportView(filesTbl);
 
-            message.setText(" ");
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 2;
-            gridBagConstraints.gridy = 1;
-            gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-            gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-            gridBagConstraints.weightx = 0.5;
-            gridBagConstraints.insets = new java.awt.Insets(5, 5, 0, 0);
-            jPanel7.add(message, gridBagConstraints);
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridx = 0;
+                gridBagConstraints.gridy = 2;
+                gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+                gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+                gridBagConstraints.weighty = 1.0;
+                jPanel7.add(jScrollPane1, gridBagConstraints);
 
-            numFilesInTable.setText(" ");
-            numFilesInTable.setMaximumSize(new java.awt.Dimension(100, 26));
-            numFilesInTable.setMinimumSize(new java.awt.Dimension(100, 26));
-            numFilesInTable.setPreferredSize(new java.awt.Dimension(100, 26));
-            jPanel7.add(numFilesInTable, new java.awt.GridBagConstraints());
+                processStatus.setText(" ");
+                processStatus.setMaximumSize(new java.awt.Dimension(999, 23));
+                processStatus.setMinimumSize(new java.awt.Dimension(115, 23));
+                processStatus.setOpaque(true);
+                processStatus.setPreferredSize(new java.awt.Dimension(140, 23));
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridx = 0;
+                gridBagConstraints.gridy = 1;
+                gridBagConstraints.gridwidth = 2;
+                gridBagConstraints.insets = new java.awt.Insets(5, 5, 0, 0);
+                jPanel7.add(processStatus, gridBagConstraints);
 
-            upFolder.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/yellow/Folder-Upload-icon-16.png"))); // NOI18N
-            upFolder.setText("Up");
-            upFolder.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    upFolderActionPerformed(evt);
-                }
-            });
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 0;
-            gridBagConstraints.gridy = 0;
-            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-            gridBagConstraints.insets = new java.awt.Insets(0, 7, 0, 0);
-            jPanel7.add(upFolder, gridBagConstraints);
+                message.setText(" ");
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridx = 2;
+                gridBagConstraints.gridy = 1;
+                gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+                gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+                gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+                gridBagConstraints.weightx = 0.5;
+                gridBagConstraints.insets = new java.awt.Insets(5, 5, 0, 0);
+                jPanel7.add(message, gridBagConstraints);
 
-            countBtn.setText("Count");
-            countBtn.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    countBtnActionPerformed(evt);
-                }
-            });
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 2;
-            gridBagConstraints.gridy = 0;
-            gridBagConstraints.insets = new java.awt.Insets(0, 5, 0, 0);
-            jPanel7.add(countBtn, gridBagConstraints);
+                numFilesInTable.setText(" ");
+                numFilesInTable.setMaximumSize(new java.awt.Dimension(100, 26));
+                numFilesInTable.setMinimumSize(new java.awt.Dimension(100, 26));
+                numFilesInTable.setPreferredSize(new java.awt.Dimension(100, 26));
+                jPanel7.add(numFilesInTable, new java.awt.GridBagConstraints());
 
-            logsBtn.setText("logs");
-            logsBtn.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    logsBtnActionPerformed(evt);
-                }
-            });
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 12;
-            gridBagConstraints.gridy = 0;
-            gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-            gridBagConstraints.weightx = 0.3;
-            gridBagConstraints.insets = new java.awt.Insets(0, 12, 0, 0);
-            jPanel7.add(logsBtn, gridBagConstraints);
+                upFolder.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/yellow/Folder-Upload-icon-16.png"))); // NOI18N
+                upFolder.setText("Up");
+                upFolder.addActionListener(new java.awt.event.ActionListener() {
+                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                        upFolderActionPerformed(evt);
+                    }
+                });
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridx = 0;
+                gridBagConstraints.gridy = 0;
+                gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+                gridBagConstraints.insets = new java.awt.Insets(0, 7, 0, 0);
+                jPanel7.add(upFolder, gridBagConstraints);
 
-            fsTypeLbl.setText("       ");
-            fsTypeLbl.setMaximumSize(new java.awt.Dimension(30, 23));
-            fsTypeLbl.setMinimumSize(new java.awt.Dimension(30, 23));
-            fsTypeLbl.setPreferredSize(new java.awt.Dimension(30, 23));
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 13;
-            gridBagConstraints.gridy = 0;
-            jPanel7.add(fsTypeLbl, gridBagConstraints);
+                countBtn.setText("Count");
+                countBtn.addActionListener(new java.awt.event.ActionListener() {
+                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                        countBtnActionPerformed(evt);
+                    }
+                });
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridx = 2;
+                gridBagConstraints.gridy = 0;
+                gridBagConstraints.insets = new java.awt.Insets(0, 5, 0, 0);
+                jPanel7.add(countBtn, gridBagConstraints);
 
-            newerVersionLbl.setText(" ");
-            newerVersionLbl.setMaximumSize(new java.awt.Dimension(120, 23));
-            gridBagConstraints = new java.awt.GridBagConstraints();
-            gridBagConstraints.gridx = 14;
-            gridBagConstraints.gridy = 0;
-            jPanel7.add(newerVersionLbl, gridBagConstraints);
+                logsBtn.setText("logs");
+                logsBtn.addActionListener(new java.awt.event.ActionListener() {
+                    public void actionPerformed(java.awt.event.ActionEvent evt) {
+                        logsBtnActionPerformed(evt);
+                    }
+                });
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridx = 12;
+                gridBagConstraints.gridy = 0;
+                gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+                gridBagConstraints.weightx = 0.3;
+                gridBagConstraints.insets = new java.awt.Insets(0, 12, 0, 0);
+                jPanel7.add(logsBtn, gridBagConstraints);
 
-            jSplitPane1.setRightComponent(jPanel7);
+                fsTypeLbl.setText("       ");
+                fsTypeLbl.setMaximumSize(new java.awt.Dimension(30, 23));
+                fsTypeLbl.setMinimumSize(new java.awt.Dimension(30, 23));
+                fsTypeLbl.setPreferredSize(new java.awt.Dimension(30, 23));
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridx = 13;
+                gridBagConstraints.gridy = 0;
+                jPanel7.add(fsTypeLbl, gridBagConstraints);
 
-            jPanel10.add(jSplitPane1, java.awt.BorderLayout.CENTER);
+                newerVersionLbl.setText(" ");
+                newerVersionLbl.setMaximumSize(new java.awt.Dimension(120, 23));
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridx = 14;
+                gridBagConstraints.gridy = 0;
+                jPanel7.add(newerVersionLbl, gridBagConstraints);
 
-            botPanel.setPreferredSize(new java.awt.Dimension(10, 1));
-            jPanel10.add(botPanel, java.awt.BorderLayout.PAGE_END);
+                jSplitPane1.setRightComponent(jPanel7);
 
-            jSplitPane2.setRightComponent(jPanel10);
+                jPanel10.add(jSplitPane1, java.awt.BorderLayout.CENTER);
 
-            getContentPane().add(jSplitPane2, java.awt.BorderLayout.CENTER);
+                botPanel.setPreferredSize(new java.awt.Dimension(10, 1));
+                jPanel10.add(botPanel, java.awt.BorderLayout.PAGE_END);
 
-            pack();
-        }// </editor-fold>//GEN-END:initComponents
+                jSplitPane2.setRightComponent(jPanel10);
+
+                getContentPane().add(jSplitPane2, java.awt.BorderLayout.CENTER);
+
+                pack();
+            }// </editor-fold>//GEN-END:initComponents
 
     private void startingFolderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startingFolderActionPerformed
         searchBtnActionPerformed( null );
@@ -4561,12 +4649,13 @@ public class JFileFinderWin extends javax.swing.JFrame {
     private javax.swing.JMenuItem readFileIntoListWin;
     private javax.swing.JMenuItem readFileIntoListWin1;
     private javax.swing.JPanel replaceSavePathPanel;
+    private javax.swing.JLabel reportIssueLbl;
     private javax.swing.JButton rightHistory;
     private javax.swing.JButton rmtConnectBtn;
     private javax.swing.JButton rmtDisconnectBtn;
     private javax.swing.JButton rmtForceDisconnectBtn;
     private javax.swing.JTextField rmtHost;
-    private javax.swing.JTextField rmtPasswd;
+    private javax.swing.JPasswordField rmtPasswd;
     private javax.swing.JTextField rmtSshPort;
     private javax.swing.JTextField rmtUser;
     private javax.swing.JMenuItem savePathsToFile;
@@ -4603,5 +4692,6 @@ public class JFileFinderWin extends javax.swing.JFrame {
     private javax.swing.JButton upFolder;
     private javax.swing.JRadioButton useGlobPattern;
     private javax.swing.JRadioButton useRegexPattern;
+    private javax.swing.JLabel webSiteLink;
     // End of variables declaration//GEN-END:variables
 }

@@ -30,6 +30,7 @@ public class JFileDelete //  implements Runnable
     ArrayList<String> deletePaths = new ArrayList<String>();
     Boolean dataSyncLock = false;
     Deleter deleter = null;
+    Chmod chmoder = null;
     DeleterNonWalker deleterNonWalker = null;
     ConnUserInfo connUserInfo = null;
     int fsType = -1;
@@ -68,6 +69,7 @@ public class JFileDelete //  implements Runnable
             }
         catch( Exception ex )
             {
+            System.out.println( "ERROR in jFileDelete.getResultsData()" );
             ex.printStackTrace();
             }
         //ResultsData resultsData = new ResultsData();
@@ -125,43 +127,53 @@ public class JFileDelete //  implements Runnable
         // Skip using filewalker at all for deletes
 //        else
 //            {
+            chmoder = new Chmod( startingPath, deletePaths, deleteFilesOnlyFlag, deleteToTrashFlag, deleteReadonlyFlag, fsType, swingWorker );
             deleter = new Deleter( startingPath, deletePaths, deleteFilesOnlyFlag, deleteToTrashFlag, deleteReadonlyFlag, fsType, swingWorker );
 //            synchronized( dataSyncLock ) 
 //                {
                 cancelFlag = false;
-//                for ( Path fpath : deletePaths )
-                for ( String strpath : deletePaths )
-                    {
-                    Path fpath = Paths.get( strpath );
-                    System.out.println( "delete path =" + fpath + "=" );
-                    //EnumSet<FileVisitOption> opts = EnumSet.of( FOLLOW_LINKS );
-                    if ( fpath.toFile().exists() || Files.isSymbolicLink( fpath ) )
+                try {
+                    for ( String strpath : deletePaths )
                         {
-                        try {
+                        Path fpath = Paths.get( strpath );
+                        System.out.println( "delete path =" + fpath + "=" );
+                        //EnumSet<FileVisitOption> opts = EnumSet.of( FOLLOW_LINKS );
+                        if ( fpath.toFile().exists() || Files.isSymbolicLink( fpath ) )
+                            {
+                            if ( deleteReadonlyFlag )
+                                {
+                                chmoder.chmodRecursive( strpath, "777" );
+                                }
                             Files.walkFileTree( fpath, deleter );
-                            } 
-                        catch (IOException ioex) 
-                            {
-                            //System.out.println( "up ERROR  " + "my error getSimpleName" + ioex.getClass().getSimpleName() );
-                            System.out.println( "delete io ERROR  " + "my error msg" + ioex.getMessage() );
-                            if ( ! connUserInfo.isConnectedFlag() )
-                                {
-                                JOptionPane.showMessageDialog( null, ioex.getClass().getSimpleName() + ": " + ioex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE );
-                                }
-                            Logger.getLogger(JFileDelete.class.getName()).log(Level.SEVERE, null, ioex);
                             }
-                        catch (Exception ex) 
-                            {
-                            if ( ! connUserInfo.isConnectedFlag() )
-                                {
-                                JOptionPane.showMessageDialog( null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE );
-                                }
-                            Logger.getLogger(JFileDelete.class.getName()).log(Level.SEVERE, null, ex);
-                            System.out.println( "delete ERROR  " + "my error msg" + ex.getMessage() );
-                            }
+
+                        //break;  for testing to do just 1st path
                         }
-                    
-                    //break;  for testing to do just 1st path
+                    } 
+//                catch ( java.nio.file.AccessDeniedException exAccessDenied ) 
+                catch (IOException ioex) 
+                    {
+                    //System.out.println( "up ERROR  " + "my error getSimpleName" + ioex.getClass().getSimpleName() );
+                    System.out.println( "delete io ERROR:  " + ioex );
+                    deleter.setProcessStatus( DeleteFrame.PROCESS_STATUS_DELETE_INCOMPLETE );
+                    deleter.setMessage( ioex.toString() );
+                    if ( ! connUserInfo.isConnectedFlag() )
+                        {
+                        JOptionPane.showMessageDialog( null, ioex.getClass().getSimpleName() + ": " + ioex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE );
+                        }
+                    Logger.getLogger(JFileDelete.class.getName()).log(Level.SEVERE, null, ioex);
+                    ioex.printStackTrace();
+                    }
+                catch (Exception ex) 
+                    {
+                    deleter.setProcessStatus( DeleteFrame.PROCESS_STATUS_DELETE_INCOMPLETE );
+                    deleter.setMessage( ex.toString() );
+                    if ( ! connUserInfo.isConnectedFlag() )
+                        {
+                        JOptionPane.showMessageDialog( null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE );
+                        }
+                    Logger.getLogger(JFileDelete.class.getName()).log(Level.SEVERE, null, ex);
+                    System.out.println( "delete ERROR:  " + ex );
                     }
 //                }
             deleter.done();

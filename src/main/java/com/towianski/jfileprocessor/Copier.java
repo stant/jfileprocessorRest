@@ -14,7 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,6 +41,7 @@ public class Copier extends SimpleFileVisitor<Path>
     private long numFileTests = 0;
     private long numFolderTests = 0;
     private long numTested = 0;
+    private ArrayList<String> errorList = new ArrayList<String>();
 
     boolean cancelFlag = false;
     boolean cancelFillFlag = false;
@@ -101,6 +101,13 @@ public class Copier extends SimpleFileVisitor<Path>
             while ( fromPath.toFile().isDirectory() &&
                     this.toPath.toRealPath().equals( this.startingPath.toRealPath() ) )
                 {
+                if ( swingWorker == null )
+                    {
+                    message = "ERROR: Folder exists";
+                    cancelFlag = true;
+                    break;
+                    }
+
                 if ( ! this.startingPath.equals( this.toPath ) )
                     {
                     ans = JOptionPane.showInputDialog( "Folder exists (probably through a symbolic link). New name: ", fromPath.getFileName() );
@@ -218,41 +225,47 @@ public class Copier extends SimpleFileVisitor<Path>
 
             if ( copyOptions == null || copyOptions.size() < 1 )
                 {
-//                System.out.println("copy with default options. file =" + file + "=   to =" + toPath.resolve(startingPath.relativize( file ) ) + "=" );
+//                System.out.println( "copy with default options. file =" + file + "=   to =" + toPath.resolve(startingPath.relativize( file ) ) + "=" );
+                //System.out.println( "copy with default options. file =" + toPathFile + "=" );
                 Files.copy( file, toPathFile );
                 }
             else
                 {
-//                System.out.println("copy with sent options. file =" + file + "=   to =" + toPath.resolve(startingPath.relativize( file ) ) + "=" );
+//                System.out.println( "copy with sent options. file =" + file + "=   to =" + toPath.resolve(startingPath.relativize( file ) ) + "=" );
+                //System.out.println( "copy with sent options. file =" + toPathFile + "=" );
                 Files.copy( file, toPathFile, copyOptions.toArray( new CopyOption[ copyOptions.size() ] ) );
                 }
             }
         catch ( java.nio.file.NoSuchFileException noSuchFileExc ) 
             {
-            logger.log( Level.INFO, "CAUGHT ERROR  " + noSuchFileExc.getClass().getSimpleName() + ": " + file );
+            logger.log( Level.INFO, "ERROR  " + noSuchFileExc + ": " + file );
             logger.log( Level.INFO, logger.getExceptionAsString( noSuchFileExc ) );
+            errorList.add( file + " -> " + "ERROR " + noSuchFileExc );
             return FileVisitResult.CONTINUE;
             }
         catch ( java.nio.file.AccessDeniedException exAccessDenied ) 
             {
-            logger.log( Level.INFO, "CAUGHT WARNING  " + exAccessDenied.getClass().getSimpleName() + ": " + file );
+            logger.log( Level.INFO, "WARNING  " + exAccessDenied + ": " + file );
             logger.log( Level.INFO, logger.getExceptionAsString( exAccessDenied ) );
+            errorList.add( file + " -> " + "WARNING " + exAccessDenied );
             if ( swingWorker != null )  swingWorker.setCloseWhenDoneFlag( false );
             return FileVisitResult.CONTINUE;
             }
         catch ( java.nio.file.FileAlreadyExistsException faeExc )
             {
-            logger.log( Level.INFO, "CAUGHT ERROR  " + faeExc.getClass().getSimpleName() + ": " + file );
-            System.out.println( "CAUGHT ERROR  " + faeExc.getClass().getSimpleName() + ": " + file );
-            message = "ERROR: " + faeExc.getClass().getSimpleName() + ": " + file;
+            logger.log( Level.INFO, "ERROR  " + faeExc + ": " + file );
+            System.out.println( "ERROR  " + faeExc + ": " + file );
+            errorList.add( file + " -> " + "ERROR " + faeExc );
+            message = "ERROR: " + faeExc + ": " + file;
             return FileVisitResult.CONTINUE;
             }
         catch ( Exception exc )
             {
-            logger.log(Level.SEVERE, "CAUGHT ERROR  " + exc.getClass().getSimpleName() + ": " + file );
-            System.out.println( "CAUGHT ERROR  " + exc.getClass().getSimpleName() + ": " + file );
+            logger.log(Level.SEVERE, "ERROR  " + exc + ": " + file );
+            System.out.println( "ERROR  " + exc + ": " + file );
+            errorList.add( file + " -> " + "ERROR " + exc );
             processStatus = "Error";
-            message = exc.getClass().getSimpleName() + ": " + file;
+            message = exc + ": " + file;
             return FileVisitResult.TERMINATE;
             }
     
@@ -263,6 +276,7 @@ public class Copier extends SimpleFileVisitor<Path>
             }
         
         numFileMatches++;
+        System.out.println( "visitFile() numFileMatches = " + numFileMatches );
         return FileVisitResult.CONTINUE;
         }
 
@@ -275,7 +289,7 @@ public class Copier extends SimpleFileVisitor<Path>
             if ( isDoingCutFlag )
                 {
                 Files.delete( dir );
-                //System.out.println( "would delete folder =" + dir );
+                System.out.println( "would delete folder =" + dir );
                 //numFoldersDeleted++;
                 }
             return FileVisitResult.CONTINUE;
@@ -284,14 +298,16 @@ public class Copier extends SimpleFileVisitor<Path>
 //        catch (RuntimeException ex3) 
 //            {
 //            Logger.getLogger(Deleter.class.getName()).log(Level.SEVERE, null, ex3 );
-//        System.out.println( "CAUGHT RUNTIME ERROR  " + "my error msg" + ex3.getClass().getSimpleName() + ": " + dir );
+//        System.out.println( "CAUGHT RUNTIME ERROR  " + "my error msg" + ex3 + ": " + dir );
 //            throw new IOException( "my runtime msg" + ex3.getClass().getSimpleName() + ": " + dir );
 //            }
         catch (Exception ex2) 
             {
             logger.log(Level.SEVERE, null, ex2 );
-            //System.out.println( "CAUGHT ERROR  " + "my error msg" + ex2.getClass().getSimpleName() + ": " + dir );
-            throw new IOException( ex2.getClass().getSimpleName() + ": " + dir );
+            errorList.add( dir + " -> " + "ERROR " + ex2 );
+            ex2.printStackTrace();
+            //System.out.println( "ERROR  " + "my error msg" + ex2 + ": " + dir );
+            throw new IOException( ex2 + ": " + dir );
             }
         //return FileVisitResult.TERMINATE;
         }
@@ -356,6 +372,14 @@ public class Copier extends SimpleFileVisitor<Path>
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public ArrayList<String> getErrorList() {
+        return errorList;
+    }
+
+    public void setErrorList(ArrayList<String> errorList) {
+        this.errorList = errorList;
     }
         
 }

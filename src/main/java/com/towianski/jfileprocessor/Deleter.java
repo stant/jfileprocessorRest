@@ -8,6 +8,7 @@ package com.towianski.jfileprocessor;
 import com.towianski.models.Constants;
 import com.towianski.utils.DesktopUtils;
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -16,7 +17,10 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
@@ -31,6 +35,7 @@ public class Deleter extends SimpleFileVisitor<Path>
     private long numFilesDeleted = 0;
     private long numFoldersDeleted = 0;
     private long numTested = 0;
+    private ArrayList<String> errorList = new ArrayList<String>();
 
     boolean cancelFlag = false;
 //    ArrayList<Path> deletePaths = new ArrayList<Path>();
@@ -62,26 +67,54 @@ public class Deleter extends SimpleFileVisitor<Path>
         {
         cancelFlag = true;
         }
-
+        
+//    @Override
+//    public FileVisitResult visitFileFailed( Path file, IOException exc )
+//            throws IOException 
+//        {
+//        if ( exc instanceof AccessDeniedException ) 
+//            {
+////            return FileVisitResult.SKIP_SUBTREE;
+//            try {
+//                System.out.println( "Delete visitFileFailed 0" );
+////                setMods( file );
+//                commonVisitFile( file );
+//                return FileVisitResult.CONTINUE;
+//                }
+//            catch ( Exception ex ) 
+//                {
+//                System.out.println( "Delete visitFileFailed Error: " + ex );
+//                processStatus = "Error";
+//                message = file + ": " + ex;
+//                return FileVisitResult.TERMINATE;
+//                }
+//            }
+//
+//        System.out.println( "Delete visitFileFailed OTHER Error: " + exc );
+//        return super.visitFileFailed(file, exc);
+//    }
+    
     @Override
     public FileVisitResult visitFile( Path fpath, BasicFileAttributes attrs ) 
             throws IOException 
         {
+        System.out.println( "visitFile fpath =" + fpath );
         if ( cancelFlag )
             {
             System.out.println( "Delete cancelled by user." );
             return FileVisitResult.TERMINATE;
             }
         numTested++;
+        if ( fpath.toFile().isDirectory() )
+            {
+            System.out.println( "commonVisitFile fpath just return for folder =" + fpath );
+            return FileVisitResult.CONTINUE;
+            }
         try {
-            if ( deleteReadonlyFlag )
-                {
-                fpath.toFile().setWritable( true );
-                if ( fsType == Constants.FILESYSTEM_DOS )
-                    {
-                    Files.setAttribute( fpath, "dos:readonly", false );
-                    }        
-                }
+//            if ( deleteReadonlyFlag )   handled by calling chmod() before all deletes as timing does not work here !
+//                {
+//                setMods( fpath );
+//                }
             if ( deleteToTrashFlag )
                 {
                 Path trashFpath = trashFolder.resolve( fromPath.relativize( fpath ) );
@@ -114,8 +147,8 @@ public class Deleter extends SimpleFileVisitor<Path>
                                     + fpath
                                     + "\nEither delete hidden files first, or check \"Delete Read-Only\" which will also delete hidden files."
                                     , "Error", JOptionPane.ERROR_MESSAGE );
-                    message = "Handle hidden file first: " + fpath;
                     }
+                message = "Handle hidden file first: " + fpath;
                 }
             else if ( fsType == Constants.FILESYSTEM_POSIX )
                 {
@@ -135,6 +168,7 @@ public class Deleter extends SimpleFileVisitor<Path>
                 }
             Logger.getLogger(Deleter.class.getName()).log(Level.SEVERE, null, exAccessDenied );
             System.out.println( "visitFile() AccessDeniedException: " + "  " + exAccessDenied.getClass().getSimpleName() + ": " + fpath );
+            exAccessDenied.printStackTrace();
             if ( deleteToTrashFlag )
                 {
                 System.out.println( "visitFile() copy toPath =" + trashFolder.resolve( fromPath.relativize( fpath ) ) + "=" );
@@ -192,7 +226,7 @@ public class Deleter extends SimpleFileVisitor<Path>
         catch (Exception ex2) 
             {
             processStatus = "Error";
-            message = ex2.getClass().getSimpleName() + ": " + fpath;
+            message = ex2 + ": " + fpath;
             Logger.getLogger(Deleter.class.getName()).log(Level.SEVERE, null, ex2 );
             System.out.println( "postVisitDirectory() delete folder ERROR  " + "  " + ex2.getClass().getSimpleName() + ": " + fpath );
             ex2.printStackTrace();

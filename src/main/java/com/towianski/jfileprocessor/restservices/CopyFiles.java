@@ -32,6 +32,7 @@ public class CopyFiles   //extends SwingWorker<ResultsData, Long>
 
     public CopyFiles( CopyModel copyModel )
         {
+        System.out.println( "entered CopyFiles() constructor" );
 ////        this.jFileFinderWin = jFileFinderWin;
 //        this.copyFrame = copyFrame;
 //        this.jfilecopy = jfilecopy;
@@ -42,13 +43,16 @@ public class CopyFiles   //extends SwingWorker<ResultsData, Long>
 
 //        Rest.saveObjectToFile( "CopyModel.json", copyModel );
         jfilecopy = new JFileCopy( copyModel.getConnUserInfo(), copyModel.isDoingCutFlag(), copyModel.getStartingPath(), copyModel.getCopyPaths(), copyModel.getToPath(), copyModel.getFileVisitOptions(), copyModel.getCopyOpts() );
+//        System.out.println( "entered CopyFiles() new jfilecopy =" + jfilecopy );
         }
 
 //    @Override
     public ResultsData doInBackground() {
 //        copyFrame.stopDirWatcher();
 //        copyFrame.setProcessStatus( copyFrame.PROCESS_STATUS_COPY_STARTED );
+//        System.out.println( "entered CopyFiles() doInBackground() before jfilecopy" );
         jfilecopy.run( null );
+//        System.out.println( "entered CopyFiles() doInBackground() after jfilecopy" );
         return jfilecopy.getResultsData();
     }
 

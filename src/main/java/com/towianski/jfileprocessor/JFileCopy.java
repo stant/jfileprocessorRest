@@ -72,12 +72,12 @@ public class JFileCopy //  implements Runnable
 //            if ( connUserInfo.isUsingSftp() )
             if ( connUserInfo.getCopyProcotol() == Constants.COPY_PROTOCOL_LOCAL )
                 {
-                resultsData = new ResultsData( cancelFlag, copier.getProcessStatus(), copier.getMessage(), copier.getNumTested(), copier.getNumFileMatches(), copier.getNumFolderMatches(), copier.getNumFileTests(), copier.getNumFolderTests() );
+                resultsData = new ResultsData( cancelFlag, copier.getProcessStatus(), copier.getMessage(), copier.getNumTested(), copier.getNumFileMatches(), copier.getNumFolderMatches(), copier.getNumFileTests(), copier.getNumFolderTests(), copier.getErrorList() );
                 }
             else
                 {
                 System.out.println("jFileCopy use copierNonWalker results" );
-                resultsData = new ResultsData( cancelFlag, copierNonWalker.getProcessStatus(), copierNonWalker.getMessage(), copierNonWalker.getNumTested(), copierNonWalker.getNumFileMatches(), copierNonWalker.getNumFolderMatches(), copierNonWalker.getNumFileTests(), copierNonWalker.getNumFolderTests() );
+                resultsData = new ResultsData( cancelFlag, copierNonWalker.getProcessStatus(), copierNonWalker.getMessage(), copierNonWalker.getNumTested(), copierNonWalker.getNumFileMatches(), copierNonWalker.getNumFolderMatches(), copierNonWalker.getNumFileTests(), copierNonWalker.getNumFolderTests(), copierNonWalker.getErrorList() );
                 }
             }
         catch( Exception ex )
@@ -120,6 +120,7 @@ public class JFileCopy //  implements Runnable
             catch (IOException ex) 
                 {
                 Logger.getLogger(JFileCopy.class.getName()).log(Level.SEVERE, null, ex);
+                ex.printStackTrace();
                 }
         
             copier.done();
@@ -151,6 +152,13 @@ public class JFileCopy //  implements Runnable
 //                sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost() );
                 }
             copierNonWalker = new CopierNonWalker( connUserInfo, sftp, sftpSrc, isDoingCutFlag, copyOptions, swingWorker );
+            if ( ! sftp.isConnected() )
+                {
+                cancelFlag = true;
+                copierNonWalker.setProcessStatus( CopyFrame.PROCESS_STATUS_COPY_CANCELED );
+                copierNonWalker.setMessage( sftp.getMessage() );
+                return;
+                }
 
             try {
                 synchronized( dataSyncLock ) 
@@ -175,6 +183,7 @@ public class JFileCopy //  implements Runnable
             catch (Exception ex) 
                 {
                 Logger.getLogger(JFileCopy.class.getName()).log(Level.SEVERE, null, ex);
+                ex.printStackTrace();
                 }
             finally
                 {
@@ -183,6 +192,7 @@ public class JFileCopy //  implements Runnable
                     sftpSrc.close();
                 }
             }
+        
         }
         
     public static void main(String[] args) throws IOException 

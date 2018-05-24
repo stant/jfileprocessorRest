@@ -8,6 +8,7 @@ package com.towianski.utils;
 import com.towianski.chainfilters.ChainFilterArgs;
 import com.towianski.chainfilters.FilterChain;
 import com.towianski.jfileprocessor.JFileFinder;
+import com.towianski.jfileprocessor.JFileFinderSwingWorker;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -41,10 +42,10 @@ public class FinderFileVisitor extends SimpleFileVisitor<Path>
         private ArrayList<Path> matchedPathsList = new ArrayList<Path>();
         private HashMap<Path, String> noAccessFolder = new HashMap<Path, String>();
         private boolean cancelFlag = false;
-
+        private JFileFinderSwingWorker jFileFinderSwingWorker;
         
         public FinderFileVisitor( String pattern, JFileFinder jFileFinder, ArrayList<Path> matchedPathsList, FilterChain chainFilterList, FilterChain chainFilterFolderList, FilterChain chainFilterPreVisitFolderList
-                                  , HashMap<Path, String> noAccessFolder ) 
+                                  , HashMap<Path, String> noAccessFolder, JFileFinderSwingWorker jFileFinderSwingWorker ) 
             {
             chainFilterArgs.setNumFileMatches(numFileMatches);
             chainFilterArgs.setNumFolderMatches(numFolderMatches);
@@ -58,6 +59,7 @@ public class FinderFileVisitor extends SimpleFileVisitor<Path>
             this.chainFilterFolderList = chainFilterFolderList;
             this.chainFilterPreVisitFolderList = chainFilterPreVisitFolderList;
             this.noAccessFolder = noAccessFolder;
+            this.jFileFinderSwingWorker = jFileFinderSwingWorker;
         }
 
         public void cancelSearch()
@@ -71,6 +73,8 @@ public class FinderFileVisitor extends SimpleFileVisitor<Path>
             numFileTests++;
             numTested++;
             chainFilterArgs.setNumFileMatches(numFileMatches);
+            if ( jFileFinderSwingWorker != null )  jFileFinderSwingWorker.publish2( numTested );
+
             if ( chainFilterList != null )
                 {
                 //BasicFileAttributes attrs;

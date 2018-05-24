@@ -287,6 +287,7 @@ public class CopyFrame extends javax.swing.JFrame {
 
             this.setMessage( msg + partialMsg );
             this.setResultsData( resultsData );
+            showCopyErrors();
             
             // clean up
 //            resultsData = null;
@@ -308,6 +309,14 @@ public class CopyFrame extends javax.swing.JFrame {
             }
             System.out.println( "Error in CopyFiles(): " + why);
             e.printStackTrace();
+            }
+        }
+    
+    public void showCopyErrors()
+        {
+        if ( resultsData.getErrorList().size() > 0 )
+            {
+            jFileFinderWin.openStringsToList( null, "Copy-Issues-List", resultsData.getErrorList() );  // This one saves search results to a List window called "files"
             }
         }
     

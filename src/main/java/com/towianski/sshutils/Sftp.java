@@ -25,7 +25,9 @@ public class Sftp {
     com.jcraft.jsch.ChannelSftp chanSftp = null;
     Channel channel = null;
     Session session = null;
-            
+    private boolean isConnected = false;
+    private String message = "";
+    
 public Sftp( String user, String password, String rhost )
     {
     try
@@ -66,12 +68,24 @@ public Sftp( String user, String password, String rhost )
         channel=session.openChannel( "sftp" );
         channel.connect();
         chanSftp = (com.jcraft.jsch.ChannelSftp)channel;
+        isConnected = true;
+        message = "";
         System.out.println( "Sftp done" );
         }
-    catch(Exception e)
+    catch(Exception ex)
         {
-        System.out.println(e);
+        isConnected = false;
+        message = "Sftp(): " + ex;
+        System.out.println(ex);
         }
+    }
+
+    public boolean isConnected() {
+        return isConnected;
+    }
+
+    public String getMessage() {
+        return message;
     }
     
 public com.jcraft.jsch.ChannelSftp getChanSftp()
@@ -87,7 +101,7 @@ public boolean exists( String path )
         } 
     catch (Exception ex)
         {
-        Logger.getLogger(CopierNonWalker.class.getName()).log(Level.SEVERE, null, ex);
+        Logger.getLogger(CopierNonWalker.class.getName()).log(Level.SEVERE, null, "does not exist/no stat");
         }
     return false;
     }

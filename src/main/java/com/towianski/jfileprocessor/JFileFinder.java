@@ -306,7 +306,19 @@ public class JFileFinder //  implements Runnable
                     DosFileAttributes fsattr = Files.readAttributes( fpath, DosFileAttributes.class );
 //                    if ( jFileFinderWin.isShowOwnerFlag() )
                         {
-                        rowList.add( Files.getOwner( fpath ) );
+                        try {
+                            rowList.add( Files.getOwner( fpath ) );
+                            } 
+                        catch (Exception ex) 
+                            {
+                            rowList.add( "unknown" );
+                            if ( ! attr.isDirectory() )
+                                {
+                                rowList.set( FilesTblModel.FILESTBLMODEL_FOLDERTYPE, FilesTblModel.FOLDERTYPE_FILE_NOACCESS );
+                                }
+                            logger.log(Level.SEVERE, ": dos owner line " + Thread.currentThread().getStackTrace()[1].getLineNumber() + ": " + ex.toString());
+                            ex.printStackTrace();
+                            }
                         }
 //                    if ( jFileFinderWin.isShowGroupFlag() )
                         {
@@ -314,12 +326,24 @@ public class JFileFinder //  implements Runnable
                         }
 //                    if ( jFileFinderWin.isShowPermsFlag() )
                         {
-                        rowList.add( (fsattr.isReadOnly() ? "R" : "-") + (fsattr.isArchive() ? "A" : "-") + (fsattr.isSystem() ? "S" : "-") );
+                        try {
+                            rowList.add( (fsattr.isReadOnly() ? "R" : "-") + (fsattr.isArchive() ? "A" : "-") + (fsattr.isSystem() ? "S" : "-") );
+                            } 
+                        catch (Exception ex) 
+                            {
+                            rowList.add( "???" );
+                            if ( ! attr.isDirectory() )
+                                {
+                                rowList.set( FilesTblModel.FILESTBLMODEL_FOLDERTYPE, FilesTblModel.FOLDERTYPE_FILE_NOACCESS );
+                                }
+                            logger.log(Level.SEVERE, ": dos rights line " + Thread.currentThread().getStackTrace()[2].getLineNumber() + ": " + ex.toString());
+                            }
                         }
                     
                     PathsInfoList.add( rowList );
                 } catch (Exception ex) {
                     logger.log(Level.SEVERE, ": line " + Thread.currentThread().getStackTrace()[2].getLineNumber() + ": " + ex.toString());
+                    ex.printStackTrace();
                 }
     //        System.out.println("creationTime     = " + attr.creationTime());
     //        System.out.println("lastAccessTime   = " + attr.lastAccessTime());
@@ -400,7 +424,7 @@ public class JFileFinder //  implements Runnable
         System.exit(-1);
     }
 
-    public void run() // JFileFinderSwingWorker jFileFinderSwingWorker ) 
+    public void run( JFileFinderSwingWorker jFileFinderSwingWorker ) 
     {
         startingPathLength = startingPath.endsWith( System.getProperty( "file.separator" ) ) ? startingPath.length() : startingPath.length() + 1;
         Path startingDir = Paths.get( startingPath );
@@ -417,7 +441,7 @@ public class JFileFinder //  implements Runnable
         System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
     
         finderFileVisitor = new FinderFileVisitor( (startingPath + filePattern).replace( "\\", "\\\\" ), this, matchedPathsList
-                                                   , chainFilterList, chainFilterFolderList, chainFilterPreVisitFolderList, noAccessFolder );
+                                                   , chainFilterList, chainFilterFolderList, chainFilterPreVisitFolderList, noAccessFolder, jFileFinderSwingWorker );
         
         try {
             synchronized( dataSyncLock ) 

@@ -31,11 +31,13 @@ public EnumFolderIconCellRenderer() {
         ImageIcon filenotfoundicon = new ImageIcon(ImageIO.read(getClass().getResource("/icons/yellow/document-not-found-icon-16.png")));
         ImageIcon foldericon = new ImageIcon(ImageIO.read(getClass().getResource("/icons/yellow/Folder-Blank-icon-16.png")));
         ImageIcon noaccessFoldericon = new ImageIcon(ImageIO.read(getClass().getResource("/icons/yellow/Folder-No-Access-icon-16.png")));
+        ImageIcon noaccessFileicon = new ImageIcon(ImageIO.read(getClass().getResource("/icons/yellow/File-No-Access-icon-16.png")));
 
         this.icons.put( FilesTblModel.FOLDERTYPE_FILE, fileicon );
         this.icons.put( FilesTblModel.FOLDERTYPE_FILE_NOT_FOUND, filenotfoundicon );
         this.icons.put( FilesTblModel.FOLDERTYPE_FOLDER, foldericon );
         this.icons.put( FilesTblModel.FOLDERTYPE_FOLDER_NOACCESS, noaccessFoldericon );
+        this.icons.put( FilesTblModel.FOLDERTYPE_FILE_NOACCESS, noaccessFileicon );
                 
         // Set properties that never change.
         this.setHorizontalAlignment(JLabel.CENTER);
@@ -53,10 +55,10 @@ public EnumFolderIconCellRenderer() {
   protected void setValue(Object value) {
     // Set properties that change on individual cells.
 //    if ( value instanceof Boolean )
-//        System.out.println( "EnumIconCellRenderer is boolean =" + (Boolean) value );
+//        System.out.println( "EnumFolderIconCellRenderer is boolean =" + (Boolean) value );
     if ( value instanceof Integer )
         {
-//        System.out.println( "EnumIconCellRenderer is Integer =" + (Integer) value );
+        //System.out.println( "EnumFolderIconCellRenderer is Integer =" + (Integer) value );
         this.setIcon( icons.get( (Integer) value ) );
         }
     }

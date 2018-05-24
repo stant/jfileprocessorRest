@@ -33,13 +33,18 @@ public class DesktopUtils
    {
       return getJfpHome( "Bookmarks.txt", "file" );
    }
-    
+
    public static File getUserTmp()
    {
 //      return getJfpHome( "tmp", "folder" );
         return new File( "/tmp/JFP" );
    }
     
+   public static boolean isHeadlessProperty()
+        {
+        return System.getProperty( "java.awt.headless", "false" ).equalsIgnoreCase( "TRUE" ) ? true : false ;
+        }
+   
    public static File getJfpHome( String specificFolder, String fType )
    {
       System.out.println( "os.name =" + System.getProperty( "os.name" ) + "=" );
@@ -117,12 +122,12 @@ public class DesktopUtils
     if ( ! jfpHome.exists() )
         {
         boolean ok = jfpHome.mkdir();
-        JOptionPane.showMessageDialog( null, "Could not find a JFileProcessor folder so I created one here: \n\n" + jfpHome
+        if ( ! isHeadlessProperty() )  JOptionPane.showMessageDialog( null, "Could not find a JFileProcessor folder so I created one here: \n\n" + jfpHome
                                         + missingHomeErrMsg
                                         );
         if ( ! ok )
             {
-            JOptionPane.showMessageDialog( null, "*** Error creating JFileProcessor folder: \n\n" + jfpHome );
+            if ( ! isHeadlessProperty() )  JOptionPane.showMessageDialog( null, "*** Error creating JFileProcessor folder: \n\n" + jfpHome );
             }
         }
     jfpHome = new File( jfpHome, specificFolder );
@@ -133,7 +138,7 @@ public class DesktopUtils
             {
             boolean ok = false;
             ok = fType.equals( "folder" ) ? jfpHome.mkdirs() : jfpHome.createNewFile();
-            JOptionPane.showMessageDialog( null, "Could not find its JFileProcessor " + specificFolder + " file so I created one here: \n\n" + jfpHome
+            if ( ! isHeadlessProperty() )  JOptionPane.showMessageDialog( null, "Could not find its JFileProcessor " + specificFolder + " file so I created one here: \n\n" + jfpHome
                         );
             }
         }
@@ -176,6 +181,8 @@ public class DesktopUtils
 
     public static void moveJframeToBottomScreen( JFrame f )
         {
+        if ( isHeadlessProperty() )  return;
+        
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice defaultScreen = ge.getDefaultScreenDevice();
         Rectangle bounds = defaultScreen.getDefaultConfiguration().getBounds();

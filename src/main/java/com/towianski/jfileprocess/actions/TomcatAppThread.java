@@ -103,21 +103,23 @@ public class TomcatAppThread implements Runnable
                 if ( ! cancelFlag && 
                     ( response == null || ! response.equalsIgnoreCase( "RUNNING" ) ) )
                     {
-                    String[] mainCommand = System.getProperty("sun.java.command").split(" ");
-                    String jfpFilename = mainCommand[0];
-                    System.out.println( "jfpFilename =" + jfpFilename + "=" );
+//                    String[] mainCommand = System.getProperty("sun.java.command").split(" ");
+//                    String jfpFilename = mainCommand[0];
+//                    System.out.println( "jfpFilename =" + jfpFilename + "=" );
 //                        String fpath = System.getProperty( "user.dir" ) + System.getProperty( "file.separator" ) + "build" + System.getProperty( "file.separator" ) + "libs" + System.getProperty( "file.separator" );
                     String fpath = System.getProperty( "user.dir" ) + System.getProperty( "file.separator" );
 //                    fpath = fpath.replace( "-Gui", "-Server" );
 //                    System.out.println( "jfpFilename =" + jfpFilename + "=" );
-                    jfpFilename = JFileProcessorVersion.getName() + "-" + JFileProcessorVersion.getVersion() + ".jar";  //"JFileProcessor-1.6.0.jar";
+                    String jfpFilename = JFileProcessorVersion.getName() + "-" + JFileProcessorVersion.getVersion() + ".jar";  //"JFileProcessor-1.6.0.jar";
                     System.out.println( "set jfpFilename =" + jfpFilename + "=" );
                     System.out.println( "try jschSftpUtils   file =" + fpath + jfpFilename + "=   to remote =" + user + "@" + rmtHost + ":" + jfpFilename + "=" );
 
+                    jFileFinderWin.setMessage( "copy server to remote" );
                     //jschSftpUtils.copyIfMissing( fpath + jfpFilename, user, passwd, rmtHost, jfpFilename );
                     jschSftpUtils.sftpIfDiff( fpath + jfpFilename, user, passwd, rmtHost, jfpFilename );
                     if ( ! cancelFlag )
                         {
+                        jFileFinderWin.setMessage( "start remote server" );
                         setStartedServer( true );
                         jschSftpUtils.exec( user, passwd, rmtHost, "java -Dserver.port=" + System.getProperty( "server.port", "8443" ) + " -jar " + jfpFilename + " --server --logging.file=/tmp/jfp-springboot.logging" );
                         //java -jar your-spring.jar --security.require-ssl=true --server.port=8443 --server.ssl.key-store=keystore --server.ssl.key-store-password=changeit --server.ssl.key-password=changeit
