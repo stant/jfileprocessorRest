@@ -135,15 +135,15 @@ public class JFileDelete //  implements Runnable
                 try {
                     for ( String strpath : deletePaths )
                         {
+                        System.out.println( "delete strpath =" + strpath + "=   deleteReadonlyFlag =" + deleteReadonlyFlag );
+                        if ( deleteReadonlyFlag )
+                            {
+                            chmoder.chmodRecursive( strpath, "777" );
+                            }
                         Path fpath = Paths.get( strpath );
-                        System.out.println( "delete path =" + fpath + "=" );
                         //EnumSet<FileVisitOption> opts = EnumSet.of( FOLLOW_LINKS );
                         if ( fpath.toFile().exists() || Files.isSymbolicLink( fpath ) )
                             {
-                            if ( deleteReadonlyFlag )
-                                {
-                                chmoder.chmodRecursive( strpath, "777" );
-                                }
                             Files.walkFileTree( fpath, deleter );
                             }
 

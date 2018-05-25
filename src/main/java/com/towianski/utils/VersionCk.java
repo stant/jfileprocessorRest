@@ -104,6 +104,8 @@ public class VersionCk {
         checkVersion( "10-rc42", "10.0.0-rc53");
         checkVersion( "1.6", "1.6.0-rc99");
         checkVersion( "1.6.0-rc99", "1.6.0");
+        checkVersion( "1.6.0-beta", "1.6.0-beta2");
+        checkVersion( "1.6.0-beta", "1.6.0-beta-2");
         }
 
     private static void checkVersion(String baseVersion, String testVersion) 
