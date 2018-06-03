@@ -3938,7 +3938,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
                         numChanged ++;
                         }
                     }
-                JOptionPane.showMessageDialog( this, "Number of files added: " + numChanged );
+//                JOptionPane.showMessageDialog( this, "Number of files added: " + numChanged );
                 }
             listOfFilesPanel.setCount();
             }

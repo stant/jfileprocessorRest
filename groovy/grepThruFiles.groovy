@@ -13,16 +13,18 @@ class Test {
         System.out.println( "entered grepThruFiles.main()");
 //        def test = new Test();
 
-        // we are going to write output to this file !
-        def outFile = new File( System.getProperty("java.io.tmpdir") + System.getProperty( "file.separator") + "NewFile.txt" );
-        outFile.write "";
-
         com.towianski.jfileprocessor.CodeProcessorPanel codeProcessorPanel = binding.getVariable( "codeProcessorPanel" );
         def defaultComboBoxModel = binding.getVariable( "defaultComboBoxModel" );
         System.out.println( "got codeProcessorPanel.jFileFinderWin.getStartingFolder() =" + codeProcessorPanel.jFileFinderWin.getStartingFolder() + "=" );
         ResultsData resultsData = binding.getVariable( "resultsData" );
 
-        System.out.println( "selected item =" + codeProcessorPanel.listOfLists.getSelectedItem() + "=" );
+        String winList = codeProcessorPanel.listOfLists.getSelectedItem();
+        System.out.println( "selected item =" + winList + "=" );
+
+        // we are going to write output to this file !
+        def outFile = new File( System.getProperty("java.io.tmpdir") + System.getProperty( "file.separator") + "NewFile-" + winList + ".txt" );
+        outFile.write "";
+        
         int numItems = defaultComboBoxModel.getSize();
         System.out.println( "defaultComboBoxModel.getSize() num of items =" + numItems + "=" );
         String str = "";
@@ -36,7 +38,7 @@ class Test {
     //            String fileContents = new File( str ).text
     //            outFile << fileContents;
     //            String cmd = "ls -l " + str;
-                String cmd = "grep -i sftp " + str;
+                String cmd = "grep -i ArrayList " + str;
                 def list = cmd.execute().text
                 list.eachLine{
                     outFile << it;

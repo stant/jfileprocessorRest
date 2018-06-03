@@ -57,6 +57,7 @@ public class CodeProcessorPanel extends javax.swing.JFrame {
     boolean cancelFillFlag = false;
     String startingPath = null;
     Boolean dataSyncLock = false;
+    boolean openedAFile = false;
         
 
     /**
@@ -237,6 +238,7 @@ public class CodeProcessorPanel extends javax.swing.JFrame {
             {
             exc.printStackTrace();
             }
+        openedAFile = true;
         }
     
     public void saveToFile( File selectedFile )
@@ -319,7 +321,8 @@ public class CodeProcessorPanel extends javax.swing.JFrame {
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
+    private void initComponents()
+    {
         java.awt.GridBagConstraints gridBagConstraints;
 
         jPanel1 = new javax.swing.JPanel();
@@ -357,8 +360,10 @@ public class CodeProcessorPanel extends javax.swing.JFrame {
         jPanel1.add(listOfLists, gridBagConstraints);
 
         doCmdBtn.setText("Run");
-        doCmdBtn.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+        doCmdBtn.addActionListener(new java.awt.event.ActionListener()
+        {
+            public void actionPerformed(java.awt.event.ActionEvent evt)
+            {
                 doCmdBtnActionPerformed(evt);
             }
         });
@@ -370,8 +375,10 @@ public class CodeProcessorPanel extends javax.swing.JFrame {
         jPanel1.add(doCmdBtn, gridBagConstraints);
 
         saveToFile.setText("Save As...");
-        saveToFile.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+        saveToFile.addActionListener(new java.awt.event.ActionListener()
+        {
+            public void actionPerformed(java.awt.event.ActionEvent evt)
+            {
                 saveToFileActionPerformed(evt);
             }
         });
@@ -382,8 +389,10 @@ public class CodeProcessorPanel extends javax.swing.JFrame {
         jPanel1.add(saveToFile, gridBagConstraints);
 
         openFile.setText("Open File");
-        openFile.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+        openFile.addActionListener(new java.awt.event.ActionListener()
+        {
+            public void actionPerformed(java.awt.event.ActionEvent evt)
+            {
                 openFileActionPerformed(evt);
             }
         });
@@ -405,8 +414,10 @@ public class CodeProcessorPanel extends javax.swing.JFrame {
         jPanel1.add(jScrollPane2, gridBagConstraints);
 
         saveBtn.setText("Save");
-        saveBtn.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+        saveBtn.addActionListener(new java.awt.event.ActionListener()
+        {
+            public void actionPerformed(java.awt.event.ActionEvent evt)
+            {
                 saveBtnActionPerformed(evt);
             }
         });
@@ -492,7 +503,14 @@ public class CodeProcessorPanel extends javax.swing.JFrame {
         JFileChooser chooser = new JFileChooser();
         chooser.setFileHidingEnabled( true );
         chooser.setDialogTitle( "Open File" );
-        chooser.setCurrentDirectory( new File( jFileFinderWin.JfpHomeDir ) );
+        if ( ! openedAFile )
+            {
+            chooser.setCurrentDirectory( new File( jFileFinderWin.JfpHomeDir ) );
+            }
+        else
+            {
+            chooser.setCurrentDirectory( new File( currentDirectory ) );
+            }
         chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         //
         // disable the "All files" option.

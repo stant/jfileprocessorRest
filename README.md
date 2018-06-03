@@ -6,6 +6,8 @@ Place to get the official versions (many sites are behind):
 
 made using Java 8.
 
+1.6.0-beta-xxx  are betas because I was not able to test anything on a Mac for this release. I do not have access to one at this time. Any testing info would be appreciated.
+
 Report Issues at:  ![github main](https://github.com/stant/jfileprocessorRest/issues)
 
 This is a File and List Manager with search features: 
