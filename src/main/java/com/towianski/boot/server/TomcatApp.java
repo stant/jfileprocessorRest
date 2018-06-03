@@ -31,8 +31,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import testit.model.ProgramMemoryEmp;
-import testit.utils.Rest;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -51,18 +49,6 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 public class TomcatApp {
 
     private static Log logger = LogFactory.getLog(TomcatApp.class);
-
-    static public Rest myRest = new Rest();
-    static ProgramMemoryEmp programMemory = null;
-
-    public static void setProgramMemory(ProgramMemoryEmp programMemory) {
-        TomcatApp.programMemory = programMemory;
-    }
-
-    static public ProgramMemoryEmp getProgramMemory() {
-        return programMemory;
-    }
-
 
     @Bean
     protected ServletContextListener listener() {

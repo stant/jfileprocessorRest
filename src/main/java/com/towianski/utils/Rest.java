@@ -34,7 +34,7 @@ public class Rest {
     static File programMemoryFile = null;
 
     static {
-        programMemoryFile = getJfpHome( "programMemory.json", "file" );
+        programMemoryFile = getJfpHome( "ProgramMemory.json", "file" );
         }
 
 //    @Override
@@ -47,7 +47,7 @@ public class Rest {
 
     static public Object readObjectFromFile( String fileName, TypeReference typeRef )
         {
-        System.out.println( "REST.readObjectFromFile()" );
+        System.out.println( "REST.readObjectFromFile()   fileName =" + fileName + "=" );
         Object obj = null;
 //        ProgramMemory programMemory = new ProgramMemory();
         //read json file data to String
@@ -101,7 +101,7 @@ public class Rest {
 
     static public void saveObjectToFile( String fileName, Object obj ) 
         {
-        System.out.println( "Rest.saveObjectToFile()" );
+        System.out.println( "Rest.saveObjectToFile()   fileName =" + fileName + "=" );
         File toFile = null;
         
         //convert Object to json string
