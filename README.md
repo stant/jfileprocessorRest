@@ -77,6 +77,7 @@ If nothing is selected it uses the "Folder:" you are in.
 * Install-Folder/   groovy   or   menu-scripts
 
 groovy: folder for groovy scripts. 
+
 menu-scripts: special groovy scripts folder. Place scripts in here to make them show up in the right-click "Scripts" menu.
 This is a short cut. It will run the script without a code window on the files you have selected.
 Most of the groovy scripts I include as examples write to the same file system-temp-folder/NewFile.txt so be sure to modify as needed.
