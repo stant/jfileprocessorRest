@@ -32,6 +32,12 @@ public class CircularArrayList {
     
     public void add( String newPath )
         {
+        if ( idx >= 0 )  // Don't add duplicate of last entry
+            {
+            if ( cal.get( idx ).equals( newPath ) )
+                return;
+            }
+        
         addAt ++;
         if ( addAt >= max )
             {

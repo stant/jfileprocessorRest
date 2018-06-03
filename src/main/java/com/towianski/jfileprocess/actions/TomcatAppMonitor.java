@@ -24,19 +24,21 @@ public class TomcatAppMonitor implements Runnable
     String passwd = null;
     String rmtHost = null;
     boolean cancelFlag = false;
-    JFileFinderWin jFileFinderWin = null;
     RestServerSw restServerSw = null;
+    JFileFinderWin jFileFinderWin = null;
     boolean startedServer = false;
     TomcatAppThread tomcatAppThread = null;
     Thread runThread = null;
+    WatchTomcatAppStartThread watchTomcatAppStartThread = null;
     Thread watchStartThread = null;
     int count = 0;
     
     /**
      * Creates a WatchService and registers the given directory
      */
-    public TomcatAppMonitor( ConnUserInfo connUserInfo, String user, String passwd, String rmtHost, JFileFinderWin jFileFinderWin, RestServerSw restServerSw )
+    public TomcatAppMonitor( RestServerSw restServerSw, ConnUserInfo connUserInfo, String user, String passwd, String rmtHost, JFileFinderWin jFileFinderWin )
         {
+        this.restServerSw = restServerSw;
         this.connUserInfo = connUserInfo;
         this.user = user;
         this.passwd = passwd;
@@ -44,9 +46,9 @@ public class TomcatAppMonitor implements Runnable
         this.jFileFinderWin = jFileFinderWin;
         }
     
-    public void cancelRestServer( boolean forceStop )
+    public void cancelTomcatAppMonitor( boolean forceStop )
         {
-        System.out.println("TomcatAppMonitor set cancelFlag to true");
+        System.out.println( "cancelTomcatAppMonitor() set cancelFlag to true" );
         System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
         cancelFlag = true;
 
@@ -60,34 +62,54 @@ public class TomcatAppMonitor implements Runnable
                 }
             });
 
-        Thread.currentThread().interrupt();
-        System.out.println("TomcatAppMonitor exit cancelSearch()");
+        //Thread.currentThread().interrupt();
+        System.out.println("exit cancelTomcatAppMonitor()");
         }
     
     public void cancelAppThread( boolean forceStop )
         {
         System.out.println("TomcatAppMonitor cancelAppThread()");
         System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
-        if ( tomcatAppThread != null )
+        if ( runThread != null && runThread.isAlive() )
             {
+            System.out.println( "stop/interrupt runThread/tomcatAppThread" );
             try
                 {
-                watchStartThread.interrupt();
-                watchStartThread.join();
-                tomcatAppThread.cancelRestServer( forceStop );
-//                runThread.interrupt();
-//                runThread.join();
-                System.out.println( "TomcatAppMonitor.cancelRestServer() - after runThread.join()" );
+                tomcatAppThread.cancelTomcatAppThread( forceStop );
+                runThread.interrupt();
+                runThread.join();
                 } 
             catch (InterruptedException ex)
                 {
-                System.out.println( "TomcatAppMonitor.cancelRestServer() - ERROR on runThread.join()" );
-                Logger.getLogger(RestServerSw.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println( "TomcatAppMonitor.cancelAppThread() - InterruptedException on runThread.join()" );
+                Logger.getLogger(TomcatAppMonitor.class.getName()).log(Level.SEVERE, null, ex);
                 }
+            System.out.println( "TomcatAppMonitor.cancelAppThread() - after runThread.join()" );
+            }
+
+        if ( watchStartThread != null && watchStartThread.isAlive() )
+            {
+            System.out.println( "stop/interrupt watchTomcatAppStartThread" );
+            try
+                {
+                watchTomcatAppStartThread.cancelWatchTomcatAppStartThread( false );
+                watchStartThread.interrupt();
+                watchStartThread.join();
+                } 
+            catch (InterruptedException ex)
+                {
+                System.out.println( "TomcatAppMonitor.cancelAppThread() - InterruptedException on runThread.join()" );
+                Logger.getLogger(TomcatAppMonitor.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            System.out.println( "Done/joined watchTomcatAppStartThread" );
             }
         System.out.println("exit TomcatAppMonitor cancelAppThread()");
         }
     
+    // Starts 2 threads.
+    // watch tomcatapp thread which just tests connection and turns button green or reset. if goes from running to stopped, it calls disconnect.
+    // tomcat app thread
+    // then waits to be stopped.
     @Override
     public void run() 
         {
@@ -96,117 +118,68 @@ public class TomcatAppMonitor implements Runnable
         RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
 
         cancelFlag = false;
-        int downTimes = 99;
-        String response = null;
-        boolean didFirstStart = false;
+        int downTimes = 0;
 
-        WatchUntilTomcatAppStartThread watchUntilTomcatAppStartThread = new WatchUntilTomcatAppStartThread( connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin );
-        watchStartThread = ProcessInThread.newThread( "WatchUntilTomcatAppStartThread", 0, false, watchUntilTomcatAppStartThread );
+        watchTomcatAppStartThread = new WatchTomcatAppStartThread( restServerSw, connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin );
+        watchStartThread = ProcessInThread.newThread( "watchTomcatAppStartThread", 0, false, watchTomcatAppStartThread );
         watchStartThread.start();
 
         tomcatAppThread = new TomcatAppThread( connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin );
-//        runThread = ProcessInThread.newThread( "TomcatAppMonitor", count++, false, tomcatAppThread );
-//        runThread.start();
-        tomcatAppThread.run();
+        runThread = ProcessInThread.newThread( "tomcatAppThread", count++, false, tomcatAppThread );
+        runThread.start();
+//        tomcatAppThread.run();
+        //System.out.println( "after first tomcatAppThread.run()" );
         
         //waitUntilStarted();
-        
-        while ( ! cancelFlag )
+        try
             {
-            try
+            synchronized (this) 
                 {
-                System.out.println( "TomcatAppMonitor.run() make rest /jfp/sys/ping call" );
-                try
-                    {
-                    response = noHostVerifyRestTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.SYS_PING, String.class );
-                    }
-                catch( Exception exc )
-                    {
-                    System.out.println( "TomcatAppMonitor.run() ping threw Exception !!" );
-                    response = null;
-//                    SwingUtilities.invokeLater(new Runnable() 
-//                        {
-//                        public void run() {
-//                            jFileFinderWin.setRmtConnectBtnBackground( Color.yellow );
-//                            }
-//                        });
-                    exc.printStackTrace();
-                    }
-                System.out.println( "TomcatAppMonitor.run() ping response =" + response + "=" );
-                
-                if ( ! cancelFlag && 
-                    ( response == null || ! response.equalsIgnoreCase( "RUNNING" ) ) )
-                    {
-                    if ( ++downTimes > 5 )
-                        {
-                        if ( runThread != null && runThread.isAlive() )
-                            {
-                            System.out.println( "TomcatAppMonitor.run() STOP any existing running server" );
-                            cancelAppThread( false );
-                            }
-                        tomcatAppThread = new TomcatAppThread( connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin );
-//                        runThread = ProcessInThread.newThread( "TomcatAppMonitor", count++, false, tomcatAppThread );
-//                        runThread.start();
-                        tomcatAppThread.run();
-                
-                        //waitUntilStarted();
-
-//                        SwingUtilities.invokeLater(new Runnable() 
-//                            {
-//                            public void run() {
-//                                jFileFinderWin.setRmtConnectBtnBackground( Color.yellow );
-//                                }
-//                            });
-                        System.out.println( "TomcatAppMonitor after start remote jfp server" );
-//                        Thread.sleep( 30000 );
-                        downTimes = 0;
-                        }
-                    else
-                        {
-                        Thread.sleep( 1000 );
-                        }
-                    }
-                else   //if ( didFirstStart ) // is running or first start ?
-                    {
-                    Thread.sleep( 10000 );
-                    }
-//                else if ( ! didFirstStart ) // is running or first start ?
-//                    {
-//                    // already running
-//                    downTimes = 0;
-//                    connUserInfo.setConnectedFlag( true );
-//                    SwingUtilities.invokeLater(new Runnable() 
-//                        {
-//                        public void run() {
-//                            jFileFinderWin.setRmtConnectBtnBackground( Color.green );
-//                            }
-//                        });
-//                    }
+                this.wait();
                 }
-            catch( InterruptedException intexc )
-                {
-                System.out.println( "TomcatAppMonitor sleep interrupted" );
-//                SwingUtilities.invokeLater(new Runnable() 
-//                    {
-//                    public void run() {
-//                        jFileFinderWin.setRmtConnectBtnBackground( Color.yellow );
-//                        }
-//                    });
-                }
-            catch( Exception exc )
-                {
-//                SwingUtilities.invokeLater(new Runnable() 
-//                    {
-//                    public void run() {
-//                        jFileFinderWin.setRmtConnectBtnBackground( Color.yellow );
-//                        }
-//                    });
-                exc.printStackTrace();
-                }
-            didFirstStart = true;
-            } // while
+            } 
+        catch (InterruptedException ex)
+            {
+            System.out.println( "TomcatAppMonitor.wait() - InterruptedException" );
+            Logger.getLogger(TomcatAppMonitor.class.getName()).log(Level.SEVERE, null, ex);
+            }
         
-        connUserInfo.setConnectedFlag( false );
+//        while ( ! cancelFlag &&  ++downTimes < 5 )
+//            {
+//            try
+//                {
+//                tomcatAppThread = new TomcatAppThread( connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin );
+////                        runThread = ProcessInThread.newThread( "TomcatAppMonitor", count++, false, tomcatAppThread );
+////                        runThread.start();
+//                tomcatAppThread.run();
+//                System.out.println( "after tomcatAppThread.run()  downTimes =" + downTimes );
+//                Thread.sleep( 1000 );
+//                }
+//            catch( InterruptedException intexc )
+//                {
+//                System.out.println( "TomcatAppMonitor sleep interrupted" );
+////                SwingUtilities.invokeLater(new Runnable() 
+////                    {
+////                    public void run() {
+////                        jFileFinderWin.setRmtConnectBtnBackground( Color.yellow );
+////                        }
+////                    });
+//                }
+//            catch( Exception exc )
+//                {
+////                SwingUtilities.invokeLater(new Runnable() 
+////                    {
+////                    public void run() {
+////                        jFileFinderWin.setRmtConnectBtnBackground( Color.yellow );
+////                        }
+////                    });
+//                exc.printStackTrace();
+//                }
+//            } // while
+        //System.out.println( "TomcatAppMonitor.run() STOP any existing running server" );
+        //cancelAppThread( false );
+        
+        //connUserInfo.setConnectedFlag( false );
 //        SwingUtilities.invokeLater(new Runnable() 
 //            {
 //            public void run() {
@@ -233,7 +206,7 @@ public class TomcatAppMonitor implements Runnable
             try
                 {
                 response = noHostVerifyRestTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.SYS_GET_FILESYS, Integer.class );
-                System.out.println( "RestServerSw.run() SYS_GET_FILESYS response =" + response );
+                System.out.println( "TomcatAppMonitor.run() SYS_GET_FILESYS response =" + response );
 //                connUserInfo.setToFilesysType(response);
 //                System.out.println( "connUserInfo.getToFilesysType() =" + connUserInfo.getToFilesysType() );
                 jFileFinderWin.setFilesysType(response);
@@ -268,7 +241,7 @@ public class TomcatAppMonitor implements Runnable
                 } 
             catch (InterruptedException ex)
                 {
-                Logger.getLogger(RestServerSw.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(TomcatAppMonitor.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
             if ( --waitCount < 1 )  break;

@@ -10,7 +10,10 @@ import com.towianski.models.JfpRestURIConstants;
 import com.towianski.sshutils.Sftp;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -123,4 +126,18 @@ public class FileUtils
                 }
             }
         }
+    
+    public static void touch( Path path ) 
+            throws IOException 
+        {
+        if (Files.exists(path)) 
+            {
+            Files.setLastModifiedTime(path, FileTime.from(Instant.now()));
+            }
+        else
+            {
+            Files.createFile(path);
+            }
+        }
+
     }

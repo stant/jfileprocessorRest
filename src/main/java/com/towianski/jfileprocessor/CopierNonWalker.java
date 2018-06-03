@@ -393,6 +393,7 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
                     if ( copyOptions.contains( StandardCopyOption.REPLACE_EXISTING ) )
                         {
 //                        chanSftp.chmod( 511, destinationFolderStr );   // 511 is decimal for 777 in Octal
+//					overwrite option could be looked at:  channelSftp.put(new FileInputStream(f1), f1.getName(), ChannelSftp.OVERWRITE);
                         System.out.println( "rm " + destinationFolderStr );
                         chanSftp.rm( destinationFolderStr );
                         System.out.println( "put " + sourceFolderStr );

@@ -66,8 +66,11 @@ public Sftp( String user, String password, String rhost )
         System.out.println( "Sftp at 5" );
 
         channel=session.openChannel( "sftp" );
+        System.out.println( "Sftp at 6" );
         channel.connect();
+        System.out.println( "Sftp at 7" );
         chanSftp = (com.jcraft.jsch.ChannelSftp)channel;
+        System.out.println( "Sftp at 8" );
         isConnected = true;
         message = "";
         System.out.println( "Sftp done" );
@@ -76,7 +79,7 @@ public Sftp( String user, String password, String rhost )
         {
         isConnected = false;
         message = "Sftp(): " + ex;
-        System.out.println(ex);
+        System.out.println( "Sftp(): " + ex );
         }
     }
 

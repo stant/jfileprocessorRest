@@ -208,26 +208,25 @@ public class SavedPathsPanel extends javax.swing.JPanel {
         if ( arr.length > 3 )
             {
             jFileFinderWin.setStartingFolder( arr[0] );
-            jFileFinderWin.setRmtUser( arr[1] );
-            jFileFinderWin.setRmtPasswd( arr[2] );
-            jFileFinderWin.setRmtHost( arr[3] );
-            jFileFinderWin.setRmtSshPort( arr[4] );
             
-//            SwingUtilities.invokeLater(new Runnable() 
-//                {
-//                public void run() {
-//                    jFileFinderWin.callRmtConnectBtnActionPerformed( null );
-//                    jFileFinderWin.callSearchBtnActionPerformed( null );
-//                    }
-//                });
+            if ( jFileFinderWin.getRmtUser().equals( arr[1] ) &&
+                jFileFinderWin.getRmtPasswd().equals( arr[2] ) &&
+                jFileFinderWin.getRmtHost().equals( arr[3] ) &&
+                jFileFinderWin.getRmtSshPort().equals( arr[4] ) 
+                    )
+                {
+                jFileFinderWin.callSearchBtnActionPerformed( null );
+                }
+            else
+                {
+                System.out.println( "  -- switch server" );
+                jFileFinderWin.setRmtUser( arr[1] );
+                jFileFinderWin.setRmtPasswd( arr[2] );
+                jFileFinderWin.setRmtHost( arr[3] );
+                jFileFinderWin.setRmtSshPort( arr[4] );
             
-//            SwingUtilities.invokeLater(new Runnable() 
-//                {
-//                public void run() {
-//                    jFileFinderWin.callSearchBtnActionPerformed( null );
-//                    }
-//                });
-            jFileFinderWin.clickConnectAndSearch( null );
+                jFileFinderWin.clickConnectAndSearch( null );
+                }
             }
         else
             {

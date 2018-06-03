@@ -53,23 +53,27 @@ public class RestServerSw {
         System.out.println( "enter RestServerSw.cancelRestServer()" );
         if ( tomcatAppMonitor != null )
             {
-            tomcatAppMonitor.cancelRestServer( forceStop );
-            try
+            if ( runThread != null && runThread.isAlive() )
                 {
-                runThread.join();
-                System.out.println( "RestServerSw.cancelRestServer() - after runThread.join()" );
-                } 
-            catch (InterruptedException ex)
-                {
-                System.out.println( "RestServerSw.cancelRestServer() - ERROR on runThread.join()" );
-                ex.printStackTrace();
-                Logger.getLogger(RestServerSw.class.getName()).log(Level.SEVERE, null, ex);
+                tomcatAppMonitor.cancelTomcatAppMonitor( forceStop );
+                try
+                    {
+                    runThread.interrupt();
+                    runThread.join();
+                    System.out.println( "RestServerSw.cancelRestServer() - after runThread.join()" );
+                    } 
+                catch (InterruptedException ex)
+                    {
+                    System.out.println( "RestServerSw.cancelRestServer() - InterruptedException on runThread.join()" );
+                    ex.printStackTrace();
+                    Logger.getLogger(RestServerSw.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
             }
         else   // no thread already running
             {
             TomcatAppThread tomcatAppThread = new TomcatAppThread( connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin );
-            tomcatAppThread.cancelRestServer(forceStop);
+            tomcatAppThread.cancelTomcatAppThread(forceStop);
             }
         System.out.println( "exit RestServerSw.cancelRestServer()" );
         }
@@ -99,7 +103,7 @@ public class RestServerSw {
                     {
                     cancelRestServer( false );
                     }
-                tomcatAppMonitor = new TomcatAppMonitor( connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin, this );
+                tomcatAppMonitor = new TomcatAppMonitor( this, connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin );
                 runThread = ProcessInThread.newThread( "TomcatAppMonitor", count++, true, tomcatAppMonitor );
                 runThread.start();
 
@@ -225,7 +229,7 @@ public class RestServerSw {
 //        System.out.println( "Exiting RestServerSw run() - Done" );
 //        }
 
-    public void waitUntilStarted()
+    public void waitUntilStarted()    // not called at this point
         {
         System.out.println( "entered RestServerSw waitUntilStarted()" );
         System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );

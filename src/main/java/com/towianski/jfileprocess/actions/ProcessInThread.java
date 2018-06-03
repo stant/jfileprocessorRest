@@ -55,7 +55,11 @@ public class ProcessInThread {
         String className = "com.towianski.boot.StartApp";
         
 //        String[] runArgs = { javaBin, "-cp", classpath, className };
-        String[] runArgs = { javaBin, "-Dserver.port=" + System.getProperty( "server.port", "8443" ), "-jar", classpath };
+        String[] runPosixArgs = { javaBin, "-Dserver.port=" + System.getProperty( "server.port", "8443" ), "-jar", classpath };
+        String[] runWinArgs = { "powershell.exe", "Start-Process", "-FilePath", "\"" + javaBin + "-Dserver.port=" + System.getProperty( "server.port", "8443" ) + "-jar" + classpath + "\"", "-Wait" };
+
+//        String[] runArgs = System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) ? runWinArgs : runPosixArgs;
+        String[] runArgs = runPosixArgs;
         
         String[] allArgs = Arrays.copyOf( runArgs, runArgs.length + passArgs.length);
         System.arraycopy( passArgs, 0, allArgs, runArgs.length, passArgs.length );

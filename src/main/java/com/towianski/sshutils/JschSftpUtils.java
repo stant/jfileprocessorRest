@@ -42,9 +42,16 @@ public class JschSftpUtils
         session.disconnect();
         }
         
-public void sftpIfDiff( String locFile, String user, String password, String rhost, String rmtFile )
+// return "" if ok, or an error message
+public String sftpIfDiff( String locFile, String user, String password, String rhost, String rmtFile )
     {
     Sftp sftp = new Sftp( user, password, rhost );
+    if ( ! sftp.isConnected() )
+        {
+        return sftp.getMessage();
+        }
+    
+    String errMsg = "";
     com.jcraft.jsch.ChannelSftp chanSftp = sftp.getChanSftp();
     boolean doCopy = false;
     
@@ -59,8 +66,12 @@ public void sftpIfDiff( String locFile, String user, String password, String rho
             sftpAttrs = chanSftp.stat( rmtFile );
             if ( sftpAttrs.getSize() != attr.size() )
                 {
-                System.out.println( "file sizes diff so recopy over jar file." );
+                System.out.println( "  -- file sizes diff so recopy over jar file." );
                 doCopy = true;
+                }
+            else
+                {
+                System.out.println( "  -- remote file size same so no recopy." );
                 }
             } 
         catch (SftpException ex)
@@ -82,8 +93,48 @@ public void sftpIfDiff( String locFile, String user, String password, String rho
     catch (SftpException ex) 
         {
         java.util.logging.Logger.getLogger(JschSftpUtils.class.getName()).log(Level.SEVERE, null, ex);
+        errMsg = ex.toString();
         }
     sftp.close();
+    return errMsg;
+    }
+
+public boolean isRemoteDos( String user, String password, String rhost )
+    {
+    Sftp sftp = new Sftp( user, password, rhost );
+    if ( ! sftp.isConnected() )
+        {
+        return false;
+        }
+    
+    com.jcraft.jsch.ChannelSftp chanSftp = sftp.getChanSftp();
+    boolean isDos = false;
+    
+    try {
+        String testStr = chanSftp.pwd();
+        // keep string before 2nd / as drive: so /c/Users -> /c    /home/stan -> /home
+        int at = testStr.substring( 1 ).indexOf( "/" );
+        if ( at < 0 )  at = testStr.length();
+        testStr = testStr.substring( 0, at + 1 ) + "/Windows/System";
+        //System.out.println( "remote getHome() =" + chanSftp.getHome() + "=" );
+        System.out.println( "checking for remote windows path =" + testStr + "=" );
+        SftpATTRS sftpAttrs = chanSftp.stat( testStr );
+        if ( sftpAttrs != null )
+            {
+            isDos = true;
+            }
+        } 
+    catch (SftpException exc)
+        {
+        exc.printStackTrace();
+        }
+    sftp.close();
+    return isDos;
+    }
+
+public boolean isRemotePosix( String user, String password, String rhost )
+    {
+    return ! isRemoteDos( user, password, rhost );
     }
 
     public void copyIfMissing( String lfile, String user, String password, String rhost, String rfile )
@@ -368,6 +419,8 @@ public void SftpPut( String locFile, String user, String password, String rhost,
 
     try {
         //    sftpChannel.put("C:/source/local/path/file.zip", "/target/remote/path/file.zip");
+        //System.out.println( "SftpPut locFile =" + locFile + "=   to rmtFile =" + rmtFile + "=" );
+        rmtFile = rmtFile.replace( "\\", "/" );
         System.out.println( "SftpPut locFile =" + locFile + "=   to rmtFile =" + rmtFile + "=" );
         chanSftp.put( locFile, rmtFile );
     } catch (SftpException ex) {
@@ -382,12 +435,21 @@ public void SftpGet( String rmtFile, String user, String password, String rhost,
     com.jcraft.jsch.ChannelSftp chanSftp = sftp.getChanSftp();
 
     try {
+        //System.out.println( "SftpGet rmtFile =" + rmtFile + "=   to locFile =" + locFile + "=" );
+        rmtFile = rmtFile.replace( "\\", "/" );
+//        locFile = locFile.replace( "\\", "/" );
         System.out.println( "SftpGet rmtFile =" + rmtFile + "=   to locFile =" + locFile + "=" );
         //    sftpChannel.get("/source/remote/path/file.zip", "C:/target/local/path/file.zip");
+        //FileUtils.touch( Paths.get( locFile ) );
+        //System.out.println( "SftpGet after touch locFile =" + locFile + "=" );
         chanSftp.get( rmtFile, locFile );
     } catch (SftpException ex) {
+        System.out.println( "SftpGet ERROR =" + ex );
         java.util.logging.Logger.getLogger(JschSftpUtils.class.getName()).log(Level.SEVERE, null, ex);
-    }
+    } catch (Exception ex) {
+           System.out.println( "SftpGet Touch ERROR =" + ex );
+           java.util.logging.Logger.getLogger(JschSftpUtils.class.getName()).log(Level.SEVERE, null, ex);
+        }
     sftp.close();
     }
 
@@ -541,6 +603,8 @@ public void exec( String user, String password, String rhost, String runCmd )
       // X Forwarding
        channel.setXForwarding(true);
 
+//       channel.sendRequests();
+       
       channel.setInputStream(System.in);
 //      channel.setInputStream(null);
 

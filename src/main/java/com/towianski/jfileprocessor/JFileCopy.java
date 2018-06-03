@@ -116,10 +116,12 @@ public class JFileCopy //  implements Runnable
                         //break;  for testing to do just 1st path
                         }
                     }
-                } 
-            catch (IOException ex) 
+                }
+            catch (Exception ex) 
                 {
-                Logger.getLogger(JFileCopy.class.getName()).log(Level.SEVERE, null, ex);
+                copierNonWalker.setProcessStatus( CopyFrame.PROCESS_STATUS_COPY_INCOMPLETED );
+                copierNonWalker.setMessage( ex.toString() );
+                copier.getErrorList().add( " -> copy path - ERROR " + ex );
                 ex.printStackTrace();
                 }
         

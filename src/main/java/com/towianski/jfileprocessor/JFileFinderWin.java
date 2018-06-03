@@ -182,6 +182,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
     Boolean countOnlyFlag = false;
     SwingWorker afterFillSwingWorker = null;
     String JfpHomeDir = System.getProperty( "user.dir" ) + System.getProperty( "file.separator" );
+    String JfpHomeTempDir = System.getProperty( "user.dir" ) + System.getProperty( "file.separator" ) + "temp" + System.getProperty( "file.separator" );
     File scriptsFile = new File( JfpHomeDir + "menu-scripts" );
     
     CircularArrayList pathsHistoryList = new CircularArrayList(50 );
@@ -266,7 +267,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
     public void start() 
         {
         this.setTitle( JFileProcessorVersion.getName() + " " + JFileProcessorVersion.getVersion() + " - Stan Towianski  (c) 2015-2018" );
-        System.out.println("Scripts Directory =" + scriptsFile + "=" );
+        System.out.println( "JfpHomeTempDir Directory =" + JfpHomeTempDir + "=" );
+        System.out.println( "Scripts Directory =" + scriptsFile + "=" );
         
         jSplitPane2.setLeftComponent( savedPathReplacablePanel );
 
@@ -695,13 +697,13 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
     public void callSearchBtnActionPerformed(java.awt.event.ActionEvent evt)
         {   // FIXXX  I can get rid of this method !
-        searchBtnAction( evt );
+//        searchBtnAction( evt );
+        searchBtn.doClick();
         }
         
     public void clickConnectAndSearch(java.awt.event.ActionEvent evt)
         {
         rmtConnectBtn.doClick();
-        //searchBtn.doClick();
         }
             
     public void callRmtConnectBtnActionPerformed(java.awt.event.ActionEvent evt)
@@ -1384,32 +1386,32 @@ public class JFileFinderWin extends javax.swing.JFrame {
         System.out.println( "resultsData.getFilesMatched() =" + resultsData.getFilesMatched() );
         System.out.println( "resultsData.getFilesTblModel() =" + resultsData.getFilesTblModel().toString() );
 
-            NumberFormat numFormat = NumberFormat.getIntegerInstance();
-            String partialMsg = "";
-            if ( resultsData.getSearchWasCanceled() )
-                {
-                jFileFinderWin.setProcessStatus( Constants.PROCESS_STATUS_SEARCH_CANCELED );
-                partialMsg = " PARTIAL files list.";
-                }
-            else
-                {
-                jFileFinderWin.setProcessStatus( Constants.PROCESS_STATUS_SEARCH_COMPLETED );
-                }
-            jFileFinderWin.setMessage( "Matched " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) 
-                    + " folders out of " + numFormat.format( resultsData.getFilesTested() ) + " files and " + numFormat.format( resultsData.getFoldersTested() ) + " folders.  Total "
-                    + numFormat.format( resultsData.getFilesVisited() ) + partialMsg );
-            jFileFinderWin.setResultsData( resultsData );
-            
-            //jFileFinderWin.emptyFilesTable();
-            
-            if ( ! countOnlyFlag )
-                {
-                System.out.println( "call JFileFinderSwingWorker.fillTableModelSwingWorker.execute()" );
-                System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
-                //FillTableModelSwingWorker fillTableModelSwingWorker = new FillTableModelSwingWorker( jFileFinderWin, jfilefinder );
-                //fillTableModelSwingWorker.execute();   //doInBackground();
-                fillInFilesTable( resultsData.getFilesTblModel() );
-                }
+        NumberFormat numFormat = NumberFormat.getIntegerInstance();
+        String partialMsg = "";
+        if ( resultsData.getSearchWasCanceled() )
+            {
+            jFileFinderWin.setProcessStatus( Constants.PROCESS_STATUS_SEARCH_CANCELED );
+            partialMsg = " PARTIAL files list.";
+            }
+        else
+            {
+            jFileFinderWin.setProcessStatus( Constants.PROCESS_STATUS_SEARCH_COMPLETED );
+            }
+        jFileFinderWin.setMessage( "Matched " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) 
+                + " folders out of " + numFormat.format( resultsData.getFilesTested() ) + " files and " + numFormat.format( resultsData.getFoldersTested() ) + " folders.  Total "
+                + numFormat.format( resultsData.getFilesVisited() ) + partialMsg );
+        jFileFinderWin.setResultsData( resultsData );
+
+        //jFileFinderWin.emptyFilesTable();
+
+        if ( ! countOnlyFlag )
+            {
+            System.out.println( "call JFileFinderSwingWorker.fillTableModelSwingWorker.execute()" );
+            System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+            //FillTableModelSwingWorker fillTableModelSwingWorker = new FillTableModelSwingWorker( jFileFinderWin, jfilefinder );
+            //fillTableModelSwingWorker.execute();   //doInBackground();
+            fillInFilesTable( resultsData.getFilesTblModel() );
+            }
 
 //        FilesTblModel filesTblModel = restTemplate.postForEntity( SERVER_URI+JfpRestURIConstants.SEARCH, searchModel, FilesTblModel.class).getBody();
 //        System.out.println( "response filesTblModel =" + filesTblModel + "=" );
@@ -1647,8 +1649,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
                  ! stdOutFile.getText().equals( filestr ) && ! stdErrFile.getText().equals( filestr ) )
                 {
                 JschSftpUtils jschSftpUtils = new JschSftpUtils();
-                jschSftpUtils.SftpGet( filestr, rmtUser.getText().trim(), rmtPasswd.getText().trim(), rmtHost.getText().trim(), JfpHomeDir + file.getName() );
-                file = new File( JfpHomeDir + file.getName() );
+                jschSftpUtils.SftpGet( filestr, rmtUser.getText().trim(), rmtPasswd.getText().trim(), rmtHost.getText().trim(), JfpHomeTempDir + file.getName() );
+                file = new File( JfpHomeTempDir + file.getName() );
                 }
             if ( file.exists() )
                 {
@@ -1657,7 +1659,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             if ( connUserInfo.isConnectedFlag()  &&   //rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) &&
                  ! stdOutFile.getText().equals( filestr ) && ! stdErrFile.getText().equals( filestr ) )
                 {
-                SftpReturnFileFrame sftpReturnFileFrame = new SftpReturnFileFrame( connUserInfo, JfpHomeDir + file.getName(), rmtUser.getText().trim(), rmtPasswd.getText().trim(), rmtHost.getText().trim(), rmtFile.toString() );
+                SftpReturnFileFrame sftpReturnFileFrame = new SftpReturnFileFrame( connUserInfo, JfpHomeTempDir + file.getName(), rmtUser.getText().trim(), rmtPasswd.getText().trim(), rmtHost.getText().trim(), rmtFile.toString() );
                 sftpReturnFileFrame.validate();
                 sftpReturnFileFrame.pack();
                 sftpReturnFileFrame.setVisible(true);
@@ -1706,8 +1708,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
                  ! stdOutFile.getText().equals( filestr ) && ! stdErrFile.getText().equals( filestr ) )
                 {
                 JschSftpUtils jschSftpUtils = new JschSftpUtils();
-                jschSftpUtils.SftpGet( filestr, rmtUser.getText().trim(), rmtPasswd.getText().trim(), rmtHost.getText().trim(), JfpHomeDir + file.getName() );
-                file = new File( JfpHomeDir + file.getName() );
+                jschSftpUtils.SftpGet( filestr, rmtUser.getText().trim(), rmtPasswd.getText().trim(), rmtHost.getText().trim(), JfpHomeTempDir + file.getName() );
+                file = new File( JfpHomeTempDir + file.getName() );
                 }
             if ( file.exists() )
                 {
@@ -1716,7 +1718,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             if ( connUserInfo.isConnectedFlag()  &&   //rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) &&
                  ! stdOutFile.getText().equals( filestr ) && ! stdErrFile.getText().equals( filestr ) )
                 {
-                SftpReturnFileFrame sftpReturnFileFrame = new SftpReturnFileFrame( connUserInfo, JfpHomeDir + file.getName(), rmtUser.getText().trim(), rmtPasswd.getText().trim(), rmtHost.getText().trim(), rmtFile.toString() );
+                SftpReturnFileFrame sftpReturnFileFrame = new SftpReturnFileFrame( connUserInfo, JfpHomeTempDir + file.getName(), rmtUser.getText().trim(), rmtPasswd.getText().trim(), rmtHost.getText().trim(), rmtFile.toString() );
                 sftpReturnFileFrame.validate();
                 sftpReturnFileFrame.pack();
                 sftpReturnFileFrame.setVisible(true);
@@ -3786,7 +3788,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
         if ( folderType == FilesTblModel.FOLDERTYPE_FOLDER ) // skipping no access folder for now !
             {
             this.setStartingFolder( selectedPath );
-            this.callSearchBtnActionPerformed( null );
+            //this.callSearchBtnActionPerformed( null );
+            searchBtn.doClick();
             }
         else if ( folderType == FilesTblModel.FOLDERTYPE_FILE )
             {
@@ -4257,9 +4260,14 @@ public class JFileFinderWin extends javax.swing.JFrame {
             JschSftpUtils jschSftpUtils = new JschSftpUtils();
             
                 try {
-                    String tmp = "../JFileProcessor-Server/build/libs/JFileProcessor-Server-1.5.11.jar";
-                    jschSftpUtils.copyIfMissing( tmp, "", "", "192.168.56.103", "JFileProcessor-Server-1.5.11.jar" );
-            System.out.println( "try scpTo   file =" + tmp + "=   to remote =" + DesktopUtils.getUserTmp() + System.getProperty( "file.separator") + tmp + "=" );
+                    //System.out.println( "try scpTo   file =" + tmp + "=   to remote =" + DesktopUtils.getUserTmp() + System.getProperty( "file.separator") + tmp + "=" );
+                    String fpath = System.getProperty( "user.dir" ) + System.getProperty( "file.separator" );
+                    String jfpFilename = JFileProcessorVersion.getName() + "-" + JFileProcessorVersion.getVersion() + ".jar";
+                    System.out.println( "set jfpFilename =" + jfpFilename + "=" );
+                    System.out.println( "try jschSftpUtils   file =" + fpath + jfpFilename + "=   to remote =" + rmtUser.getText() + "@" + rmtHost + ":" + jfpFilename + "=" );
+
+                    jFileFinderWin.setMessage( "copy server to remote" );
+                    jschSftpUtils.sftpIfDiff( fpath + jfpFilename, rmtUser.getText(), rmtPasswd.getText(), rmtHost.getText(), jfpFilename );
                     } 
                 catch (Exception ex) 
                     {
@@ -4275,7 +4283,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
 //            scpTo.execX11Forwarding( "", "", "192.168.56.103" );
 //            scpTo.execX11ForwardingOrig( "", "", "192.168.56.103" );
-            jschSftpUtils.exec( "", "", "192.168.56.103", "/opt/jFileProcessor/server.sh" );
+            jschSftpUtils.exec( rmtUser.getText(), rmtPasswd.getText(), rmtHost.getText(), "/opt/jFileProcessor/server.sh" );
 //              scpTo.execX11( "", "", "192.168.56.103" );
             }
         catch( Exception exc )
@@ -4318,7 +4326,11 @@ public class JFileFinderWin extends javax.swing.JFrame {
                 if ( restServerSw != null )
                     {
                     if ( connUserInfo.isConnectedFlag() || rmtConnectBtn.getBackground() != saveColor )
+                        {
+//                        JOptionPane.showMessageDialog( null, "Please Disconnect first", "Error", JOptionPane.ERROR_MESSAGE );
+                        rmtDisconnectBtn.doClick();
                         return;
+                        }
                     }
                 connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_SFTP, getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort() );
                 connUserInfo.setFrom( Constants.PATH_PROTOCOL_FILE, "", "", "localhost", "" );
