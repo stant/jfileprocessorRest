@@ -95,8 +95,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -107,6 +109,7 @@ import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -184,6 +187,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
     String JfpHomeDir = System.getProperty( "user.dir" ) + System.getProperty( "file.separator" );
     String JfpHomeTempDir = System.getProperty( "user.dir" ) + System.getProperty( "file.separator" ) + "temp" + System.getProperty( "file.separator" );
     File scriptsFile = new File( JfpHomeDir + "menu-scripts" );
+    File scriptsOsFile = null;
+    String hostAddress = findHostAddress( "?" );
     
     CircularArrayList pathsHistoryList = new CircularArrayList(50 );
     SavedPathsPanel savedPathReplacablePanel = new SavedPathsPanel( this );
@@ -322,7 +327,20 @@ public class JFileFinderWin extends javax.swing.JFrame {
     checkForUpdate();
     setupReportIssueLink();
     
+    if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "mac" ) )
+        {
+        scriptsOsFile = new File( JfpHomeDir + "menu-scripts" + System.getProperty( "file.separator" ) + "mac" );
+        }
+    else if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
+        {
+        scriptsOsFile = new File( JfpHomeDir + "menu-scripts" + System.getProperty( "file.separator" ) + "windows" );
+        }
+    else if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "linux" ) )
+        {
+        scriptsOsFile = new File( JfpHomeDir + "menu-scripts" + System.getProperty( "file.separator" ) + "linux" );
+        }
     System.out.println( "read scriptsFile/menu-scripts from  =" + scriptsFile + "=" );
+    System.out.println( "read OS scriptsOsFile/menu-scripts from  =" + scriptsOsFile + "=" );
     
 //    RestServerSw restServer = null;
 //    if ( restServer == null )
@@ -385,6 +403,25 @@ public class JFileFinderWin extends javax.swing.JFrame {
         return new ProgramMemory();
         }
  
+    public String findHostAddress( String host )
+        {
+        if ( host == null || host.equals( "?" ) || host.equals( "" ) )
+            {
+            InetAddress inetAddress;
+            try {
+                inetAddress = InetAddress.getLocalHost();
+                System.out.println("IP Address:- " + inetAddress.getHostAddress());
+                System.out.println("Host Name:- " + inetAddress.getHostName());
+                host = inetAddress.getHostAddress();
+                }
+            catch (UnknownHostException ex) {
+                Logger.getLogger(ConnUserInfo.class.getName()).log(Level.SEVERE, null, ex);
+                host = "?";
+                }
+            }
+        return host;
+        }
+    
     public void addkeymapstuff()
     {
        EnterAction enterAction = new EnterAction( this );
@@ -657,6 +694,14 @@ public class JFileFinderWin extends javax.swing.JFrame {
         this.showHiddenFilesFlag.setSelected( showHiddenFilesFlag );
     }
 
+    public boolean getFileMgrMode() {
+        return fileMgrMode.isSelected();
+    }
+
+    public void setFileMgrMode(boolean bb) {
+        this.fileMgrMode.setSelected( bb );
+    }
+
     public int getFilesysType() {
         return filesysType;
     }
@@ -760,12 +805,17 @@ public class JFileFinderWin extends javax.swing.JFrame {
         {
         CutActionPerformed( evt );
         }
-                        
+
     public void callPasteActionPerformed(java.awt.event.ActionEvent evt)
         {
         PasteActionPerformed( evt );
         }
-                        
+
+    public void callFileMgrModeActionPerformed(java.awt.event.ActionEvent evt)
+        {
+        fileMgrModeActionPerformed( evt );
+        }
+
     public void stopSearch() {
         jfilefinder.cancelSearch();
         }
@@ -928,6 +978,26 @@ public class JFileFinderWin extends javax.swing.JFrame {
     public void setRmtSshPort(String str)
         {
         this.rmtSshPort.setText(str);
+        }
+
+    public String getMyEditorCmd()
+        {
+        return myEditorCmd.getText().trim();
+        }
+
+    public void setMyEditorCmd(String myEditorCmd)
+        {
+        this.myEditorCmd.setText(myEditorCmd);
+        }
+
+    public String getStartConsoleCmd()
+        {
+        return startConsoleCmd.getText().trim();
+        }
+
+    public void setStartConsoleCmd(String startConsoleCmd)
+        {
+        this.startConsoleCmd.setText(startConsoleCmd);
         }
 
     public void setupReportIssueLink()
@@ -1643,6 +1713,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
 //        System.out.println( "filestr              =" + filestr + "=" );
 //        System.out.println( "stdOutFile.getText() =" + stdOutFile.getText() + "=" );
 
+        System.out.println( "do Desktop Open" );
         Desktop desktop = Desktop.getDesktop();
         try {
             if ( connUserInfo.isConnectedFlag()  &&   //rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) &&
@@ -1702,6 +1773,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             return;
             }
          
+        System.out.println( "do Desktop Edit" );
         Desktop desktop = Desktop.getDesktop();
         try {
             if ( connUserInfo.isConnectedFlag()  &&   //rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) &&
@@ -1713,7 +1785,11 @@ public class JFileFinderWin extends javax.swing.JFrame {
                 }
             if ( file.exists() )
                 {
-                desktop.edit( file );
+                //desktop.edit( file );
+                System.out.println( "start Cmd =" + myEditorCmd.getText() + " " + file.toString() + "=" );
+                ProcessInThread jp = new ProcessInThread();
+                int rc = jp.exec( getStartingFolder(), true, false, myEditorCmd.getText(), file.toString() );
+                System.out.println( "javaprocess.exec start new window rc = " + rc + "=" );
                 }
             if ( connUserInfo.isConnectedFlag()  &&   //rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) &&
                  ! stdOutFile.getText().equals( filestr ) && ! stdErrFile.getText().equals( filestr ) )
@@ -1796,7 +1872,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             }
         else
             {
-            stringBuf.append( Constants.PATH_PROTOCOL_FILE + "???localhost?22" ).append( "?" );
+            stringBuf.append( Constants.PATH_PROTOCOL_FILE + "???" + hostAddress + "?22" ).append( "?" );
             }
         
         for( int row : filesTbl.getSelectedRows() )
@@ -2130,6 +2206,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
         stopFolderCount = new javax.swing.JTextField();
         jLabel16 = new javax.swing.JLabel();
         jPanel9 = new javax.swing.JPanel();
+        myEditorLbl = new javax.swing.JLabel();
+        myEditorCmd = new javax.swing.JTextField();
         jLabel11 = new javax.swing.JLabel();
         startConsoleCmd = new javax.swing.JTextField();
         jLabel12 = new javax.swing.JLabel();
@@ -2224,7 +2302,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPopupMenu1.add(copyFilename);
             jPopupMenu1.add(jSeparator1);
 
-            Edit.setText("Edit File");
+            Edit.setText("my Edit File");
             Edit.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     EditActionPerformed(evt);
@@ -2232,7 +2310,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             });
             jPopupMenu1.add(Edit);
 
-            openFile.setText("Open File");
+            openFile.setText("System Open File");
             openFile.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     openFileActionPerformed(evt);
@@ -3059,10 +3137,33 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
             jPanel9.setLayout(new java.awt.GridBagLayout());
 
-            jLabel11.setText("Start Console command: ");
+            myEditorLbl.setText("My Editor");
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridx = 0;
             gridBagConstraints.gridy = 0;
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+            gridBagConstraints.insets = new java.awt.Insets(0, 5, 0, 0);
+            jPanel9.add(myEditorLbl, gridBagConstraints);
+
+            myEditorCmd.setMinimumSize(new java.awt.Dimension(300, 24));
+            myEditorCmd.setPreferredSize(new java.awt.Dimension(300, 24));
+            myEditorCmd.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    myEditorCmdActionPerformed(evt);
+                }
+            });
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.gridx = 1;
+            gridBagConstraints.gridy = 0;
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+            gridBagConstraints.weightx = 1.0;
+            gridBagConstraints.insets = new java.awt.Insets(5, 0, 0, 0);
+            jPanel9.add(myEditorCmd, gridBagConstraints);
+
+            jLabel11.setText("Start Console command: ");
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.gridx = 0;
+            gridBagConstraints.gridy = 1;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
             gridBagConstraints.weightx = 0.3;
             gridBagConstraints.insets = new java.awt.Insets(0, 5, 0, 0);
@@ -3077,15 +3178,16 @@ public class JFileFinderWin extends javax.swing.JFrame {
             });
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridx = 1;
-            gridBagConstraints.gridy = 0;
+            gridBagConstraints.gridy = 1;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
             gridBagConstraints.weightx = 1.0;
+            gridBagConstraints.insets = new java.awt.Insets(5, 0, 0, 0);
             jPanel9.add(startConsoleCmd, gridBagConstraints);
 
             jLabel12.setText("StdOut Log File: ");
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridx = 0;
-            gridBagConstraints.gridy = 1;
+            gridBagConstraints.gridy = 2;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
             gridBagConstraints.weightx = 0.3;
             gridBagConstraints.insets = new java.awt.Insets(0, 5, 0, 0);
@@ -3094,7 +3196,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jLabel13.setText("StdErr Log File: ");
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridx = 0;
-            gridBagConstraints.gridy = 2;
+            gridBagConstraints.gridy = 3;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
             gridBagConstraints.weightx = 1.0;
             gridBagConstraints.insets = new java.awt.Insets(0, 5, 0, 0);
@@ -3114,7 +3216,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             });
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridx = 1;
-            gridBagConstraints.gridy = 1;
+            gridBagConstraints.gridy = 2;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
             gridBagConstraints.insets = new java.awt.Insets(5, 0, 0, 0);
             jPanel9.add(stdOutFile, gridBagConstraints);
@@ -3128,7 +3230,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             });
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridx = 1;
-            gridBagConstraints.gridy = 2;
+            gridBagConstraints.gridy = 3;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
             gridBagConstraints.insets = new java.awt.Insets(5, 0, 0, 0);
             jPanel9.add(stdErrFile, gridBagConstraints);
@@ -3141,7 +3243,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             });
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridx = 1;
-            gridBagConstraints.gridy = 3;
+            gridBagConstraints.gridy = 4;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
             gridBagConstraints.insets = new java.awt.Insets(5, 0, 0, 0);
             jPanel9.add(stopFileWatchTb, gridBagConstraints);
@@ -3149,7 +3251,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             fileWatchLbl.setText("Watch File Changes:");
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridx = 0;
-            gridBagConstraints.gridy = 3;
+            gridBagConstraints.gridy = 4;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
             gridBagConstraints.insets = new java.awt.Insets(0, 5, 0, 0);
             jPanel9.add(fileWatchLbl, gridBagConstraints);
@@ -3633,7 +3735,15 @@ public class JFileFinderWin extends javax.swing.JFrame {
                 }
             else
                 {
-                connUserInfo.setTo( Constants.PATH_PROTOCOL_FILE, "", "", "localhost", "" );
+                connUserInfo.setTo( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "" );
+                }
+            
+            if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_FILE ) &&
+                 connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_FILE ) &&
+                 ! connUserInfo.getFromHost().equals( connUserInfo.getToHost() )   )
+                {
+                JOptionPane.showMessageDialog( this, "Cannot make a local copy between different systems/hosts.\nPlease use sftp", "Error", JOptionPane.ERROR_MESSAGE );
+                return;
                 }
             copyPaths.clear();
             for ( String fpath : StringsList )
@@ -3700,14 +3810,14 @@ public class JFileFinderWin extends javax.swing.JFrame {
                 {
                 deleteFrame.setDeleteToTrashFlag( false );
                 }
-            connUserInfo.setFrom( Constants.PATH_PROTOCOL_FILE, "", "", "localhost", "" );
+            connUserInfo.setFrom( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "" );
             if ( connUserInfo.isConnectedFlag() )
                 {
                 connUserInfo.setTo( Constants.PATH_PROTOCOL_SFTP, getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort() );
                 }
             else
                 {
-                connUserInfo.setTo( Constants.PATH_PROTOCOL_FILE, "", "", "localhost", "" );
+                connUserInfo.setTo( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "" );
                 }
             deleteFrame.setup( this, connUserInfo, copyPathStartPath, deletePaths );
             deleteFrame.pack();
@@ -3793,7 +3903,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             }
         else if ( folderType == FilesTblModel.FOLDERTYPE_FILE )
             {
-            this.desktopEdit( selectedPath );
+            this.desktopOpen( selectedPath );
             }        
     }                                      
 
@@ -3984,7 +4094,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
     //            int rc = 0;
     //            rc = JavaProcess.exec( getStartingFolder(), startConsoleCmd.getText() );
                 ProcessInThread jp = new ProcessInThread();
-                int rc = jp.exec( getStartingFolder(), true, startConsoleCmd.getText() );
+                int rc = jp.exec( getStartingFolder(), true, false, startConsoleCmd.getText() );
                 System.out.println( "javaprocess.exec start new window rc = " + rc + "=" );
                 }
             else
@@ -3994,7 +4104,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
                     int rowIndex = filesTbl.convertRowIndexToModel( row );
                     File file = new File( (String) filesTblModel.getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) );
                     ProcessInThread jp = new ProcessInThread();
-                    int rc = jp.exec( file.getParent(), true, startConsoleCmd.getText() );
+                    int rc = jp.exec( file.getParent(), true, false, startConsoleCmd.getText() );
                     System.out.println( "javaprocess.exec start new window rc = " + rc + "=" );
                     }            
                 }
@@ -4013,6 +4123,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
     }//GEN-LAST:event_startConsoleCmdActionPerformed
 
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
+        
+        System.out.println( "Entered formWindowOpened()" );
         if ( startConsoleCmd.getText() == null || startConsoleCmd.getText().equals( "" ) )
             {
             if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "mac" ) )
@@ -4022,7 +4134,6 @@ public class JFileFinderWin extends javax.swing.JFrame {
             else if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
                 {
                 startConsoleCmd.setText( "cmd.exe /C start" );
-                setFilesysType( Constants.FILESYSTEM_DOS );
                 }
             else if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "linux" ) )
                 {
@@ -4040,10 +4151,31 @@ public class JFileFinderWin extends javax.swing.JFrame {
                     }
                 }
             }
-        connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_FILE, "", "", "localhost", "" );
-        connUserInfo.setTo( Constants.PATH_PROTOCOL_FILE, "", "", "localhost", "" );
-        connUserInfo.setFromFilesysType( filesysType );
-        connUserInfo.setToFilesysType( filesysType );
+        if ( myEditorCmd.getText() == null || myEditorCmd.getText().equals( "" ) )
+            {
+            if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "mac" ) )
+                {
+                myEditorCmd.setText( "/usr/bin/open -n -a /Applications/TextEdit.app" );
+                }
+            else if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
+                {
+                myEditorCmd.setText( "wordpad.exe" );
+                }
+            else if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "linux" ) )
+                {
+                if ( Files.exists( Paths.get( "/bin/kwrite" ) ) )
+                    {
+                    myEditorCmd.setText( "/bin/kwrite" );
+                    }
+                else if ( Files.exists( Paths.get( "/usr/bin/gedit" ) ) )
+                    {
+                    myEditorCmd.setText( "/usr/bin/gedit" );
+                    }
+                }
+            }
+        connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "" );
+        connUserInfo.setTo( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "" );
+        calcFilesysType();  // also sets in connUserInfo
     }//GEN-LAST:event_formWindowOpened
 
     private void startCmdWin1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startCmdWin1ActionPerformed
@@ -4176,7 +4308,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
     private void scriptsMenuMenuSelected(javax.swing.event.MenuEvent evt) {//GEN-FIRST:event_scriptsMenuMenuSelected
         
         scriptsMenu.removeAll();            
-        File[] files = scriptsFile.listFiles();
+        ArrayList<File> files = new ArrayList<File>(Arrays.asList( scriptsFile.listFiles() ));
+        files.addAll( new ArrayList<File>(Arrays.asList( scriptsOsFile.listFiles() ) ) );
         if ( files == null )   return;
          
         for ( File file : files ) 
@@ -4333,7 +4466,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
                         }
                     }
                 connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_SFTP, getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort() );
-                connUserInfo.setFrom( Constants.PATH_PROTOCOL_FILE, "", "", "localhost", "" );
+                connUserInfo.setFrom( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "" );
                 connUserInfo.setFromFilesysType( filesysType );
 //                if ( restServerSw == null )
 //                    {
@@ -4391,8 +4524,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
 //            rmtConnectBtn.setBackground( saveColor );
             rmtConnectBtn.setText( "" );
             }
-        connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_FILE, "", "", "localhost", "" );
-        connUserInfo.setFrom( Constants.PATH_PROTOCOL_FILE, "", "", "localhost", "" );
+        connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "" );
+        connUserInfo.setFrom( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "" );
         calcFilesysType();  // also sets in connUserInfo
     }//GEN-LAST:event_rmtForceDisconnectBtnActionPerformed
 
@@ -4422,8 +4555,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
             setRmtPasswd( "" );
             setRmtHost( "" );
             }
-        connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_FILE, "", "", "localhost", "" );
-        connUserInfo.setFrom( Constants.PATH_PROTOCOL_FILE, "", "", "localhost", "" );
+        connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "" );
+        connUserInfo.setFrom( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "" );
         calcFilesysType();  // also sets in connUserInfo
     }//GEN-LAST:event_rmtDisconnectBtnActionPerformed
 
@@ -4448,12 +4581,13 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
     private void scriptsMenu1MenuSelected(javax.swing.event.MenuEvent evt) {//GEN-FIRST:event_scriptsMenu1MenuSelected
         scriptsMenu1.removeAll();            
-        File[] files = scriptsFile.listFiles();
+        ArrayList<File> files = new ArrayList<File>(Arrays.asList( scriptsFile.listFiles() ));
+        files.addAll( new ArrayList<File>(Arrays.asList( scriptsOsFile.listFiles() ) ) );
         if ( files == null )   return;
          
         for ( File file : files ) 
             {
-            System.out.println(file.getName());
+            //System.out.println( "is groovy menu file: " + file.getName() + "?" );
             if ( file.toString().endsWith( ".groovy" ) )
                 {
                 JMenuItem menuItem = new JMenuItem( file.getName().substring( 0, file.getName().length() - 7 ), null );
@@ -4472,6 +4606,11 @@ public class JFileFinderWin extends javax.swing.JFrame {
     private void openListWindow1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openListWindow1ActionPerformed
         openListWindowActionPerformed( null );
     }//GEN-LAST:event_openListWindow1ActionPerformed
+
+    private void myEditorCmdActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_myEditorCmdActionPerformed
+    {//GEN-HEADEREND:event_myEditorCmdActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_myEditorCmdActionPerformed
 
     /**
      * @param args the command line arguments
@@ -4649,6 +4788,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
     private javax.swing.JTextField maxDepth;
     private javax.swing.JLabel message;
     private javax.swing.JTextField minDepth;
+    private javax.swing.JTextField myEditorCmd;
+    private javax.swing.JLabel myEditorLbl;
     private javax.swing.JLabel newerVersionLbl;
     private javax.swing.JLabel numFilesInTable;
     private javax.swing.JMenuItem openCodeWin;

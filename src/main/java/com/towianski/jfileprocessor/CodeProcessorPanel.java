@@ -124,6 +124,15 @@ public class CodeProcessorPanel extends javax.swing.JFrame {
         jFileFinderWin.setListPanelModel( (String) listOfLists.getSelectedItem(), defaultComboBoxModel );
     }
 
+    public Object getSelectedList() {
+        // list could be null if code window is not opened but just script is being run
+        if ( listOfLists == null || listOfLists.getSelectedItem() == null )
+            {
+            return jFileFinderWin.LIST_OF_FILES_SELECTED;
+            }
+        return listOfLists.getSelectedItem();
+    }
+    
     public DefaultComboBoxModel getListPanelModel( String listName ) 
         {
         DefaultComboBoxModel defaultComboBoxModel = null;

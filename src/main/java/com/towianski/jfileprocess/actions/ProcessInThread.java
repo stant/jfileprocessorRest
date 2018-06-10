@@ -116,11 +116,11 @@ public class ProcessInThread {
 //        return process.exitValue();
 //	}
 
-    public int exec( String startDir, Boolean daemonFlag, String... passArgs ) 
+    public int exec( String startDir, boolean daemonFlag, boolean waitFlag, String... passArgs ) 
             throws IOException, InterruptedException 
         {
         String[] myargs =  { "" };
-        if ( passArgs[0].indexOf( " " ) >=0 )
+        if ( passArgs[0].indexOf( " " ) >=0 && ! passArgs[0].startsWith( "\"" ) )
             {
             myargs = passArgs[0].split( " " );
             }
@@ -145,6 +145,16 @@ public class ProcessInThread {
 //            builder = new ProcessBuilder( allArgs );
             proc = new ProcessRunnable( null, allArgs );
             }
+        else if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
+            {
+            for ( String str : myargs )
+                {
+                System.out.println( "run cmd: (" + str + ") " );
+    //            cmd.add( str );
+                }
+//            builder = new ProcessBuilder( myargs );
+            proc = new ProcessRunnable( startDir, myargs );
+            }
         else
             {
             for ( String str : myargs )
@@ -158,7 +168,12 @@ public class ProcessInThread {
         
         Thread bgThread = newThread( "ProcessInThread.exec", 0, daemonFlag, proc );
         bgThread.start();
-
+        if ( waitFlag )
+            {
+            System.out.println( "WAIT FOR thread command to join" );
+            bgThread.join();
+            }
+        
 //        IOThreadHandler outputHandler = new IOThreadHandler( process.getInputStream() );
 //        outputHandler.start();
 //        process.waitFor();

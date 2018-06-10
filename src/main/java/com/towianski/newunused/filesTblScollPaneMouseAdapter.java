@@ -74,7 +74,7 @@ public class filesTblScollPaneMouseAdapter extends MouseAdapter
                     }
                 else
                     {
-                    jFileFinderWin.desktopEdit( selectedPath );
+                    jFileFinderWin.desktopOpen( selectedPath );
                     }
                }            
         }

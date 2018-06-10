@@ -41,8 +41,8 @@ public class AfterFillSwingWorkerTmp extends AfterFillSwingWorker
            // this actionPerform is what creates the NewFile.txt window
 
            // go back to regular file manager mode
-           jFileFinderWin.fileMgrMode.setSelected( true );
-           jFileFinderWin.fileMgrModeActionPerformed( null );
+           jFileFinderWin.setFileMgrMode( true );
+           jFileFinderWin.callFileMgrModeActionPerformed( null );
 
             System.out.println( "exiting AfterFillSwingWorkerTmp.done()" );
             } 
@@ -86,8 +86,8 @@ static void main(String[] args) {
     codeProcessorPanel.jFileFinderWin.setAfterFillSwingWorker( new AfterFillSwingWorkerTmp( codeProcessorPanel ) );
     
     // set jfp to search fileMgrMode
-    codeProcessorPanel.jFileFinderWin.fileMgrMode.setSelected( false );
-    codeProcessorPanel.jFileFinderWin.fileMgrModeActionPerformed( null );
+    codeProcessorPanel.jFileFinderWin.setFileMgrMode( false );
+    codeProcessorPanel.jFileFinderWin.callFileMgrModeActionPerformed( null );
 
     // set your folder
   //  codeProcessorPanel.jFileFinderWin.setStartingFolder( "f:/programs/Boot2DockerforWindows/" );

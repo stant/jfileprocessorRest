@@ -6,6 +6,10 @@
 package com.towianski.models;
 
 import static com.towianski.models.Constants.FILESYSTEM_POSIX;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -39,7 +43,7 @@ public class ConnUserInfo
         this.fromProtocol = fromProtocol;
         this.fromUser = fromUser;
         this.fromPassword = fromPassword;
-        this.fromHost = fromHost;
+        this.fromHost = findHostAddress( fromHost );
         this.fromSshPort = fromSshPort;
         
         this.toProtocol = toProtocol;
@@ -54,7 +58,7 @@ public class ConnUserInfo
         this.fromProtocol = fromProtocol;
         this.fromUser = fromUser;
         this.fromPassword = fromPassword;
-        this.fromHost = fromHost;
+        this.fromHost = findHostAddress( fromHost );
         this.fromSshPort = fromSshPort;
         }
 
@@ -73,7 +77,7 @@ public class ConnUserInfo
         this.fromProtocol = fromProtocol;
         this.fromUser = fromUser;
         this.fromPassword = fromPassword;
-        this.fromHost = fromHost;
+        this.fromHost = findHostAddress( fromHost );
         this.fromSshPort = fromSshPort;
         }
 
@@ -86,6 +90,27 @@ public class ConnUserInfo
         this.toSshPort = toSshPort;
         }
 
+    public String findHostAddress( String host )
+        {
+        if ( host == null || host.equals( "?" ) || host.equals( "" ) )
+            {
+            InetAddress inetAddress;
+            try {
+                inetAddress = InetAddress.getLocalHost();
+                System.out.println("IP Address:- " + inetAddress.getHostAddress());
+                System.out.println("Host Name:- " + inetAddress.getHostName());
+                host = inetAddress.getHostAddress();
+                }
+            catch (UnknownHostException ex) {
+                Logger.getLogger(ConnUserInfo.class.getName()).log(Level.SEVERE, null, ex);
+                host = "?";
+                }
+            }
+        return host;
+        }
+    
+    ///------------------------------------------------------------------------------------
+    
     public boolean isRunCopyOnLocal() {
         return ! isRunCopyOnRemote();
     }
@@ -119,8 +144,18 @@ public class ConnUserInfo
         this.connectedFlag = connectedFlag;
         if ( ! connectedFlag )
             {
-            setFrom( Constants.PATH_PROTOCOL_FILE, "", "", "localhost", "" );
-            setTo( Constants.PATH_PROTOCOL_FILE, "", "", "localhost", "" );
+            setFrom( Constants.PATH_PROTOCOL_FILE, "", "", "?", "" );
+            setTo( Constants.PATH_PROTOCOL_FILE, "", "", "?", "" );
+            if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
+                {
+                fromFilesysType = Constants.FILESYSTEM_DOS;
+                toFilesysType = Constants.FILESYSTEM_DOS;
+                }
+            else
+                {
+                fromFilesysType = Constants.FILESYSTEM_POSIX;
+                toFilesysType = Constants.FILESYSTEM_POSIX;
+                }
             }
         }
 

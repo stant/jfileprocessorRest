@@ -19,7 +19,7 @@ class Test {
         System.out.println( "got codeProcessorPanel.jFileFinderWin.getStartingFolder() =" + codeProcessorPanel.jFileFinderWin.getStartingFolder() + "=" );
         ResultsData resultsData = binding.getVariable( "resultsData" );
 
-        String winList = codeProcessorPanel.listOfLists.getSelectedItem();
+        String winList = codeProcessorPanel.getSelectedList();
         System.out.println( "selected item =" + winList + "=" );
 
         // we are going to write output to this file !
@@ -29,7 +29,7 @@ class Test {
         int numItems = defaultComboBoxModel.getSize();
         System.out.println( "defaultComboBoxModel.getSize() num of items =" + numItems + "=" );
         
-        String grepText = JOptionPane.showInputDialog( "String to grep for: ", "" );
+        String grepText = JOptionPane.showInputDialog( "String to findstr for: ", "" );
         if ( grepText == null )
             {
             numItems = 0;
@@ -43,8 +43,10 @@ class Test {
         for( int i = 0; i < numItems; i++ )
             {
             cmdAl.clear();
-            cmdAl.add( "grep" );
-            cmdAl.add( "-i" );
+            cmdAl.add( "cmd.exe" );
+            cmdAl.add( "/C" );
+            cmdAl.add( "findstr" );
+            cmdAl.add( "/i" );
             str = defaultComboBoxModel.getElementAt( i ).toString();
 
             System.out.println( "check for other list index =" + i + "   str =" + str + "=" );

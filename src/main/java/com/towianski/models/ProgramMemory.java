@@ -20,6 +20,8 @@ public class ProgramMemory {
     boolean showOwnerFlag = false;
     boolean showGroupFlag = false;
     boolean showPermsFlag = false;
+    String startConsoleCmd = "";
+    String myEditorCmd = "";
     String checkForUpdateDate = "";   // value is only here, which is better
     
     public ProgramMemory()
@@ -76,6 +78,26 @@ public class ProgramMemory {
     public void setCheckForUpdateDate(String checkForUpdateDate) {
         this.checkForUpdateDate = checkForUpdateDate;
     }
+
+    public String getStartConsoleCmd()
+        {
+        return startConsoleCmd;
+        }
+
+    public void setStartConsoleCmd(String startConsoleCmd)
+        {
+        this.startConsoleCmd = startConsoleCmd;
+        }
+
+    public String getMyEditorCmd()
+        {
+        return myEditorCmd;
+        }
+
+    public void setMyEditorCmd(String myEditorCmd)
+        {
+        this.myEditorCmd = myEditorCmd;
+        }
     
     
     //---------
@@ -87,6 +109,8 @@ public class ProgramMemory {
         jFileFinderWin.setShowOwnerFlag(showOwnerFlag);
         jFileFinderWin.setShowGroupFlag(showGroupFlag);
         jFileFinderWin.setShowPermsFlag(showPermsFlag);
+        jFileFinderWin.setStartConsoleCmd( startConsoleCmd );
+        jFileFinderWin.setMyEditorCmd( myEditorCmd );
         }
     
     //---------
@@ -99,6 +123,8 @@ public class ProgramMemory {
             this.showOwnerFlag = jFileFinderWin.isShowOwnerFlag();
             this.showGroupFlag = jFileFinderWin.getShowGroupFlag();
             this.showPermsFlag = jFileFinderWin.isShowPermsFlag();
+            this.startConsoleCmd = jFileFinderWin.getStartConsoleCmd();
+            this.myEditorCmd = jFileFinderWin.getMyEditorCmd();
             }
         catch( Exception exc )
             {

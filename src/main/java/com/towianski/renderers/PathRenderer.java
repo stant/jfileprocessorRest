@@ -6,8 +6,6 @@
 package com.towianski.renderers;
 
 import com.towianski.models.Constants;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import javax.swing.table.DefaultTableCellRenderer;
 
 /**

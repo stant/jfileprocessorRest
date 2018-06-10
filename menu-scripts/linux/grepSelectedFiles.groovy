@@ -3,8 +3,6 @@ package com.towianski.testutils;
 import com.towianski.jfileprocessor.TextEditPanel;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import com.towianski.models.ResultsData;
 
 // written by: Stan Towianski - August 2017
@@ -13,7 +11,7 @@ class Test {
 }
 
  static void main(String[] args) {
-        System.out.println( "entered runCommandOnSelectedFiles.groovy.main()");
+        System.out.println( "entered listThruFiles.main()");
 //        def test = new Test();
 
         com.towianski.jfileprocessor.CodeProcessorPanel codeProcessorPanel = binding.getVariable( "codeProcessorPanel" );
@@ -30,52 +28,50 @@ class Test {
 
         int numItems = defaultComboBoxModel.getSize();
         System.out.println( "defaultComboBoxModel.getSize() num of items =" + numItems + "=" );
-        String baseCmd = null;
-        if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "mac" ) )
-            {
-            baseCmd = "ls -l %f";
-            }
-        else if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
-            {
-            baseCmd = "cmd.exe /C dir %f";
-            }
-        else if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "linux" ) )
-            {
-            baseCmd = "ls -l %f";
-            }
         
-        baseCmd = JOptionPane.showInputDialog( "command to run (%f=full file, %F=file name): ", baseCmd );
-        if ( baseCmd == null )
+        String grepText = JOptionPane.showInputDialog( "String to grep for: ", "" );
+        if ( grepText == null )
             {
             numItems = 0;
             }
-            
         String str = "";
-        String strName = "";
         def atFile = null;
+        //numItems = 10;
+        ArrayList<String> cmdAl = new ArrayList<String>();
+        cmdAl.add( "grep" );
+        cmdAl.add( "-i" );
         for( int i = 0; i < numItems; i++ )
             {
+            cmdAl.clear();
+            cmdAl.add( "grep" );
+            cmdAl.add( "-i" );
             str = defaultComboBoxModel.getElementAt( i ).toString();
-            Path path = Paths.get( str );
-            strName = path.getFileName().toString();
 
-            outFile << System.getProperty("line.separator") + "------ " + (i + 1) + " - " + str + "  -------------------------------" + System.getProperty("line.separator");
+            System.out.println( "check for other list index =" + i + "   str =" + str + "=" );
 
-            String cmd = baseCmd;
-            cmd = cmd.replace( "%f", str );
-            cmd = cmd.replace( "%F", strName );
-            System.out.println( "do: =" + cmd + "=" );
-            def list = cmd.execute().text
-            list.eachLine{
-                outFile << it + System.getProperty("line.separator");
-                }
-            if ( codeProcessorPanel.getStopSearch() )
+    //            String fileContents = new File( str ).text
+    //            outFile << fileContents;
+                //String cmd = "grep -i " + grepText + " " + "${str}";
+                cmdAl.add( "${grepText}" );
+                cmdAl.add( str );
+                def lines = cmdAl.execute().text
+                def list = lines.readLines()
+                //outFile << "run cmdAl =" + cmdAl + "   list.size() =" + list.size() +  System.getProperty("line.separator");
+                //if ( 1 == 1 )
+                if ( list.size() > 0 )  // != null && ! list.equals( "" ) )
                 {
-                outFile << "--Canceled--" + System.getProperty("line.separator");
-                resultsData.setProcessStatus( codeProcessorPanel.PROCESS_STATUS_COPY_CANCELED );
-                resultsData.setMessage( "by user" );
-                break;
-                }
+            outFile << System.getProperty("line.separator") + "------ " + (i + 1) + " - " + str + "  -------------------------------" +  System.getProperty("line.separator");
+               lines.eachLine{
+                    outFile << it + System.getProperty("line.separator");
+                    }
+                    }
+                if ( codeProcessorPanel.getStopSearch() )
+                    {
+                    outFile << "--Canceled--" + System.getProperty("line.separator");
+                    resultsData.setProcessStatus( codeProcessorPanel.PROCESS_STATUS_COPY_CANCELED );
+                    resultsData.setMessage( "by user" );
+                    break;
+                    }
             }
 
  //       resultsData.setMessage( "junk msg" );

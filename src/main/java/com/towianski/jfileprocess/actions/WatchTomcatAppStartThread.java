@@ -53,6 +53,7 @@ public class WatchTomcatAppStartThread implements Runnable
         System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
         RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
         
+        isRunning = false;
         boolean firstWaitFlag = true;
         int response = -9;
         //int waitCount = 15;
@@ -82,25 +83,27 @@ public class WatchTomcatAppStartThread implements Runnable
                     if ( isRunning )  // diff so flip status
                         {
                         System.out.println( "WatchTomcatAppStartThread was running now is not. reset button color" );
-//                        connUserInfo.setConnectedFlag( false );
-//                        jFileFinderWin.setFilesysType(response);
-//                        SwingUtilities.invokeLater(new Runnable() 
-//                            {
-//                            public void run() {
-//                                jFileFinderWin.setRmtConnectBtnBackgroundReset();
-//                                }
-//                            });
+                        connUserInfo.setConnectedFlag( false );
+                        //jFileFinderWin.setFilesysType(response);
+                        SwingUtilities.invokeLater(new Runnable() 
+                            {
+                            public void run() {
+                                jFileFinderWin.setRmtConnectBtnBackground( Color.yellow );
+                                }
+                            });
                         restServerSw.cancelRestServer( false );   // no force stop
                         }
                     isRunning = false;
                     }
                 else
                     {
+                    System.out.println( "WatchTomcatAppStartThread isRunning = " + isRunning );
                     if ( ! isRunning )  // diff so flip status
                         {
                         System.out.println( "WatchTomcatAppStartThread waitUntilStarted() set button color to green for connected" );
                         connUserInfo.setConnectedFlag( true );
-                        jFileFinderWin.setFilesysType(response);
+                        connUserInfo.setToFilesysType( response );
+                        jFileFinderWin.setFilesysType( response );
                         SwingUtilities.invokeLater(new Runnable() 
                             {
                             public void run() {
