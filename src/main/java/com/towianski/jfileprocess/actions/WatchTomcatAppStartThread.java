@@ -26,14 +26,16 @@ public class WatchTomcatAppStartThread implements Runnable
     String rmtHost = null;
     boolean cancelFlag = false;
     JFileFinderWin jFileFinderWin = null;
+    Thread runThread = null;
     boolean isRunning = false;
     
     /**
      * Creates a WatchService and registers the given directory
      */
-    public WatchTomcatAppStartThread( RestServerSw restServerSw, ConnUserInfo connUserInfo, String user, String passwd, String rmtHost, JFileFinderWin jFileFinderWin )
+    public WatchTomcatAppStartThread( RestServerSw restServerSw, Thread runThread, ConnUserInfo connUserInfo, String user, String passwd, String rmtHost, JFileFinderWin jFileFinderWin )
         {
         this.restServerSw = restServerSw;
+        this.runThread = runThread;
         this.connUserInfo = connUserInfo;
         this.user = user;
         this.passwd = passwd;
@@ -61,9 +63,9 @@ public class WatchTomcatAppStartThread implements Runnable
         try
             {
             //while ( (response < 0 || ! (response == Constants.FILESYSTEM_DOS || response == Constants.FILESYSTEM_POSIX))  && ! cancelFlag )
-            while ( ! cancelFlag )
+            while ( ! cancelFlag && runThread != null && runThread.isAlive() )
                 {
-                System.out.println( "WatchTomcatAppStartThread.run() make rest " + JfpRestURIConstants.SYS_GET_FILESYS + " call" );
+                System.out.println( "WatchTomcatAppStartThread.run() make rest " + connUserInfo.getToUri() + JfpRestURIConstants.SYS_GET_FILESYS + " call" );
                 try
                     {
                     response = noHostVerifyRestTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.SYS_GET_FILESYS, Integer.class );

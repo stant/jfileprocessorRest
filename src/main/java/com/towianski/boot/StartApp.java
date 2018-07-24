@@ -17,9 +17,6 @@ public class StartApp //implements CommandLineRunner
 //    @Autowired
 //     JFileFinderWin jFileFinderWin;
     
-//    @Autowired
-//    Environment environment;
-    
     public static void main(String[] args) 
         {
         SpringApplication app;

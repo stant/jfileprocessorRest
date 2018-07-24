@@ -34,11 +34,13 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
@@ -49,7 +51,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 public class TomcatApp {
 
     private static Log logger = LogFactory.getLog(TomcatApp.class);
-
+    
     @Bean
     protected ServletContextListener listener() {
         return new ServletContextListener() {
@@ -225,6 +227,9 @@ public class TomcatApp {
         context = new SpringApplicationBuilder(TomcatApp.class).profiles("server").run(args);
 
         logger.info( "*** after SpringApplication.run(TomcatApp.class, args)" );
+        logger.info( "*** after SpringApplication.run(TomcatApp.class, args)" );
+        
+            System.out.println( "server using port =" + context.getEnvironment().getProperty("local.server.port") + "=" );
 
 //        final JFileFinderWin jffw = new JFileFinderWin();
 //        if ( args.length > 0 )

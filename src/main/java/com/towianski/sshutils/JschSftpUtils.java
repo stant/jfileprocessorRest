@@ -18,6 +18,7 @@ package com.towianski.sshutils;
  */
 import com.jcraft.jsch.*;
 import com.towianski.jfileprocessor.CopierNonWalker;
+import com.towianski.models.ConnUserInfo;
 import java.awt.*;
 import javax.swing.*;
 import java.io.*;
@@ -26,6 +27,8 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Properties;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class JschSftpUtils
     {    
@@ -542,7 +545,7 @@ public long getRemoteFileSize( String lfile, String user, String password, Strin
 //    return Main.oldestFile;
 //}
 
-public void exec( String user, String password, String rhost, String runCmd )
+public void exec( String user, String password, String rhost, ConnUserInfo connUserInfo, String runCmd )
     {
     try{
     System.out.println( "try exec   user =" + user + "=   to password =" + password + "=" );
@@ -620,12 +623,34 @@ public void exec( String user, String password, String rhost, String runCmd )
       channel.connect();
     System.out.println( "exec at 9" );
 
-      byte[] tmp=new byte[1024];
-      while(true){
-        while(in.available()>0){
-          int i=in.read(tmp, 0, 1024);
-          if(i<0)break;
-          System.out.print(new String(tmp, 0, i));
+    Pattern startedOnPortMsg = Pattern.compile( ".*Tomcat started on port\\(s\\): (\\d+) \\(https\\).*" );   // the pattern to search for
+    Pattern portInUseMsg = Pattern.compile( ".*Address already in use.*" );   // the pattern to search for
+    
+    byte[] tmp=new byte[1024];
+    while(true){
+        while(in.available()>0)
+            {
+            int i=in.read(tmp, 0, 1024);
+            if(i<0)break;
+            String rin = new String( tmp, 0, i );
+            System.out.print( "rmt stream ->" + rin );
+            Matcher m1 = startedOnPortMsg.matcher( rin );
+            Matcher m2 = portInUseMsg.matcher( rin );
+
+            // if we find a match, get the group 
+            if (m1.find())
+                {
+                // we're only looking for one group, so get it
+                connUserInfo.setToUsingHttpsPort( m1.group(1) );
+                // print the group out for verification
+                System.out.println( "got portUsed = " + connUserInfo.getToUsingHttpsPort() );
+                System.out.println( "got connUserInfo.getToUri() = " + connUserInfo.getToUri() );
+                }
+            else if (m2.find())
+                {
+                System.out.println( "Port Already In Use !" );
+                return;
+                }
         }
         if(channel.isClosed()){
           if(in.available()>0) continue; 

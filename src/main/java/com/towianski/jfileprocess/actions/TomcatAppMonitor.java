@@ -76,6 +76,7 @@ public class TomcatAppMonitor implements Runnable
             try
                 {
                 tomcatAppThread.cancelTomcatAppThread( forceStop );
+                System.out.println( "called STOP, now interrupt runThread/tomcatAppThread" );
                 runThread.interrupt();
                 runThread.join();
                 } 
@@ -120,13 +121,13 @@ public class TomcatAppMonitor implements Runnable
         cancelFlag = false;
         int downTimes = 0;
 
-        watchTomcatAppStartThread = new WatchTomcatAppStartThread( restServerSw, connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin );
-        watchStartThread = ProcessInThread.newThread( "watchTomcatAppStartThread", 0, false, watchTomcatAppStartThread );
-        watchStartThread.start();
-
         tomcatAppThread = new TomcatAppThread( connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin );
         runThread = ProcessInThread.newThread( "tomcatAppThread", count++, false, tomcatAppThread );
         runThread.start();
+
+        watchTomcatAppStartThread = new WatchTomcatAppStartThread( restServerSw, runThread, connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin );
+        watchStartThread = ProcessInThread.newThread( "watchTomcatAppStartThread", 0, false, watchTomcatAppStartThread );
+        watchStartThread.start();
 //        tomcatAppThread.run();
         //System.out.println( "after first tomcatAppThread.run()" );
         
@@ -135,7 +136,9 @@ public class TomcatAppMonitor implements Runnable
             {
             synchronized (this) 
                 {
-                this.wait();
+                //this.wait();
+                runThread.join();
+                watchStartThread.join();
                 }
             } 
         catch (InterruptedException ex)
@@ -143,6 +146,13 @@ public class TomcatAppMonitor implements Runnable
             System.out.println( "TomcatAppMonitor.wait() - InterruptedException" );
             Logger.getLogger(TomcatAppMonitor.class.getName()).log(Level.SEVERE, null, ex);
             }
+        connUserInfo.setConnectedFlag( false );
+        SwingUtilities.invokeLater(new Runnable() 
+            {
+            public void run() {
+                jFileFinderWin.setRmtConnectBtnBackgroundReset();
+                }
+            });
         
 //        while ( ! cancelFlag &&  ++downTimes < 5 )
 //            {

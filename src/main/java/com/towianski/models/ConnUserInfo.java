@@ -32,13 +32,15 @@ public class ConnUserInfo
     String toPassword = "";
     String toHost = "localhost";
     String toSshPort = "22";
+    String toAskHttpsPort = "0";
+    String toUsingHttpsPort = "0";
     int toFilesysType = FILESYSTEM_POSIX;
 
     public ConnUserInfo()
         {
         }
 
-    public ConnUserInfo( String fromProtocol, String fromUser, String fromPassword, String fromHost, String fromSshPort, String toProtocol, String toUser, String toPassword, String toHost, String toSshPort )
+    public ConnUserInfo( String fromProtocol, String fromUser, String fromPassword, String fromHost, String fromSshPort, String toProtocol, String toUser, String toPassword, String toHost, String toSshPort, String toAskHttpsPort )
         {
         this.fromProtocol = fromProtocol;
         this.fromUser = fromUser;
@@ -51,6 +53,7 @@ public class ConnUserInfo
         this.toPassword = toPassword;
         this.toHost = toHost;
         this.toSshPort = toSshPort;
+        this.toAskHttpsPort = toAskHttpsPort;
         }
 
     public ConnUserInfo( String fromProtocol, String fromUser, String fromPassword, String fromHost, String fromSshPort )
@@ -62,7 +65,7 @@ public class ConnUserInfo
         this.fromSshPort = fromSshPort;
         }
 
-    public ConnUserInfo( boolean connectedFlag, String toProtocol, String toUser, String toPassword, String toHost, String toSshPort )
+    public ConnUserInfo( boolean connectedFlag, String toProtocol, String toUser, String toPassword, String toHost, String toSshPort, String toAskHttpsPort )
         {
         this.connectedFlag = connectedFlag;
         this.toProtocol = toProtocol;
@@ -70,6 +73,7 @@ public class ConnUserInfo
         this.toPassword = toPassword;
         this.toHost = toHost;
         this.toSshPort = toSshPort;
+        this.toAskHttpsPort = toAskHttpsPort;
         }
 
     public void setFrom( String fromProtocol, String fromUser, String fromPassword, String fromHost, String fromSshPort )
@@ -81,13 +85,14 @@ public class ConnUserInfo
         this.fromSshPort = fromSshPort;
         }
 
-    public void setTo( String toProtocol, String toUser, String toPassword, String toHost, String toSshPort )
+    public void setTo( String toProtocol, String toUser, String toPassword, String toHost, String toSshPort, String toAskHttpsPort )
         {
         this.toProtocol = toProtocol;
         this.toUser = toUser;
         this.toPassword = toPassword;
         this.toHost = toHost;
         this.toSshPort = toSshPort;
+        this.toAskHttpsPort = toAskHttpsPort;
         }
 
     public String findHostAddress( String host )
@@ -145,7 +150,7 @@ public class ConnUserInfo
         if ( ! connectedFlag )
             {
             setFrom( Constants.PATH_PROTOCOL_FILE, "", "", "?", "" );
-            setTo( Constants.PATH_PROTOCOL_FILE, "", "", "?", "" );
+            setTo( Constants.PATH_PROTOCOL_FILE, "", "", "?", "", "" );
             if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
                 {
                 fromFilesysType = Constants.FILESYSTEM_DOS;
@@ -168,7 +173,7 @@ public class ConnUserInfo
     }
 
     public String getToUri() {
-        return "https://" + toHost + ":" + System.getProperty( "server.port", "8443" );
+        return "https://" + toHost + ":" + toUsingHttpsPort;
     }
 
     public void setToUri(String ToUri) {
@@ -296,6 +301,27 @@ public class ConnUserInfo
         this.toSshPort = toSshPort;
         }
 
+    public String getToAskHttpsPort()
+        {
+        return toAskHttpsPort.trim().equals( "" ) ? "0" : toAskHttpsPort;
+        }
+
+    public void setToAskHttpsPort(String toAskHttpsPort)
+        {
+        this.toAskHttpsPort = toAskHttpsPort;
+        }
+
+    public String getToUsingHttpsPort()
+        {
+        return toUsingHttpsPort;
+        }
+
+    public void setToUsingHttpsPort(String tmp)
+        {
+        this.toUsingHttpsPort = tmp;
+        System.out.println( "connUserInfo set toUsingHttpsPort = " + this.toUsingHttpsPort );
+        }
+
     public String toString()
         {
         return  "  connectedFlag =" + connectedFlag + "="
@@ -312,6 +338,8 @@ public class ConnUserInfo
 + "  toPassword =" + toPassword + "="
 + "  toHost =" + toHost + "="
 + "  toSshPort =" + toSshPort + "="
++ "  toAskHttpsPort =" + toAskHttpsPort + "="
++ "  toUsingHttpsPort =" + toUsingHttpsPort + "="
 + "  toFilesysType =" + toFilesysType + "="
 + "  \nisRunCopyOnRemote() = " + isRunCopyOnRemote() + "=    getCopyProcotol() = " + getCopyProcotol();
         }

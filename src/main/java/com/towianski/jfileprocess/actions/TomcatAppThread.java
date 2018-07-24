@@ -131,18 +131,18 @@ public class TomcatAppThread implements Runnable
                         }
                     if ( ! cancelFlag )
                         {
-                        jFileFinderWin.setMessage( "start remote server" );
-                        String runCmd = "java -Dserver.port=" + System.getProperty( "server.port", "8443" ) + " -jar " + jfpFilename + " --server --logging.file=/tmp/jfp-springboot.logging";
+                        jFileFinderWin.setMessage( "start remote server.port" );
+                        String runCmd = "java -Dserver.port=" + connUserInfo.getToAskHttpsPort() + " -jar " + jfpFilename + " --server --logging.file=/tmp/jfp-springboot.logging";
 
                         if ( jschSftpUtils.isRemoteDos( user, passwd, rmtHost ) )
                             {
-                            runCmd = "powershell.exe Start-Process -FilePath java -ArgumentList '-Dserver.port=" + System.getProperty( "server.port", "8443" ) + " -jar " + jfpFilename + " --server --logging.file=/tmp/jfp-springboot.logging" + "' -Wait";
+                            runCmd = "powershell.exe Start-Process -FilePath java -ArgumentList '-Dserver.port=" + connUserInfo.getToAskHttpsPort() + " -jar " + jfpFilename + " --server --logging.file=/tmp/jfp-springboot.logging" + "' -Wait";
                             }
                         
                         System.out.println( "start remote server with runCmd =" + runCmd + "=" );
                         iStartedServer = true;
                         setStartedServer( true );
-                        jschSftpUtils.exec( user, passwd, rmtHost, runCmd );
+                        jschSftpUtils.exec( user, passwd, rmtHost, connUserInfo, runCmd );
                         //java -jar your-spring.jar --security.require-ssl=true --server.port=8443 --server.ssl.key-store=keystore --server.ssl.key-store-password=changeit --server.ssl.key-password=changeit
                         }
                     System.out.println( "after exec remote jfp server" );
