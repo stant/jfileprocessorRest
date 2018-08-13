@@ -9,6 +9,8 @@ import com.towianski.jfileprocess.actions.ProcessInThread;
 import com.towianski.utils.DesktopUtils;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -138,7 +140,7 @@ public class SavedPathsPanel extends javax.swing.JPanel {
             }
         if ( jFileFinderWin.getConnUserInfo().isConnectedFlag() )
             {
-            savedPathsHm.put( ans, jFileFinderWin.getStartingFolder() + "," + jFileFinderWin.getRmtUser() + "," + jFileFinderWin.getRmtPasswd() + "," + jFileFinderWin.getRmtHost() + "," + jFileFinderWin.getRmtSshPort() );
+            savedPathsHm.put( ans, jFileFinderWin.getStartingFolder() + "," + jFileFinderWin.getRmtUser() + "," + jFileFinderWin.getRmtPasswd() + "," + jFileFinderWin.getRmtHost() + "," + jFileFinderWin.getRmtSshPort() + "," + jFileFinderWin.getRmtAskHttpsPort() );
             }
         else
             {
@@ -207,12 +209,17 @@ public class SavedPathsPanel extends javax.swing.JPanel {
             }
         if ( arr.length > 3 )
             {
-            jFileFinderWin.setStartingFolder( arr[0] );
+            ArrayList<String> arrList = new ArrayList<String>(Arrays.asList(arr));
+            while ( arrList.size() < 6 )
+                arrList.add( "" );
+
+            jFileFinderWin.setStartingFolder( arrList.get( 0 ) );
             
-            if ( jFileFinderWin.getRmtUser().equals( arr[1] ) &&
-                jFileFinderWin.getRmtPasswd().equals( arr[2] ) &&
-                jFileFinderWin.getRmtHost().equals( arr[3] ) &&
-                jFileFinderWin.getRmtSshPort().equals( arr[4] ) 
+            if ( jFileFinderWin.getRmtUser().equals( arrList.get( 1 ) ) &&
+                jFileFinderWin.getRmtPasswd().equals( arrList.get( 2 ) ) &&
+                jFileFinderWin.getRmtHost().equals( arrList.get( 3 ) ) &&
+                jFileFinderWin.getRmtSshPort().equals( arrList.get( 4 ) ) &&
+                jFileFinderWin.getRmtAskHttpsPort().equals( arrList.get( 5 ) ) 
                     )
                 {
                 jFileFinderWin.callSearchBtnActionPerformed( null );
@@ -220,12 +227,13 @@ public class SavedPathsPanel extends javax.swing.JPanel {
             else
                 {
                 System.out.println( "  -- switch server" );
-                jFileFinderWin.setRmtUser( arr[1] );
-                jFileFinderWin.setRmtPasswd( arr[2] );
-                jFileFinderWin.setRmtHost( arr[3] );
-                jFileFinderWin.setRmtSshPort( arr[4] );
+                jFileFinderWin.setRmtUser( arrList.get( 1 ) );
+                jFileFinderWin.setRmtPasswd( arrList.get( 2 ) );
+                jFileFinderWin.setRmtHost( arrList.get( 3 ) );
+                jFileFinderWin.setRmtSshPort( arrList.get( 4 ) );
+                jFileFinderWin.setRmtAskHttpsPort( arrList.get( 5 ) );
             
-                jFileFinderWin.clickConnectAndSearch( null );
+//                jFileFinderWin.clickConnectAndSearch( null );
                 }
             }
         else

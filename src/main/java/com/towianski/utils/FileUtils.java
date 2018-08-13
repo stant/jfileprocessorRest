@@ -39,7 +39,7 @@ public class FileUtils
         if ( connUserInfo.isConnectedFlag() )
             {
             Sftp sftp = null;
-            sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost() );
+            sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), connUserInfo.getToSshPortInt() );
             return sftp.exists( targetPath.toString() );
             }
         else
@@ -57,7 +57,7 @@ public class FileUtils
         if ( connUserInfo.isConnectedFlag() )
             {
             Sftp sftp = null;
-            sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost() );
+            sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), connUserInfo.getToSshPortInt() );
             sftp.mkDir( targetPath.toString() );
             }
         else

@@ -5,6 +5,7 @@ import com.towianski.jfileprocessor.JFileFinderWin;
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.sshutils.JschSftpUtils;
+import com.towianski.utils.DesktopUtils;
 import com.towianski.utils.Rest;
 import java.awt.Color;
 import java.io.*;
@@ -72,107 +73,110 @@ public class TomcatAppThread implements Runnable
 //            notify();
 //            }
 //        Thread.currentThread().interrupt();   maybe did not work?
+        connUserInfo.setState( ConnUserInfo.STATE_CANCEL );
         System.out.println("TomcatAppThread exit cancelTomcatAppThread()");
         }
 
     // Now this runs once and exits. It does not loop
     @Override
     public void run() {
-        System.out.println( "entered TomcatAppThread run()" );
-        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
-        RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
+        try
+            {
+            System.out.println( "entered TomcatAppThread run()" );
+            System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+            RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
 
-        cancelFlag = false;
-        JschSftpUtils jschSftpUtils = new JschSftpUtils();
-        String response = null;
-        
+            cancelFlag = false;
+            JschSftpUtils jschSftpUtils = new JschSftpUtils();
+            String response = null;
+
+            System.out.println( "TomcatAppThread.run() make rest /jfp/sys/ping call" );
             try
                 {
-                System.out.println( "TomcatAppThread.run() make rest /jfp/sys/ping call" );
-                try
+                response = noHostVerifyRestTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.SYS_PING, String.class );
+                }
+            catch( Exception exc )
+                {
+                System.out.println( "TomcatAppThread.run() ping threw Exception !!" );
+                response = null;
+                SwingUtilities.invokeLater(new Runnable() 
                     {
-                    response = noHostVerifyRestTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.SYS_PING, String.class );
-                    }
-                catch( Exception exc )
-                    {
-                    System.out.println( "TomcatAppThread.run() ping threw Exception !!" );
-                    response = null;
-                    SwingUtilities.invokeLater(new Runnable() 
-                        {
-                        public void run() {
-                            jFileFinderWin.setRmtConnectBtnBackground( Color.yellow );
-                            }
-                        });
-                    exc.printStackTrace();
-                    }
-                System.out.println( "TomcatAppThread.run() ping response =" + response + "=" );
-                
-                if ( ! cancelFlag && 
-                    ( response == null || ! response.equalsIgnoreCase( "RUNNING" ) ) )
-                    {
+                    public void run() {
+                        jFileFinderWin.setRmtConnectBtnBackground( Color.yellow );
+                        }
+                    });
+                exc.printStackTrace();
+                }
+            System.out.println( "TomcatAppThread.run() ping response =" + response + "=" );
+
+            if ( ! cancelFlag && 
+                ( response == null || ! response.equalsIgnoreCase( "RUNNING" ) ) )
+                {
 //                    String[] mainCommand = System.getProperty("sun.java.command").split(" ");
 //                    String jfpFilename = mainCommand[0];
 //                    System.out.println( "jfpFilename =" + jfpFilename + "=" );
 //                        String fpath = System.getProperty( "user.dir" ) + System.getProperty( "file.separator" ) + "build" + System.getProperty( "file.separator" ) + "libs" + System.getProperty( "file.separator" );
-                    String fpath = System.getProperty( "user.dir" ) + System.getProperty( "file.separator" );
+                String fpath = System.getProperty( "user.dir" ) + System.getProperty( "file.separator" );
 //                    fpath = fpath.replace( "-Gui", "-Server" );
 //                    System.out.println( "jfpFilename =" + jfpFilename + "=" );
-                    String jfpFilename = JFileProcessorVersion.getName() + "-" + JFileProcessorVersion.getVersion() + ".jar";  //"JFileProcessor-1.6.0.jar";
-                    System.out.println( "set jfpFilename =" + jfpFilename + "=" );
-                    System.out.println( "try jschSftpUtils   file =" + fpath + jfpFilename + "=   to remote =" + user + "@" + rmtHost + ":" + jfpFilename + "=" );
+                String jfpFilename = JFileProcessorVersion.getName() + "-" + JFileProcessorVersion.getVersion() + ".jar";  //"JFileProcessor-1.6.0.jar";
+                System.out.println( "set jfpFilename =" + jfpFilename + "=" );
+                System.out.println( "try jschSftpUtils   file =" + fpath + jfpFilename + "=   to remote =" + user + "@" + rmtHost + ":" + jfpFilename + "=" );
 
-                    jFileFinderWin.setMessage( "copy server to remote" );
-                    //jschSftpUtils.copyIfMissing( fpath + jfpFilename, user, passwd, rmtHost, jfpFilename );
-                    String errMsg = jschSftpUtils.sftpIfDiff( fpath + jfpFilename, user, passwd, rmtHost, jfpFilename );
-                    if ( ! errMsg.equals( "" ) )
-                        {
-                        JOptionPane.showMessageDialog( null, "Could not connect. Is sftp subsystem configured in ssh?", "Error", JOptionPane.ERROR_MESSAGE );
-                        cancelFlag = true;
-                        }
-                    if ( ! cancelFlag )
-                        {
-                        jFileFinderWin.setMessage( "start remote server.port" );
-                        String runCmd = "java -Dserver.port=" + connUserInfo.getToAskHttpsPort() + " -jar " + jfpFilename + " --server --logging.file=/tmp/jfp-springboot.logging";
+                jFileFinderWin.setMessage( "copy server to remote" );
+                //jschSftpUtils.copyIfMissing( fpath + jfpFilename, user, passwd, rmtHost, jfpFilename );
+                String errMsg = jschSftpUtils.sftpIfDiff( fpath + jfpFilename, user, passwd, rmtHost, connUserInfo.getToSshPortInt(), jfpFilename );
+                if ( ! errMsg.equals( "" ) )
+                    {
+                    JOptionPane.showMessageDialog( null, "Could not connect. Is sftp subsystem configured in ssh?", "Error", JOptionPane.ERROR_MESSAGE );
+                    cancelFlag = true;
+                    }
+                if ( ! cancelFlag )
+                    {
+                    jFileFinderWin.setMessage( "start remote https server" );
+                    String runCmd = "java -Dserver.port=" + connUserInfo.getToAskHttpsPort() + " -jar " + jfpFilename + " --server --logging.file=.JFileProcessor/jfp-springboot.logging";
 
-                        if ( jschSftpUtils.isRemoteDos( user, passwd, rmtHost ) )
-                            {
-                            runCmd = "powershell.exe Start-Process -FilePath java -ArgumentList '-Dserver.port=" + connUserInfo.getToAskHttpsPort() + " -jar " + jfpFilename + " --server --logging.file=/tmp/jfp-springboot.logging" + "' -Wait";
-                            }
-                        
-                        System.out.println( "start remote server with runCmd =" + runCmd + "=" );
-                        iStartedServer = true;
-                        setStartedServer( true );
-                        jschSftpUtils.exec( user, passwd, rmtHost, connUserInfo, runCmd );
-                        //java -jar your-spring.jar --security.require-ssl=true --server.port=8443 --server.ssl.key-store=keystore --server.ssl.key-store-password=changeit --server.ssl.key-password=changeit
+                    if ( jschSftpUtils.isRemoteDos( user, passwd, rmtHost, connUserInfo.getToSshPortInt() ) )
+                        {
+                        //runCmd = "powershell.exe Start-Process -FilePath java -ArgumentList '-Dserver.port=" + connUserInfo.getToAskHttpsPort() + " -jar " + jfpFilename + " --server --logging.file=" + DesktopUtils.getTmpDir() + "\\jfp-springboot-" + "-" + connUserInfo.getToUsingHttpsPort() + ".logging" + "' -Wait";
+                        //runCmd = "powershell.exe Start-Process -FilePath java -ArgumentList '-Dserver.port=" + connUserInfo.getToAskHttpsPort() + " -jar " + jfpFilename + " --server " + "' -Wait";
+                        runCmd = "powershell.exe Start-Process -NoNewWindow -FilePath java -ArgumentList '-Dserver.port=" + connUserInfo.getToAskHttpsPort() + " -jar " + jfpFilename + " --server --logging.file=.JFileProcessor\\jfp-springboot.logging " + "' -Wait";
                         }
-                    System.out.println( "after exec remote jfp server" );
+
+                    System.out.println( "start remote server with runCmd =" + runCmd + "=" );
+                    iStartedServer = true;
+                    setStartedServer( true );
+                    jschSftpUtils.exec( user, passwd, rmtHost, connUserInfo, runCmd );
+                    //java -jar your-spring.jar --security.require-ssl=true --server.port=8443 --server.ssl.key-store=keystore --server.ssl.key-store-password=changeit --server.ssl.key-password=changeit
+                    }
+                System.out.println( "after exec remote jfp server" );
 //                    if ( ! cancelFlag )    // If I can get windows -Wait to work I do not want this wait here.
 //                        {
 //                        waitUntilNotified();
 //                        }
-                    }
-                else
-                    {
-                    System.out.println( "using prev running remote jfp server" );
+                }
+            else
+                {
+                System.out.println( "using prev running remote jfp server" );
 //                    waitUntilNotified();
-                    synchronized (this) 
-                        {
-                        this.wait();
-                        }
-                    System.out.println( "after wait using remote jfp server" );
+                synchronized (this) 
+                    {
+                    this.wait();
                     }
-                } 
-            catch (InterruptedException ex) 
-                {
-                System.out.println( "TomcatAppThread.run() Interrupted" );
-                Logger.getLogger(TomcatAppThread.class.getName()).log(Level.SEVERE, null, ex);
-                setStartedServer( false );
+                System.out.println( "after wait using remote jfp server" );
                 }
-            catch( Exception exc )
-                {
-                exc.printStackTrace();
-                }
-        
+            }
+        catch (InterruptedException ex) 
+            {
+            System.out.println( "TomcatAppThread.run() Interrupted" );
+            Logger.getLogger(TomcatAppThread.class.getName()).log(Level.SEVERE, null, ex);
+            setStartedServer( false );
+            }
+        catch( Exception exc )
+            {
+            exc.printStackTrace();
+            }
+
         SwingUtilities.invokeLater(new Runnable() 
             {
             public void run() {
@@ -185,6 +189,7 @@ public class TomcatAppThread implements Runnable
 //                jFileFinderWin.setRmtConnectBtnBackgroundReset();
 //                }
 //            });
+        connUserInfo.setState( ConnUserInfo.STATE_CANCEL );
         System.out.println( "Exiting TomcatAppThread run() - Done" );
         }
 

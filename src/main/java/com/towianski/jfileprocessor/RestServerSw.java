@@ -51,6 +51,7 @@ public class RestServerSw {
     public void cancelRestServer( boolean forceStop ) 
         {
         System.out.println( "enter RestServerSw.cancelRestServer()" );
+        connUserInfo.setState( ConnUserInfo.STATE_CANCEL );
         if ( tomcatAppMonitor != null )
             {
             if ( runThread != null && runThread.isAlive() )
@@ -58,7 +59,7 @@ public class RestServerSw {
                 tomcatAppMonitor.cancelTomcatAppMonitor( forceStop );
                 try
                     {
-                    runThread.interrupt();
+                    //runThread.interrupt();
                     runThread.join();
                     System.out.println( "RestServerSw.cancelRestServer() - after runThread.join()" );
                     } 

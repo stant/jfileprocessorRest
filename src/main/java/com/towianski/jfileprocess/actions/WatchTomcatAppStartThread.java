@@ -47,10 +47,13 @@ public class WatchTomcatAppStartThread implements Runnable
         {
         System.out.println("WatchTomcatAppStartThread set cancelFlag to true - forceStop =" + forceStop );
         cancelFlag = true;
+        connUserInfo.setState( ConnUserInfo.STATE_CANCEL );
         }
 
     @Override
     public void run() {
+        try
+            {
         System.out.println( "entered WatchTomcatAppStartThread waitUntilStarted()" );
         System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
         RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
@@ -60,10 +63,8 @@ public class WatchTomcatAppStartThread implements Runnable
         int response = -9;
         //int waitCount = 15;
         
-        try
-            {
             //while ( (response < 0 || ! (response == Constants.FILESYSTEM_DOS || response == Constants.FILESYSTEM_POSIX))  && ! cancelFlag )
-            while ( ! cancelFlag && runThread != null && runThread.isAlive() )
+            while ( ! cancelFlag && (connUserInfo.getState() != ConnUserInfo.STATE_CANCEL) && runThread != null && runThread.isAlive() )
                 {
                 System.out.println( "WatchTomcatAppStartThread.run() make rest " + connUserInfo.getToUri() + JfpRestURIConstants.SYS_GET_FILESYS + " call" );
                 try
@@ -84,13 +85,14 @@ public class WatchTomcatAppStartThread implements Runnable
                     {
                     if ( isRunning )  // diff so flip status
                         {
-                        System.out.println( "WatchTomcatAppStartThread was running now is not. reset button color" );
+                        System.out.println( "WatchTomcatAppStartThread was running but now is not. reset button color" );
                         connUserInfo.setConnectedFlag( false );
                         //jFileFinderWin.setFilesysType(response);
                         SwingUtilities.invokeLater(new Runnable() 
                             {
                             public void run() {
                                 jFileFinderWin.setRmtConnectBtnBackground( Color.yellow );
+                                jFileFinderWin.setRmtToUsingHttpsPortToolTip( "" );
                                 }
                             });
                         restServerSw.cancelRestServer( false );   // no force stop
@@ -110,17 +112,15 @@ public class WatchTomcatAppStartThread implements Runnable
                             {
                             public void run() {
                                 jFileFinderWin.setRmtConnectBtnBackground( Color.green );
+                                jFileFinderWin.setRmtToUsingHttpsPortToolTip( connUserInfo.getToUsingHttpsPort() );
+                                jFileFinderWin.setMessage( "remote https server at port " + connUserInfo.getToUsingHttpsPort() );
                                 }
                             });
                         }
                     isRunning = true;
                     }
 
-                if ( cancelFlag )
-                    {
-                    System.out.println( "cancel so no pause." );
-                    }
-                else if ( response < 0 || ! (response == Constants.FILESYSTEM_DOS || response == Constants.FILESYSTEM_POSIX) )
+                if ( response < 0 || ! (response == Constants.FILESYSTEM_DOS || response == Constants.FILESYSTEM_POSIX) )
                     {
                     if ( firstWaitFlag )
                         {
@@ -130,12 +130,14 @@ public class WatchTomcatAppStartThread implements Runnable
                         }
                     }
                 //System.out.println( "pause 4 secs" );
-                Thread.sleep( 4000 );
+                if ( ! cancelFlag && (connUserInfo.getState() != ConnUserInfo.STATE_CANCEL) )
+                    Thread.sleep( 4000 );
                 } // while
             }
         catch (InterruptedException ex)
             {
             Logger.getLogger(WatchTomcatAppStartThread.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println( "WatchTomcatAppStartThread() interrupted" );
             }
         System.out.println( "WatchTomcatAppStartThread() - Done" );
         }

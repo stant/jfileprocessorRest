@@ -46,9 +46,9 @@ public class JschSftpUtils
         }
         
 // return "" if ok, or an error message
-public String sftpIfDiff( String locFile, String user, String password, String rhost, String rmtFile )
+public String sftpIfDiff( String locFile, String user, String password, String rhost, int toSshPort, String rmtFile )
     {
-    Sftp sftp = new Sftp( user, password, rhost );
+    Sftp sftp = new Sftp( user, password, rhost, toSshPort );
     if ( ! sftp.isConnected() )
         {
         return sftp.getMessage();
@@ -102,9 +102,9 @@ public String sftpIfDiff( String locFile, String user, String password, String r
     return errMsg;
     }
 
-public boolean isRemoteDos( String user, String password, String rhost )
+public boolean isRemoteDos( String user, String password, String rhost, int toSshPort )
     {
-    Sftp sftp = new Sftp( user, password, rhost );
+    Sftp sftp = new Sftp( user, password, rhost, toSshPort );
     if ( ! sftp.isConnected() )
         {
         return false;
@@ -135,173 +135,173 @@ public boolean isRemoteDos( String user, String password, String rhost )
     return isDos;
     }
 
-public boolean isRemotePosix( String user, String password, String rhost )
+public boolean isRemotePosix( String user, String password, String rhost, int toSshPort )
     {
-    return ! isRemoteDos( user, password, rhost );
+    return ! isRemoteDos( user, password, rhost, toSshPort );
     }
 
-    public void copyIfMissing( String lfile, String user, String password, String rhost, String rfile )
-        {
-        //scpTo.copyTo( file.toString(), " ", "", "localhost", "/tmp/" + file.getName().toString() );
-        FileInputStream fis=null;
+//    public void copyIfMissing( String lfile, String user, String password, String rhost, String rfile )
+//        {
+//        //scpTo.copyTo( file.toString(), " ", "", "localhost", "/tmp/" + file.getName().toString() );
+//        FileInputStream fis=null;
+//
+//        try
+//            {
+//            BasicFileAttributes attr = Files.readAttributes( Paths.get( lfile ), BasicFileAttributes.class );
+//
+//            System.out.println( "try scpTo   user =" + user + "=   to password =" + password + "=" );
+//            System.out.println( "try scpTo   rhost =" + rhost + "=  to remoteFile =" + rfile + "=" );
+//            System.out.println( "try scpTo   lfilesize =" + attr.size() + "=   remote fsize =" + getRemoteFileSize( lfile, user, password, rhost, rfile ) + "=" );
+//            if ( getRemoteFileSize( lfile, user, password, rhost, rfile ) == attr.size() )
+//                {
+//                System.out.println( "files are same size to return" );
+//                return;
+//                }
+//
+//        //      String lfile=arg[0];
+//        //      String user=remoteFile.substring(0, remoteFile.indexOf('@')).trim();
+//        //      remoteFile=remoteFile.substring(remoteFile.indexOf('@')+1);
+//        //      String host=remoteFile.substring(0, remoteFile.indexOf(':'));
+//        //      String rfile=remoteFile.substring(remoteFile.indexOf(':')+1);
+//
+//            session=jsch.getSession(user, rhost, 22);
+//            System.out.println( "at 2" );
+//
+//            session.setPassword( password );
+//
+//            Properties config = new Properties();
+//            config.put("StrictHostKeyChecking","no");
+//            System.out.println( "at 3" );
+//            session.setConfig(config);
+//
+//              // username and password will be given via UserInfo interface.
+//        //      UserInfo ui=new MyUserInfo();
+//        //    System.out.println( "at 3" );
+//        //      session.setUserInfo(ui);
+//
+//            System.out.println( "at 4" );
+//            session.connect();
+//            System.out.println( "at 5" );
+//
+//            boolean ptimestamp = true;
+//
+//            // exec 'scp -t rfile' remotely
+//            String command="scp " + (ptimestamp ? "-p" :"") +" -t "+rfile;
+//            System.out.println( "at 6" );
+//            Channel channel=session.openChannel("exec");
+//            System.out.println( "at 7" );
+//            ((ChannelExec)channel).setCommand(command);
+//            System.out.println( "at 8" );
+//
+//            // get I/O streams for remote scp
+//            OutputStream out=channel.getOutputStream();
+//            System.out.println( "at 9" );
+//            InputStream in=channel.getInputStream();
+//            System.out.println( "at 10" );
+//
+//            channel.connect();
+//            System.out.println( "at 11" );
+//
+//            if(checkAck(in)!=0){
+//                return;
+//            }
+//
+//            File _lfile = new File(lfile);
+//            System.out.println( "at 12" );
+//
+//            if(ptimestamp){
+//                command="T"+(_lfile.lastModified()/1000)+" 0";
+//                // The access time should be sent here,
+//                // but it is not accessible with JavaAPI ;-<
+//                command+=(" "+(_lfile.lastModified()/1000)+" 0\n"); 
+//                System.out.println( "at 13" );
+//                out.write(command.getBytes()); out.flush();
+//                System.out.println( "at 14" );
+//                if(checkAck(in)!=0){
+//                    return;
+//                    }
+//                }
+//
+//              // send "C0644 filesize filename", where filename should not include '/'
+//            long filesize=_lfile.length();
+//            command="C0644 "+filesize+" ";
+//            System.out.println( "at 15" );
+//            if(lfile.lastIndexOf('/')>0){
+//                command+=lfile.substring(lfile.lastIndexOf('/')+1);
+//            }
+//            else{
+//                command+=lfile;
+//            }
+//            command+="\n";
+//            System.out.println( "at 16" );
+//            out.write(command.getBytes()); out.flush();
+//            System.out.println( "at 17" );
+//            if(checkAck(in)!=0){
+//                return;
+//            }
+//
+//            // send a content of lfile
+//            fis=new FileInputStream(lfile);
+//            byte[] buf=new byte[1024];
+//            System.out.println( "at 17" );
+//            while(true){
+//                int len=fis.read(buf, 0, buf.length);
+//                if(len<=0) break;
+//                out.write(buf, 0, len); //out.flush();
+//            }
+//            System.out.println( "at 18" );
+//            fis.close();
+//            fis=null;
+//            // send '\0'
+//            buf[0]=0; out.write(buf, 0, 1); out.flush();
+//            if(checkAck(in)!=0){
+//                return;
+//            }
+//            out.close();
+//            System.out.println( "at 19" );
+//
+//            channel.disconnect();
+//            session.disconnect();
+//
+//            System.out.println( "DONE." );
+//            return;
+//            }
+//        catch(Exception e)
+//            {
+//            System.out.println(e);
+//            try{if(fis!=null)fis.close();}catch(Exception ee){}
+//            }
+//      }
 
-        try
-            {
-            BasicFileAttributes attr = Files.readAttributes( Paths.get( lfile ), BasicFileAttributes.class );
-
-            System.out.println( "try scpTo   user =" + user + "=   to password =" + password + "=" );
-            System.out.println( "try scpTo   rhost =" + rhost + "=  to remoteFile =" + rfile + "=" );
-            System.out.println( "try scpTo   lfilesize =" + attr.size() + "=   remote fsize =" + getRemoteFileSize( lfile, user, password, rhost, rfile ) + "=" );
-            if ( getRemoteFileSize( lfile, user, password, rhost, rfile ) == attr.size() )
-                {
-                System.out.println( "files are same size to return" );
-                return;
-                }
-
-        //      String lfile=arg[0];
-        //      String user=remoteFile.substring(0, remoteFile.indexOf('@')).trim();
-        //      remoteFile=remoteFile.substring(remoteFile.indexOf('@')+1);
-        //      String host=remoteFile.substring(0, remoteFile.indexOf(':'));
-        //      String rfile=remoteFile.substring(remoteFile.indexOf(':')+1);
-
-            session=jsch.getSession(user, rhost, 22);
-            System.out.println( "at 2" );
-
-            session.setPassword( password );
-
-            Properties config = new Properties();
-            config.put("StrictHostKeyChecking","no");
-            System.out.println( "at 3" );
-            session.setConfig(config);
-
-              // username and password will be given via UserInfo interface.
-        //      UserInfo ui=new MyUserInfo();
-        //    System.out.println( "at 3" );
-        //      session.setUserInfo(ui);
-
-            System.out.println( "at 4" );
-            session.connect();
-            System.out.println( "at 5" );
-
-            boolean ptimestamp = true;
-
-            // exec 'scp -t rfile' remotely
-            String command="scp " + (ptimestamp ? "-p" :"") +" -t "+rfile;
-            System.out.println( "at 6" );
-            Channel channel=session.openChannel("exec");
-            System.out.println( "at 7" );
-            ((ChannelExec)channel).setCommand(command);
-            System.out.println( "at 8" );
-
-            // get I/O streams for remote scp
-            OutputStream out=channel.getOutputStream();
-            System.out.println( "at 9" );
-            InputStream in=channel.getInputStream();
-            System.out.println( "at 10" );
-
-            channel.connect();
-            System.out.println( "at 11" );
-
-            if(checkAck(in)!=0){
-                return;
-            }
-
-            File _lfile = new File(lfile);
-            System.out.println( "at 12" );
-
-            if(ptimestamp){
-                command="T"+(_lfile.lastModified()/1000)+" 0";
-                // The access time should be sent here,
-                // but it is not accessible with JavaAPI ;-<
-                command+=(" "+(_lfile.lastModified()/1000)+" 0\n"); 
-                System.out.println( "at 13" );
-                out.write(command.getBytes()); out.flush();
-                System.out.println( "at 14" );
-                if(checkAck(in)!=0){
-                    return;
-                    }
-                }
-
-              // send "C0644 filesize filename", where filename should not include '/'
-            long filesize=_lfile.length();
-            command="C0644 "+filesize+" ";
-            System.out.println( "at 15" );
-            if(lfile.lastIndexOf('/')>0){
-                command+=lfile.substring(lfile.lastIndexOf('/')+1);
-            }
-            else{
-                command+=lfile;
-            }
-            command+="\n";
-            System.out.println( "at 16" );
-            out.write(command.getBytes()); out.flush();
-            System.out.println( "at 17" );
-            if(checkAck(in)!=0){
-                return;
-            }
-
-            // send a content of lfile
-            fis=new FileInputStream(lfile);
-            byte[] buf=new byte[1024];
-            System.out.println( "at 17" );
-            while(true){
-                int len=fis.read(buf, 0, buf.length);
-                if(len<=0) break;
-                out.write(buf, 0, len); //out.flush();
-            }
-            System.out.println( "at 18" );
-            fis.close();
-            fis=null;
-            // send '\0'
-            buf[0]=0; out.write(buf, 0, 1); out.flush();
-            if(checkAck(in)!=0){
-                return;
-            }
-            out.close();
-            System.out.println( "at 19" );
-
-            channel.disconnect();
-            session.disconnect();
-
-            System.out.println( "DONE." );
-            return;
-            }
-        catch(Exception e)
-            {
-            System.out.println(e);
-            try{if(fis!=null)fis.close();}catch(Exception ee){}
-            }
-      }
-
-    public Session createSession( String user, String password, String rhost )
-        {
-        try
-            {
-            session = jsch.getSession( user, rhost, 22 );
-            System.out.println( "at 2" );
-
-            session.setPassword( password );
-
-            Properties config = new Properties();
-            config.put("StrictHostKeyChecking","no");
-            System.out.println( "at 3" );
-            session.setConfig(config);
-
-            // username and password will be given via UserInfo interface.
-            //      UserInfo ui=new MyUserInfo();
-            //    System.out.println( "at 3" );
-            //      session.setUserInfo(ui);
-
-            System.out.println( "at 4" );
-            session.connect();
-            } 
-        catch (JSchException ex)
-            {
-            java.util.logging.Logger.getLogger(JschSftpUtils.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        System.out.println( "at 5" );
-        return session;
-        }
+//    public Session createSession( String user, String password, String rhost )
+//        {
+//        try
+//            {
+//            session = jsch.getSession( user, rhost, 22 );
+//            System.out.println( "at 2" );
+//
+//            session.setPassword( password );
+//
+//            Properties config = new Properties();
+//            config.put("StrictHostKeyChecking","no");
+//            System.out.println( "at 3" );
+//            session.setConfig(config);
+//
+//            // username and password will be given via UserInfo interface.
+//            //      UserInfo ui=new MyUserInfo();
+//            //    System.out.println( "at 3" );
+//            //      session.setUserInfo(ui);
+//
+//            System.out.println( "at 4" );
+//            session.connect();
+//            } 
+//        catch (JSchException ex)
+//            {
+//            java.util.logging.Logger.getLogger(JschSftpUtils.class.getName()).log(Level.SEVERE, null, ex);
+//            }
+//        System.out.println( "at 5" );
+//        return session;
+//        }
     
 public void copyTo( Session session, String lfile, String rfile )
         {
@@ -415,9 +415,20 @@ public void copyTo( Session session, String lfile, String rfile )
             }
       }
 
-public void SftpPut( String locFile, String user, String password, String rhost, String rmtFile )
+public void SftpPut( String locFile, String user, String password, String rhost, String toSshPort, String rmtFile )
     {
-    Sftp sftp = new Sftp( user, password, rhost );
+    try {
+        SftpPut( locFile, user, password, rhost, Integer.parseInt( toSshPort ), rmtFile );
+        }
+    catch( Exception ex ) 
+        {
+        SftpPut( locFile, user, password, rhost, 22, rmtFile );
+        }
+    }
+
+public void SftpPut( String locFile, String user, String password, String rhost, int toSshPort, String rmtFile )
+    {
+    Sftp sftp = new Sftp( user, password, rhost, toSshPort );
     com.jcraft.jsch.ChannelSftp chanSftp = sftp.getChanSftp();
 
     try {
@@ -432,9 +443,20 @@ public void SftpPut( String locFile, String user, String password, String rhost,
     sftp.close();
     }
 
-public void SftpGet( String rmtFile, String user, String password, String rhost, String locFile )
+public void SftpGet( String rmtFile, String user, String password, String rhost, String toSshPort, String locFile )
     {
-    Sftp sftp = new Sftp( user, password, rhost );
+    try {
+        SftpGet( rmtFile, user, password, rhost, Integer.parseInt( toSshPort ), locFile );
+        }
+    catch( Exception ex ) 
+        {
+        SftpGet( rmtFile, user, password, rhost, 22, locFile );
+        }
+    }
+
+public void SftpGet( String rmtFile, String user, String password, String rhost, int toSshPort, String locFile )
+    {
+    Sftp sftp = new Sftp( user, password, rhost, toSshPort );
     com.jcraft.jsch.ChannelSftp chanSftp = sftp.getChanSftp();
 
     try {
@@ -456,9 +478,9 @@ public void SftpGet( String rmtFile, String user, String password, String rhost,
     sftp.close();
     }
 
-public boolean SftpExists( String rmtFile, String user, String password, String rhost )
+public boolean SftpExists( String rmtFile, String user, String password, String rhost, int toSshPort )
     {
-    Sftp sftp = new Sftp( user, password, rhost );
+    Sftp sftp = new Sftp( user, password, rhost, toSshPort );
 
     try {
         System.out.println( "SftpExists rmtFile =" + rmtFile + "=" );
@@ -472,9 +494,9 @@ public boolean SftpExists( String rmtFile, String user, String password, String 
     return false;
     }
 
-public long getRemoteFileSize( String lfile, String user, String password, String rhost, String filename )
+public long getRemoteFileSize( String lfile, String user, String password, String rhost, int toSshPort, String filename )
     {
-    Sftp sftp = new Sftp( user, password, rhost );
+    Sftp sftp = new Sftp( user, password, rhost, toSshPort );
     com.jcraft.jsch.ChannelSftp chanSftp = sftp.getChanSftp();
     SftpATTRS attrs = null;
     long fsize = -1;
@@ -562,7 +584,7 @@ public void exec( String user, String password, String rhost, ConnUserInfo connU
 //        session.setUserInfo(ui);
         }
       
-    session=jsch.getSession(user, rhost, 22);
+    session=jsch.getSession(user, rhost, connUserInfo.getToSshPortInt() );
     System.out.println( "exec at 2" );
 
     session.setPassword( password );
@@ -588,8 +610,8 @@ public void exec( String user, String password, String rhost, ConnUserInfo connU
       //                                           xhost+":"+xport);
       //xhost=display.substring(0, display.indexOf(':'));
       //xport=Integer.parseInt(display.substring(display.indexOf(':')+1));
-      session.setX11Host(xhost);
-      session.setX11Port(xport+6000);
+      //session.setX11Host(xhost);
+      //session.setX11Port(xport+6000);
       
 
 //      String command=JOptionPane.showInputDialog("Enter command", 
@@ -600,11 +622,14 @@ public void exec( String user, String password, String rhost, ConnUserInfo connU
       Channel channel=session.openChannel("exec");
       command += "\n";
     System.out.println( "exec at 6" );
+    
+    //channel.setPty(true);
+
       ((ChannelExec)channel).setCommand(command);
     System.out.println( "exec at 7" );
 
       // X Forwarding
-       channel.setXForwarding(true);
+       //channel.setXForwarding(true);
 
 //       channel.sendRequests();
        
@@ -617,25 +642,30 @@ public void exec( String user, String password, String rhost, ConnUserInfo connU
       //((ChannelExec)channel).setErrStream(fos);
       ((ChannelExec)channel).setErrStream(System.err);
 
-      InputStream in=channel.getInputStream();
+    InputStream in=channel.getInputStream();
     System.out.println( "exec at 8" );
 
-      channel.connect();
+    channel.connect();
     System.out.println( "exec at 9" );
 
     Pattern startedOnPortMsg = Pattern.compile( ".*Tomcat started on port\\(s\\): (\\d+) \\(https\\).*" );   // the pattern to search for
     Pattern portInUseMsg = Pattern.compile( ".*Address already in use.*" );   // the pattern to search for
+    Pattern connectionRefusedUseMsg = Pattern.compile( ".*Connection refused: connect.*" );
     
     byte[] tmp=new byte[1024];
-    while(true){
+    while ( connUserInfo.getState() != ConnUserInfo.STATE_CANCEL )  // this does not seem to ever find CANCEL value !! ?
+        {
+        //System.out.println( "connUserInfo.getToUsingHttpsPort() = " + connUserInfo.getToUsingHttpsPort() );
+        //System.out.println( "connUserInfo.getState() = " + connUserInfo.getState() );
         while(in.available()>0)
             {
             int i=in.read(tmp, 0, 1024);
             if(i<0)break;
             String rin = new String( tmp, 0, i );
-            System.out.print( "rmt stream ->" + rin );
+            //System.out.print( "rmt stream ->" + rin );
             Matcher m1 = startedOnPortMsg.matcher( rin );
             Matcher m2 = portInUseMsg.matcher( rin );
+            Matcher m3 = connectionRefusedUseMsg.matcher( rin );
 
             // if we find a match, get the group 
             if (m1.find())
@@ -651,14 +681,28 @@ public void exec( String user, String password, String rhost, ConnUserInfo connU
                 System.out.println( "Port Already In Use !" );
                 return;
                 }
-        }
-        if(channel.isClosed()){
-          if(in.available()>0) continue; 
-          System.out.println("exit-status: "+channel.getExitStatus());
-          break;
-        }
-        try{Thread.sleep(1000);}catch(Exception ee){}
-      }
+//            else if (m3.find())
+//                {
+//                System.out.println( "Connection refused: connect !" );
+//                return;
+//                }
+            }
+        //System.out.print( "DONE rmt stream." );
+        if ( channel.isClosed() )
+            {
+            if ( in.available() > 0 ) continue; 
+            System.out.println("exit-status: "+channel.getExitStatus());
+            break;
+            }
+        try{Thread.sleep(1000);} 
+        catch(Exception ee)
+            { 
+            System.out.println( "JschSftpUtils() sleep exception" );
+            connUserInfo.setState( ConnUserInfo.STATE_CANCEL );
+            break;
+            }
+      } // while
+    
     System.out.println( "exec at 10" );
       channel.disconnect();
       session.disconnect();
@@ -667,7 +711,7 @@ public void exec( String user, String password, String rhost, ConnUserInfo connU
     catch(Exception e){
       System.out.println(e);
     }
-    System.out.println( "exec done" );
+    System.out.println( "exec() Done" );
   }
 
 public void execX11ForwardingOrig( String user, String password, String host )

@@ -140,7 +140,7 @@ public class SftpReturnFileFrame extends javax.swing.JFrame {
         if ( connUserInfo.isConnectedFlag() )   //jFileFinderWin.getRmtConnectBtn().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) )
             {
             JschSftpUtils jschSftpUtils = new JschSftpUtils();
-            jschSftpUtils.SftpPut( locFile, user, password, rhost, rmtFile );
+            jschSftpUtils.SftpPut( locFile, user, password, rhost, connUserInfo.getToSshPortInt(), rmtFile );
             this.dispatchEvent( new WindowEvent( this, WindowEvent.WINDOW_CLOSING )); 
             this.dispose();
             }

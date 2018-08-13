@@ -35,6 +35,10 @@ public class ConnUserInfo
     String toAskHttpsPort = "0";
     String toUsingHttpsPort = "0";
     int toFilesysType = FILESYSTEM_POSIX;
+    
+    public int state = 0;
+
+    public static int STATE_CANCEL = 2;
 
     public ConnUserInfo()
         {
@@ -54,6 +58,7 @@ public class ConnUserInfo
         this.toHost = toHost;
         this.toSshPort = toSshPort;
         this.toAskHttpsPort = toAskHttpsPort;
+        this.toUsingHttpsPort = toAskHttpsPort;
         }
 
     public ConnUserInfo( String fromProtocol, String fromUser, String fromPassword, String fromHost, String fromSshPort )
@@ -74,6 +79,7 @@ public class ConnUserInfo
         this.toHost = toHost;
         this.toSshPort = toSshPort;
         this.toAskHttpsPort = toAskHttpsPort;
+        this.toUsingHttpsPort = toAskHttpsPort;
         }
 
     public void setFrom( String fromProtocol, String fromUser, String fromPassword, String fromHost, String fromSshPort )
@@ -93,6 +99,7 @@ public class ConnUserInfo
         this.toHost = toHost;
         this.toSshPort = toSshPort;
         this.toAskHttpsPort = toAskHttpsPort;
+        this.toUsingHttpsPort = toAskHttpsPort;
         }
 
     public String findHostAddress( String host )
@@ -162,7 +169,20 @@ public class ConnUserInfo
                 toFilesysType = Constants.FILESYSTEM_POSIX;
                 }
             }
+        else
+            {
+            state = 0;
+            }
         }
+
+    public int getState() {
+        return state;
+    }
+
+    public void setState(int state) {
+        state = state;
+        System.out.println( "connUserInfo set state = " + state );
+    }
 
     public String getFromUri() {
         return "https://" + fromHost + ":" + System.getProperty( "server.port", "8443" );
@@ -251,6 +271,16 @@ public class ConnUserInfo
         this.fromSshPort = fromSshPort;
         }
 
+    public int getFromSshPortInt()
+        {
+        try {
+            return Integer.parseInt( fromSshPort );
+            }
+        catch( Exception ex ) { }
+                
+        return 22;
+        }
+
     public String getToProtocol()
         {
         return toProtocol;
@@ -294,6 +324,16 @@ public class ConnUserInfo
     public String getToSshPort()
         {
         return toSshPort;
+        }
+
+    public int getToSshPortInt()
+        {
+        try {
+            return Integer.parseInt( toSshPort );
+            }
+        catch( Exception ex ) { }
+                
+        return 22;
         }
 
     public void setToSshPort(String toSshPort)
@@ -341,7 +381,8 @@ public class ConnUserInfo
 + "  toAskHttpsPort =" + toAskHttpsPort + "="
 + "  toUsingHttpsPort =" + toUsingHttpsPort + "="
 + "  toFilesysType =" + toFilesysType + "="
-+ "  \nisRunCopyOnRemote() = " + isRunCopyOnRemote() + "=    getCopyProcotol() = " + getCopyProcotol();
++ "  \nisRunCopyOnRemote() = " + isRunCopyOnRemote() + "=    getCopyProcotol() = " + getCopyProcotol()
++ "  \nstate = " + state;
         }
         
     }

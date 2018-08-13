@@ -51,6 +51,7 @@ public class TomcatAppMonitor implements Runnable
         System.out.println( "cancelTomcatAppMonitor() set cancelFlag to true" );
         System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
         cancelFlag = true;
+        connUserInfo.setState( ConnUserInfo.STATE_CANCEL );
 
         cancelAppThread( forceStop );
 
@@ -70,40 +71,26 @@ public class TomcatAppMonitor implements Runnable
         {
         System.out.println("TomcatAppMonitor cancelAppThread()");
         System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+//        if ( runThread != null && runThread.isAlive() )
+//            {
+//            System.out.println( "cancel runThread/tomcatAppThread" );
+//            tomcatAppThread.cancelTomcatAppThread( forceStop );
+//            }
+
         if ( runThread != null && runThread.isAlive() )
             {
-            System.out.println( "stop/interrupt runThread/tomcatAppThread" );
-            try
-                {
-                tomcatAppThread.cancelTomcatAppThread( forceStop );
-                System.out.println( "called STOP, now interrupt runThread/tomcatAppThread" );
-                runThread.interrupt();
-                runThread.join();
-                } 
-            catch (InterruptedException ex)
-                {
-                System.out.println( "TomcatAppMonitor.cancelAppThread() - InterruptedException on runThread.join()" );
-                Logger.getLogger(TomcatAppMonitor.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            System.out.println( "TomcatAppMonitor.cancelAppThread() - after runThread.join()" );
+            System.out.println( "call to stop remote server first!" );
+            tomcatAppThread.cancelTomcatAppThread(forceStop);
+            System.out.println( "interrupt runThread/tomcatAppThread" );
+            runThread.interrupt();
             }
-
+        
         if ( watchStartThread != null && watchStartThread.isAlive() )
             {
-            System.out.println( "stop/interrupt watchTomcatAppStartThread" );
-            try
-                {
-                watchTomcatAppStartThread.cancelWatchTomcatAppStartThread( false );
-                watchStartThread.interrupt();
-                watchStartThread.join();
-                } 
-            catch (InterruptedException ex)
-                {
-                System.out.println( "TomcatAppMonitor.cancelAppThread() - InterruptedException on runThread.join()" );
-                Logger.getLogger(TomcatAppMonitor.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            System.out.println( "Done/joined watchTomcatAppStartThread" );
+            System.out.println( "interrupt watchStartThread" );
+            watchStartThread.interrupt();
             }
+        
         System.out.println("exit TomcatAppMonitor cancelAppThread()");
         }
     
@@ -138,7 +125,21 @@ public class TomcatAppMonitor implements Runnable
                 {
                 //this.wait();
                 runThread.join();
-                watchStartThread.join();
+
+                if ( watchStartThread != null && watchStartThread.isAlive() )
+                    {
+                    System.out.println( "join watchTomcatAppStartThread" );
+                    try
+                        {
+                        watchStartThread.join();
+                        } 
+                    catch (InterruptedException ex)
+                        {
+                        System.out.println( "TomcatAppMonitor.cancelAppThread() - InterruptedException on watchStartThread.join()" );
+                        Logger.getLogger(TomcatAppMonitor.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    System.out.println( "Done/joined watchTomcatAppStartThread" );
+                    }
                 }
             } 
         catch (InterruptedException ex)

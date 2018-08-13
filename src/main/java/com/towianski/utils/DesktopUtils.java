@@ -34,10 +34,12 @@ public class DesktopUtils
       return getJfpHome( "Bookmarks.txt", "file" );
    }
 
-   public static File getUserTmp()
+   public static String getTmpDir()
    {
-//      return getJfpHome( "tmp", "folder" );
-        return new File( "/tmp/JFP" );
+        String tmp = System.getProperty("java.io.tmpdir");
+        if ( tmp.endsWith( System.getProperty("file.separator") ) )
+            tmp = tmp.substring( 0, tmp.length() - 1);
+        return tmp;
    }
     
    public static boolean isHeadlessProperty()

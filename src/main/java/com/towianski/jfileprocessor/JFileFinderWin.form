@@ -508,10 +508,10 @@
                       <Dimension value="[45, 25]"/>
                     </Property>
                     <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-                      <Dimension value="[90, 25]"/>
+                      <Dimension value="[45, 25]"/>
                     </Property>
                     <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-                      <Dimension value="[90, 25]"/>
+                      <Dimension value="[45, 25]"/>
                     </Property>
                   </Properties>
                   <Events>

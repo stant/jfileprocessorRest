@@ -28,7 +28,7 @@ public class Sftp {
     private boolean isConnected = false;
     private String message = "";
     
-public Sftp( String user, String password, String rhost )
+public Sftp( String user, String password, String rhost, int sshPort )
     {
     try
         {
@@ -46,7 +46,7 @@ public Sftp( String user, String password, String rhost )
 //        session.setUserInfo(ui);
             }
       
-        session=jsch.getSession(user, rhost, 22);
+        session=jsch.getSession(user, rhost, sshPort);
         System.out.println( "Sftp at 2" );
 
         session.setPassword( password );

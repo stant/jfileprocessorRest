@@ -380,6 +380,7 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
             {
             System.out.println( "Is File" );
             numFileTests ++;
+            boolean copyErrorFlag = false;
             //Copy the file content from one place to another
 //            Files.copy(sourceFolder.toPath(), destinationFolder.toPath(), StandardCopyOption.REPLACE_EXISTING);
             try {
@@ -404,6 +405,7 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
                     else
                         {
                         System.out.println( "File Not replaced/copied :: " + destinationFolderStr );
+                        copyErrorFlag = true;
                         message = "File Not replaced/copied: " + destinationFolderStr;
                         errorList.add( sourceFolderStr + " -> copy to destinationFolderStr =" + destinationFolderStr + "=  Will not replace existing file." );
                         }
@@ -419,7 +421,7 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
 //                jschSftpUtils.copyTo( jschSession, sourceFolderStr, destinationFolderStr );
                 System.out.println( "at 8" );
     
-                if ( isDoingCutFlag )
+                if ( isDoingCutFlag && ! copyErrorFlag )
                     {
                     Files.delete( Paths.get( sourceFolderStr ) );
 //                    System.out.println( "would delete local file =" + sourceFolderStr );
@@ -549,6 +551,7 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
             {
             System.out.println( "copyRecursiveSftpToLocal() - Is File" );
             numFileTests ++;
+            boolean copyErrorFlag = false;
             //Copy the file content from one place to another
 //            Files.copy(sourceFolder.toPath(), destinationFolder.toPath(), StandardCopyOption.REPLACE_EXISTING);
             try {
@@ -571,6 +574,7 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
                     else
                         {
                         System.out.println( "File Not replaced/copied :: " + destinationFolderStr );
+                        copyErrorFlag = true;
                         message = "File Not replaced/copied: " + destinationFolderStr;
                         errorList.add( sourceFolderStr + " -> copy to destinationFolderStr =" + destinationFolderStr + "=  Will not replace existing file." );
                         }
@@ -587,7 +591,7 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
 //                jschSftpUtils.copyTo( jschSession, sourceFolderStr, destinationFolderStr );
                 System.out.println( "at 8" );
     
-                if ( isDoingCutFlag )
+                if ( isDoingCutFlag && ! copyErrorFlag )
                     {
 //                    Files.delete( Paths.get( sourceFolderStr ) );
                     chanSftp.rm( sourceFolderStr );
@@ -751,6 +755,7 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
             {
             System.out.println( "copyRecursiveSftpToSftp() - Is File" );
             numFileTests ++;
+            boolean copyErrorFlag = false;
             //Copy the file content from one place to another
 //            Files.copy(sourceFolder.toPath(), destinationFolder.toPath(), StandardCopyOption.REPLACE_EXISTING);
             try {
@@ -769,6 +774,7 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
                     else
                         {
                         System.out.println( "File Not replaced/copied :: " + destinationFolderStr );
+                        copyErrorFlag = true;
                         message = "File Not replaced/copied: " + destinationFolderStr;
                         errorList.add( sourceFolderStr + " -> copy to destinationFolderStr =" + destinationFolderStr + "=  Will not replace existing file." );
                         }
@@ -799,7 +805,7 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
 //                jschSftpUtils.copyTo( jschSession, sourceFolderStr, destinationFolderStr );
                 System.out.println( "at 8" );
     
-                if ( isDoingCutFlag )
+                if ( isDoingCutFlag && ! copyErrorFlag )
                     {
 //                    Files.delete( Paths.get( sourceFolderStr ) );
                     chanSftpSrc.rm( sourceFolderStr );
