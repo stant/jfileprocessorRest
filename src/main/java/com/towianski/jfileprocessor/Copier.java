@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -161,10 +162,32 @@ public class Copier extends SimpleFileVisitor<Path>
             System.out.println( "Search cancelled by user." );
             return FileVisitResult.TERMINATE;
             }
-        if ( ! Files.exists( targetPath ) )
+
+        Path toPathFile = toPath.resolve( startingPath.relativize( dir ) );
+
+//        System.out.println( "dir =" + dir + "= .getFileSystem() =" + dir.getFileSystem() + "=   toPathFile =" + toPathFile + "= .getFileSystem() =" + toPathFile.getFileSystem() + "=" );
+        System.out.println( "dir =" + dir + "= .getFileStore() =" + Files.getFileStore( dir ) + "=   toPathFile.getParent() =" + toPathFile.getParent() + "= .getFileStore() =" + Files.getFileStore( toPathFile.getParent() ) + "=" );
+        if ( isDoingCutFlag &&
+            ( Files.getFileStore( dir ).equals( Files.getFileStore( toPathFile.getParent() ) ) ) )
+            {  // doing Move
+            System.out.println( "do MOVE dir =" + dir + "=   to =" + toPathFile + "=" );
+            //System.out.println( "copyOptions contains? StandardCopyOption.REPLACE_EXISTING =" + copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) + "=" );
+            if ( copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) )
+                Files.move( dir, toPathFile, StandardCopyOption.REPLACE_EXISTING );
+            else
+                Files.move( dir, toPathFile );
+            //Files.delete( dir );
+            //System.out.println( "would delete folder =" + dir );
+            //numFoldersDeleted++;
+            return FileVisitResult.SKIP_SUBTREE;
+            }
+        else   // doing Copy
             {
-//            System.out.println( "preVisitDir would do Files.createDirectory( " + targetPath + ")" );
-            Files.createDirectory( targetPath );
+            if ( ! Files.exists( targetPath ) )
+                {
+                //System.out.println( "preVisitDir would do Files.createDirectory( " + targetPath + ")" );
+                Files.createDirectory( targetPath );
+                }
             }
         return FileVisitResult.CONTINUE;
         }
@@ -173,6 +196,8 @@ public class Copier extends SimpleFileVisitor<Path>
     public FileVisitResult visitFile( Path file, BasicFileAttributes attrs ) 
             throws IOException 
         {
+        Path toPathFile = null;
+
         try {
         Path targetPath = toPath.resolve( startingPath.relativize( file ) );
 //        System.out.println( );
@@ -199,7 +224,7 @@ public class Copier extends SimpleFileVisitor<Path>
 //                        {
 //                        }
         
-        Path toPathFile = toPath.resolve( startingPath.relativize( file ) );
+        toPathFile = toPath.resolve( startingPath.relativize( file ) );
         while ( file.compareTo( toPathFile ) == 0 )
             {
             System.out.println( "would Copy to Itself." );
@@ -223,17 +248,35 @@ public class Copier extends SimpleFileVisitor<Path>
 //            System.out.println( "copyOptions contains? StandardCopyOption.REPLACE_EXISTING =" + copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) + "=" );
 //            System.out.println( "copyOptions.toArray( new CopyOption[ copyOptions.size() ] ) =" + copyOptions.toArray( new CopyOption[ copyOptions.size() ] ) + "=" );
 
-            if ( copyOptions == null || copyOptions.size() < 1 )
-                {
-//                System.out.println( "copy with default options. file =" + file + "=   to =" + toPath.resolve(startingPath.relativize( file ) ) + "=" );
-                //System.out.println( "copy with default options. file =" + toPathFile + "=" );
-                Files.copy( file, toPathFile );
+//            System.out.println( "file =" + file + "= .getFileSystem() =" + file.getFileSystem() + "=   toPathFile =" + toPathFile + "= .getFileSystem() =" + toPathFile.getFileSystem() + "=" );
+            System.out.println( "file =" + file + "= .getFileStore() =" + Files.getFileStore( file ) + "=   toPathFile.getParent() =" + toPathFile.getParent() + "= .getFileStore() =" + Files.getFileStore( toPathFile.getParent() ) + "=" );
+            if ( isDoingCutFlag &&
+                ( Files.getFileStore( file ).equals( Files.getFileStore( toPathFile.getParent() ) ) ) )
+                {  // doing Move
+                System.out.println( "do MOVE file =" + file + "=   to =" + toPathFile + "=" );
+                System.out.println( "copyOptions contains? StandardCopyOption.REPLACE_EXISTING =" + copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) + "=" );
+                if ( copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) )
+                    Files.move( file, toPathFile, StandardCopyOption.REPLACE_EXISTING );
+                else
+                    Files.move( file, toPathFile );
+                //Files.delete( dir );
+                //System.out.println( "would delete folder =" + dir );
+                //numFoldersDeleted++;
                 }
-            else
+            else   // doing Copy
                 {
-//                System.out.println( "copy with sent options. file =" + file + "=   to =" + toPath.resolve(startingPath.relativize( file ) ) + "=" );
-                //System.out.println( "copy with sent options. file =" + toPathFile + "=" );
-                Files.copy( file, toPathFile, copyOptions.toArray( new CopyOption[ copyOptions.size() ] ) );
+                if ( copyOptions == null || copyOptions.size() < 1 )
+                    {
+    //                System.out.println( "copy with default options. file =" + file + "=   to =" + toPath.resolve(startingPath.relativize( file ) ) + "=" );
+                    //System.out.println( "copy with default options. file =" + toPathFile + "=" );
+                    Files.copy( file, toPathFile );
+                    }
+                else
+                    {
+    //                System.out.println( "copy with sent options. file =" + file + "=   to =" + toPath.resolve(startingPath.relativize( file ) ) + "=" );
+                    //System.out.println( "copy with sent options. file =" + toPathFile + "=" );
+                    Files.copy( file, toPathFile, copyOptions.toArray( new CopyOption[ copyOptions.size() ] ) );
+                    }
                 }
             }
         catch ( java.nio.file.NoSuchFileException noSuchFileExc ) 
@@ -269,7 +312,8 @@ public class Copier extends SimpleFileVisitor<Path>
             return FileVisitResult.TERMINATE;
             }
     
-        if ( isDoingCutFlag )
+        if ( isDoingCutFlag && Files.exists( file ) &&
+              ! ( Files.getFileStore( file ).equals( Files.getFileStore( toPathFile.getParent() ) ) ) )
             {
             Files.delete( file );
             //System.out.println( "would delete file =" + file );

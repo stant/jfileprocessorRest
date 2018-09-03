@@ -5,10 +5,12 @@ import com.towianski.jfileprocessor.JFileFinderWin;
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.sshutils.JschSftpUtils;
-import com.towianski.utils.DesktopUtils;
 import com.towianski.utils.Rest;
 import java.awt.Color;
 import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
@@ -134,13 +136,20 @@ public class TomcatAppThread implements Runnable
                 if ( ! cancelFlag )
                     {
                     jFileFinderWin.setMessage( "start remote https server" );
-                    String runCmd = "java -Dserver.port=" + connUserInfo.getToAskHttpsPort() + " -jar " + jfpFilename + " --server --logging.file=.JFileProcessor/jfp-springboot.logging";
+                    // today's date
+                    Date today = Calendar.getInstance().getTime();
+                    // date "formatter" (the date format we want)
+                    SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd-hh.mm.ss");
+                    // (3) create a new String using the date format we want
+                    String serverLogFileName = "jfp-springboot-" + formatter.format(today) + ".log";
+
+                    String runCmd = "java -Dserver.port=" + connUserInfo.getToAskHttpsPort() + " -jar " + jfpFilename + " --server --logging.file=.JFileProcessor/" + serverLogFileName;
 
                     if ( jschSftpUtils.isRemoteDos( user, passwd, rmtHost, connUserInfo.getToSshPortInt() ) )
                         {
                         //runCmd = "powershell.exe Start-Process -FilePath java -ArgumentList '-Dserver.port=" + connUserInfo.getToAskHttpsPort() + " -jar " + jfpFilename + " --server --logging.file=" + DesktopUtils.getTmpDir() + "\\jfp-springboot-" + "-" + connUserInfo.getToUsingHttpsPort() + ".logging" + "' -Wait";
                         //runCmd = "powershell.exe Start-Process -FilePath java -ArgumentList '-Dserver.port=" + connUserInfo.getToAskHttpsPort() + " -jar " + jfpFilename + " --server " + "' -Wait";
-                        runCmd = "powershell.exe Start-Process -NoNewWindow -FilePath java -ArgumentList '-Dserver.port=" + connUserInfo.getToAskHttpsPort() + " -jar " + jfpFilename + " --server --logging.file=.JFileProcessor\\jfp-springboot.logging " + "' -Wait";
+                        runCmd = "powershell.exe Start-Process -NoNewWindow -FilePath java -ArgumentList '-Dserver.port=" + connUserInfo.getToAskHttpsPort() + " -jar " + jfpFilename + " --server --logging.file=.JFileProcessor\\" + serverLogFileName + " " + "' -Wait";
                         }
 
                     System.out.println( "start remote server with runCmd =" + runCmd + "=" );

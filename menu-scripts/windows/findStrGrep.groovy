@@ -43,8 +43,8 @@ class Test {
         for( int i = 0; i < numItems; i++ )
             {
             cmdAl.clear();
-            cmdAl.add( "cmd.exe" );
-            cmdAl.add( "/C" );
+            //cmdAl.add( "cmd.exe" );
+            //cmdAl.add( "/C" );
             cmdAl.add( "findstr" );
             cmdAl.add( "/i" );
             str = defaultComboBoxModel.getElementAt( i ).toString();

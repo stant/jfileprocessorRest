@@ -111,6 +111,7 @@ public class JFileCopy //  implements Runnable
                         {
                         System.out.println( "\n-------  new filewalk: copy path =" + pathstr + "=" );
                         copier.setPaths( Paths.get( pathstr ), startingPath, toPath );
+                        
                         Files.walkFileTree( Paths.get( pathstr ), fileVisitOptions, Integer.MAX_VALUE, copier );
 
                         //break;  for testing to do just 1st path

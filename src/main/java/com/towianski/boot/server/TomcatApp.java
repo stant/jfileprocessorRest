@@ -16,6 +16,8 @@ package com.towianski.boot.server;
  * limitations under the License.
  */
 
+import java.io.File;
+import java.io.PrintStream;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
@@ -34,13 +36,11 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
@@ -215,22 +215,31 @@ public class TomcatApp {
         logger.info( "*** before SpringApplication.run(TomcatApp.class, args)" );
         SpringApplication app;
         final ConfigurableApplicationContext context;
-
+        String loggingFile = "";
+        
         for ( int i = 0; i < args.length; i++ )
             {
             logger.info( "** args [" + i + "] =" + args[i] + "=" );
+            System.out.println( "** args [" + i + "] =" + args[i] + "=" );
+            if ( args[i].toLowerCase().startsWith( "--logging.file" ) )
+                {
+                loggingFile = args[i].substring( "--logging.file=".length() );
+                }
             }
-        logger.info( "** -Dwhatever =" + System.getProperty("whatever") + "=" );
-        logger.info( "** -Dmyarg2 =" + System.getProperty("myarg2") + "=" );
+//        logger.info( "** -Dwhatever =" + System.getProperty("whatever") + "=" );
+//        logger.info( "** -Dmyarg2 =" + System.getProperty("myarg2") + "=" );
         
 //        SpringApplication.run(TomcatApp.class, args);
         context = new SpringApplicationBuilder(TomcatApp.class).profiles("server").run(args);
 
         logger.info( "*** after SpringApplication.run(TomcatApp.class, args)" );
-        logger.info( "*** after SpringApplication.run(TomcatApp.class, args)" );
         
             System.out.println( "server using port =" + context.getEnvironment().getProperty("local.server.port") + "=" );
 
+        stdOutFilePropertyChange( loggingFile );
+        stdErrFilePropertyChange( loggingFile );
+
+                    
 //        final JFileFinderWin jffw = new JFileFinderWin();
 //        if ( args.length > 0 )
 //            {
@@ -248,4 +257,51 @@ public class TomcatApp {
 //        });
     }
 
+    private static void stdOutFilePropertyChange( String stdOutFile )
+    {
+        try {
+//            System.out.println( "stdOutFilePropertyChange() do nothing for now !" );
+//            if ( 1 == 1 ) return;
+            
+            System.out.println( "stdOutFilePropertyChange() set to file =" + stdOutFile + "=" );
+            if ( stdOutFile != null && ! stdOutFile.equals( "" ) )
+                {
+                System.setOut(new PrintStream(new File( stdOutFile ) ) );
+                }
+//            else
+//                {
+//                    //  should go to stderr but oh well for now
+//                System.setOut( console );
+//                }
+            } 
+        catch (Exception e) 
+            {
+            e.printStackTrace();
+            }
+    }                                         
+
+    private static void stdErrFilePropertyChange( String stdErrFile )
+    {
+        try {
+//            System.out.println( "stdErrFilePropertyChange() do nothing for now !" );
+//            if ( 1 == 1 ) return;
+            
+            System.out.println( "stdErrFilePropertyChange() set to file =" + stdErrFile + "=" );
+            if ( stdErrFile != null && ! stdErrFile.equals( "" ) )
+                {
+                System.setErr(new PrintStream(new File( stdErrFile ) ) );
+                }
+//            else
+//                {
+//                    //  should go to stderr but oh well for now
+//                System.setErr( console );
+//                }
+            } 
+        catch (Exception e) 
+            {
+            e.printStackTrace();
+            }
+    }                                         
+
+    
 }

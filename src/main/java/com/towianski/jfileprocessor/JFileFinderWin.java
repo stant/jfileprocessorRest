@@ -343,6 +343,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
     System.out.println( "read scriptsFile/menu-scripts from  =" + scriptsFile + "=" );
     System.out.println( "read OS scriptsOsFile/menu-scripts from  =" + scriptsOsFile + "=" );
     
+    (new File( JfpHomeTempDir )).mkdirs();
+    
 //    RestServerSw restServer = null;
 //    if ( restServer == null )
 //        {
@@ -1719,7 +1721,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
     public void desktopOpen( String filestr )
         {
         String rmtFile = filestr;
-        File file = new File( filestr );
+        File file = new File( filestr.replace( "\\", "/" ) );
         //first check if Desktop is supported by Platform or not
         if ( ! Desktop.isDesktopSupported() )
             {
@@ -1781,7 +1783,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
     public void desktopEdit( String filestr )
         {
         String rmtFile = filestr;
-        File file = new File( filestr );
+        File file = new File( filestr.replace( "\\", "/" ) );
         //first check if Desktop is supported by Platform or not
         if ( ! Desktop.isDesktopSupported() )
             {
@@ -1804,7 +1806,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
                 //desktop.edit( file );
                 System.out.println( "start Cmd =" + myEditorCmd.getText() + " " + file.toString() + "=" );
                 ProcessInThread jp = new ProcessInThread();
-                int rc = jp.exec( getStartingFolder(), true, false, myEditorCmd.getText(), file.toString() );
+                int rc = jp.exec( connUserInfo.isConnectedFlag() ? JfpHomeTempDir : getStartingFolder(), true, false, myEditorCmd.getText(), file.toString() );
                 System.out.println( "javaprocess.exec start new window rc = " + rc + "=" );
                 }
             if ( connUserInfo.isConnectedFlag()  &&   //rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) &&
@@ -4656,6 +4658,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
+        startSwing( args );
+    }
+
+    public static void startSwing(String args[]) {
 
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -4701,14 +4707,53 @@ public class JFileFinderWin extends javax.swing.JFrame {
 //            }
 //        });
 
+
+        EventQueue.invokeLater(() -> {
+            JFileFinderWin jFileFinderWin = new JFileFinderWin();
+            jFileFinderWin.setVisible(true);
+            if ( args.length > 0 )
+                {
+                jFileFinderWin.startingFolder.setText( args[0] );
+                jFileFinderWin.searchBtnActionPerformed( null );
+                }
+            });   
+        
+    }
+    
+    public static void startSpringBoot(String args[]) {
+
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+//        MyLogger logger = MyLogger.getLogger( JFileFinderWin.class.getName() );        
+
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        
+        for ( int i = 0; i < args.length; i++ )
+            {
+//            logger.info( "** args [" + i + "] =" + args[i] + "=" );
+            System.out.println( "** args [" + i + "] =" + args[i] + "=" );
+            }
         
 //        ConfigurableApplicationContext context = new SpringApplicationBuilder(JFileFinderWin.class).headless(false).run(args);
         ConfigurableApplicationContext context = new SpringApplicationBuilder( JFileFinderWin.class ) .profiles("client").web( WebApplicationType.NONE ).bannerMode(Banner.Mode.OFF).headless(false).run(args);
-//
-//            EventQueue.invokeLater(() -> {
-//                JFileFinderWin jFileFinderWin = context.getBean(JFileFinderWin.class);
-////                jFileFinderWin.setVisible(true);
-//            });
 
         EventQueue.invokeLater(() -> {
             JFileFinderWin jFileFinderWin = context.getBean(JFileFinderWin.class);

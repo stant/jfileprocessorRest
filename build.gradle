@@ -12,7 +12,9 @@ buildscript {
 }
 
 group 'com.towianski'
-version '1.6.0'
+version '1.6.1'
+
+// tried using boot 2.0.4 but it causes some ssl keystore problem
 
 apply plugin: 'java'
 apply plugin: 'org.springframework.boot'
@@ -129,6 +131,12 @@ task generateRunScriptPosix {
             runFile.parentFile.mkdirs()
             runFile.text = 
 """
+# if you have problem with jfp window and fonts being too small
+# it will work normal in Java 10
+
+# export JAVA_HOME=/opt/programs/Java/jdk10
+# export PATH=\$JAVA_HOME/bin;\$PATH
+
 java -jar ${rootProject.name}-${version}.jar
 """
         }
@@ -141,6 +149,12 @@ task generateRunScriptWindows {
         def runFile = file("../../programs/jfp/run.bat")
         runFile.text = 
 """
+rem if you have problem with jfp window and fonts being too small
+rem it will work normal in Java 10
+
+rem set JAVA_HOME=F:\\programs\\Java\\jdk10
+rem set PATH=%JAVA_HOME%\\bin;%PATH%
+
 start \"\" javaw -jar ${rootProject.name}-${version}.jar
 """
         }
