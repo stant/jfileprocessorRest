@@ -50,14 +50,29 @@
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="RenameActionPerformed"/>
           </Events>
         </MenuItem>
-        <MenuItem class="javax.swing.JMenuItem" name="NewFolder">
+        <Menu class="javax.swing.JMenu" name="New">
           <Properties>
-            <Property name="text" type="java.lang.String" value="New Folder   (Ctrl-N)"/>
+            <Property name="text" type="java.lang.String" value="New"/>
           </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="NewFolderActionPerformed"/>
-          </Events>
-        </MenuItem>
+          <SubComponents>
+            <MenuItem class="javax.swing.JMenuItem" name="NewFolder">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="New Folder   (Ctrl-N)"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="NewFolderActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="NewFile">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="New File"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="NewFileActionPerformed"/>
+              </Events>
+            </MenuItem>
+          </SubComponents>
+        </Menu>
         <MenuItem class="javax.swing.JMenuItem" name="copyFilename">
           <Properties>
             <Property name="text" type="java.lang.String" value="Copy Filename to Clipboard"/>
@@ -162,11 +177,29 @@
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="Paste1ActionPerformed"/>
           </Events>
         </MenuItem>
-        <MenuItem class="javax.swing.JMenuItem" name="NewFolder1">
+        <Menu class="javax.swing.JMenu" name="jMenu1">
           <Properties>
-            <Property name="text" type="java.lang.String" value="New Folder   (Ctrl-N)"/>
+            <Property name="text" type="java.lang.String" value="New"/>
           </Properties>
-        </MenuItem>
+          <SubComponents>
+            <MenuItem class="javax.swing.JMenuItem" name="NewFolder1">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="New Folder   (Ctrl-N)"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="NewFolder1ActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="NewFile1">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="New File"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="NewFile1ActionPerformed"/>
+              </Events>
+            </MenuItem>
+          </SubComponents>
+        </Menu>
         <MenuItem class="javax.swing.JMenuItem" name="startCmdWin1">
           <Properties>
             <Property name="text" type="java.lang.String" value="Open Terminal here"/>
@@ -229,10 +262,7 @@
       <Connection code="Toolkit.getDefaultToolkit().getImage( JFileFinderWin.class.getResource(&quot;/icons/jfp.png&quot;) )" type="code"/>
     </Property>
     <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-      <Dimension value="[800, 179]"/>
-    </Property>
-    <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-      <Dimension value="[1000, 502]"/>
+      <Dimension value="[500, 179]"/>
     </Property>
   </Properties>
   <SyntheticProperties>
@@ -377,7 +407,7 @@
         <Container class="javax.swing.JPanel" name="jPanel10">
           <Properties>
             <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-              <Dimension value="[800, 172]"/>
+              <Dimension value="[80, 172]"/>
             </Property>
             <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
               <Dimension value="[800, 500]"/>
@@ -392,6 +422,11 @@
           <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
           <SubComponents>
             <Container class="javax.swing.JPanel" name="topPanel">
+              <Properties>
+                <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                  <Dimension value="[60, 35]"/>
+                </Property>
+              </Properties>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
                   <BorderConstraints direction="First"/>
@@ -612,7 +647,7 @@
                 <Container class="javax.swing.JPanel" name="jPanel6">
                   <Properties>
                     <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-                      <Dimension value="[400, 30]"/>
+                      <Dimension value="[60, 30]"/>
                     </Property>
                     <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
                       <Dimension value="[400, 155]"/>
@@ -1575,7 +1610,7 @@
                 <Container class="javax.swing.JPanel" name="jPanel7">
                   <Properties>
                     <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-                      <Dimension value="[300, 90]"/>
+                      <Dimension value="[60, 90]"/>
                     </Property>
                     <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
                       <Dimension value="[500, 400]"/>
@@ -1742,10 +1777,10 @@
                           <Dimension value="[30, 23]"/>
                         </Property>
                         <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-                          <Dimension value="[30, 23]"/>
+                          <Dimension value="[70, 23]"/>
                         </Property>
                         <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-                          <Dimension value="[30, 23]"/>
+                          <Dimension value="[70, 23]"/>
                         </Property>
                       </Properties>
                       <Constraints>

@@ -120,10 +120,10 @@ public class JFileCopy //  implements Runnable
                 }
             catch (Exception ex) 
                 {
-                copierNonWalker.setProcessStatus( CopyFrame.PROCESS_STATUS_COPY_INCOMPLETED );
-                copierNonWalker.setMessage( ex.toString() );
-                copier.getErrorList().add( " -> copy path - ERROR " + ex );
                 ex.printStackTrace();
+                copier.setProcessStatus( CopyFrame.PROCESS_STATUS_COPY_INCOMPLETED );
+                copier.setMessage( ex.toString() );
+                copier.getErrorList().add( " -> copy path - ERROR " + ex );
                 }
         
             copier.done();

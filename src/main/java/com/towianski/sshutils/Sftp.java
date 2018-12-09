@@ -104,7 +104,7 @@ public boolean exists( String path )
         } 
     catch (Exception ex)
         {
-        Logger.getLogger(CopierNonWalker.class.getName()).log(Level.SEVERE, null, "does not exist/no stat");
+        Logger.getLogger(Sftp.class.getName()).log(Level.SEVERE, null, "does not exist/no stat");
         }
     return false;
     }
@@ -116,7 +116,7 @@ public void mkDir( String path )
         } 
     catch (Exception ex)
         {
-        Logger.getLogger(CopierNonWalker.class.getName()).log(Level.SEVERE, null, ex);
+        Logger.getLogger(Sftp.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -128,10 +128,21 @@ public boolean isDir( String path )
         } 
     catch (SftpException ex)
         {
-        Logger.getLogger(CopierNonWalker.class.getName()).log(Level.SEVERE, null, ex);
+        Logger.getLogger(Sftp.class.getName()).log(Level.SEVERE, null, ex);
         return false;
         }
     return sourceSftpAttrs.isDir();
+    }
+    
+public void touch( String path )
+    {
+    try {
+        chanSftp.put( path );
+        } 
+    catch (Exception ex)
+        {
+        Logger.getLogger(Sftp.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
 public void close()

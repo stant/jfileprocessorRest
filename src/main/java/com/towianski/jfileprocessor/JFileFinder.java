@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.DosFileAttributes;
+import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFileAttributes;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.text.SimpleDateFormat;
@@ -175,6 +176,7 @@ public class JFileFinder //  implements Runnable
             BasicFileAttributes attr;
             try {
                 attr = Files.readAttributes( fpath, BasicFileAttributes.class );
+                PosixFileAttributes fsattr = Files.readAttributes( fpath, PosixFileAttributes.class );
 
                 int ftype = FilesTblModel.FILETYPE_NORMAL;
                 if ( Files.isSymbolicLink( fpath ) )
@@ -192,7 +194,9 @@ public class JFileFinder //  implements Runnable
                 int folderType = FilesTblModel.FOLDERTYPE_FILE;
                 if ( attr.isDirectory() )
                     {
-                    if ( noAccessFolder.containsKey( fpath ) )
+                    if ( noAccessFolder.containsKey( fpath ) || 
+                          ! Files.isExecutable( fpath ) ||
+                          ! Files.isReadable(fpath ) )
                         {
                         folderType = FilesTblModel.FOLDERTYPE_FOLDER_NOACCESS;
                         }
@@ -207,7 +211,6 @@ public class JFileFinder //  implements Runnable
                 rowList.add( new Date( attr.lastModifiedTime().toMillis() ) );
                 rowList.add( attr.size() );
 
-                PosixFileAttributes fsattr = Files.readAttributes( fpath, PosixFileAttributes.class );
 //                    if ( jFileFinderWin.isShowOwnerFlag() )
                     {
                     rowList.add( fsattr.owner() );
@@ -288,14 +291,16 @@ public class JFileFinder //  implements Runnable
                     int folderType = FilesTblModel.FOLDERTYPE_FILE;
                     if ( attr.isDirectory() )
                         {
-                        if ( noAccessFolder.containsKey( fpath ) )
-                            {
-                            folderType = FilesTblModel.FOLDERTYPE_FOLDER_NOACCESS;
-                            }
-                        else
-                            {
-                            folderType = FilesTblModel.FOLDERTYPE_FOLDER;
-                            }
+                        if ( noAccessFolder.containsKey( fpath ) || 
+                              ! Files.isExecutable( fpath ) ||
+                              ! Files.isReadable(fpath ) )
+                                {
+                                folderType = FilesTblModel.FOLDERTYPE_FOLDER_NOACCESS;
+                                }
+                            else
+                                {
+                                folderType = FilesTblModel.FOLDERTYPE_FOLDER;
+                                }
                         }
                     rowList.add( folderType );
                 

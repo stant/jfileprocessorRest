@@ -373,7 +373,21 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
                 //Recursive function call
                 copyRecursiveLocalToSftp( srcFile.toString(), destFile.toString() );
                 }
-            postVisitDirectory( Paths.get( sourceFolderStr ) );  // delete folder if doing cut
+            Path dir = Paths.get( sourceFolderStr );  // delete folder if doing cut
+            try {
+                if ( isDoingCutFlag )
+                    {
+                    Files.delete( dir );
+                    System.out.println( "would delete local folder =" + dir );
+                    }
+                }
+            catch (Exception ex2) 
+                {
+                logger.log(Level.SEVERE, null, ex2 );
+                errorList.add( dir + " -> " + "ERROR " + ex2 );
+                //System.out.println( "CAUGHT ERROR  " + "my error msg" + ex2.getClass().getSimpleName() + ": " + dir );
+                //throw new IOException( ex2 + ": " + dir );
+                }
             numFolderMatches++;
             }
         else
@@ -849,7 +863,7 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
             logger.log(Level.SEVERE, null, ex2 );
             errorList.add( dir + " -> " + "ERROR " + ex2 );
             //System.out.println( "CAUGHT ERROR  " + "my error msg" + ex2.getClass().getSimpleName() + ": " + dir );
-            throw new IOException( ex2 + ": " + dir );
+            //throw new IOException( ex2 + ": " + dir );
             }
         //return FileVisitResult.TERMINATE;
         }

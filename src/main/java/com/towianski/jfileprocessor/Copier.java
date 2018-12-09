@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.CopyOption;
 import java.nio.file.FileVisitResult;
+import static java.nio.file.FileVisitResult.CONTINUE;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -149,46 +150,81 @@ public class Copier extends SimpleFileVisitor<Path>
     public FileVisitResult preVisitDirectory( Path dir, BasicFileAttributes attrs )
             throws IOException 
         {
-        Path targetPath = this.toPath.resolve( this.startingPath.relativize( dir ) );
-//        System.out.println( );
-//        System.out.println( "preVisitDir relativize =" + this.startingPath.relativize( dir ) + "=" );
-//        System.out.println( "preVisitDir toPath =" + toPath + "   resolve targetPath =" + targetPath + "=" );
+        try {
+            Path targetPath = this.toPath.resolve( this.startingPath.relativize( dir ) );
+    //        System.out.println( );
+    //        System.out.println( "preVisitDir relativize =" + this.startingPath.relativize( dir ) + "=" );
+    //        System.out.println( "preVisitDir toPath =" + toPath + "   resolve targetPath =" + targetPath + "=" );
 
-        numTested++;
-        numFolderTests ++;
-        numFolderMatches++;
-        if ( cancelFlag )
-            {
-            System.out.println( "Search cancelled by user." );
-            return FileVisitResult.TERMINATE;
-            }
-
-        Path toPathFile = toPath.resolve( startingPath.relativize( dir ) );
-
-//        System.out.println( "dir =" + dir + "= .getFileSystem() =" + dir.getFileSystem() + "=   toPathFile =" + toPathFile + "= .getFileSystem() =" + toPathFile.getFileSystem() + "=" );
-        System.out.println( "dir =" + dir + "= .getFileStore() =" + Files.getFileStore( dir ) + "=   toPathFile.getParent() =" + toPathFile.getParent() + "= .getFileStore() =" + Files.getFileStore( toPathFile.getParent() ) + "=" );
-        if ( isDoingCutFlag &&
-            ( Files.getFileStore( dir ).equals( Files.getFileStore( toPathFile.getParent() ) ) ) )
-            {  // doing Move
-            System.out.println( "do MOVE dir =" + dir + "=   to =" + toPathFile + "=" );
-            //System.out.println( "copyOptions contains? StandardCopyOption.REPLACE_EXISTING =" + copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) + "=" );
-            if ( copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) )
-                Files.move( dir, toPathFile, StandardCopyOption.REPLACE_EXISTING );
-            else
-                Files.move( dir, toPathFile );
-            //Files.delete( dir );
-            //System.out.println( "would delete folder =" + dir );
-            //numFoldersDeleted++;
-            return FileVisitResult.SKIP_SUBTREE;
-            }
-        else   // doing Copy
-            {
-            if ( ! Files.exists( targetPath ) )
+            numTested++;
+            numFolderTests ++;
+            numFolderMatches++;
+            if ( cancelFlag )
                 {
-                //System.out.println( "preVisitDir would do Files.createDirectory( " + targetPath + ")" );
-                Files.createDirectory( targetPath );
+                System.out.println( "Search cancelled by user." );
+                return FileVisitResult.TERMINATE;
+                }
+
+            Path toPathFile = toPath.resolve( startingPath.relativize( dir ) );
+
+    //        System.out.println( "dir =" + dir + "= .getFileSystem() =" + dir.getFileSystem() + "=   toPathFile =" + toPathFile + "= .getFileSystem() =" + toPathFile.getFileSystem() + "=" );
+            System.out.println( "dir =" + dir + "= .getFileStore() =" + Files.getFileStore( dir ) + "=   toPathFile.getParent() =" + toPathFile.getParent() + "= .getFileStore() =" + Files.getFileStore( toPathFile.getParent() ) + "=" );
+            if ( isDoingCutFlag &&
+                ( Files.getFileStore( dir ).equals( Files.getFileStore( toPathFile.getParent() ) ) ) )
+                {  // doing Move
+                System.out.println( "do MOVE dir =" + dir + "=   to =" + toPathFile + "=" );
+                //System.out.println( "copyOptions contains? StandardCopyOption.REPLACE_EXISTING =" + copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) + "=" );
+                if ( copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) )
+                    Files.move( dir, toPathFile, StandardCopyOption.REPLACE_EXISTING );
+                else
+                    Files.move( dir, toPathFile );
+                //Files.delete( dir );
+                //System.out.println( "would delete folder =" + dir );
+                //numFoldersDeleted++;
+                return FileVisitResult.SKIP_SUBTREE;
+                }
+            else   // doing Copy
+                {
+                if ( ! Files.exists( targetPath ) )
+                    {
+                    //System.out.println( "preVisitDir would do Files.createDirectory( " + targetPath + ")" );
+                    Files.createDirectory( targetPath );
+                    }
                 }
             }
+        catch ( java.nio.file.NoSuchFileException noSuchFileExc ) 
+            {
+            logger.log( Level.INFO, "ERROR  " + noSuchFileExc + ": " + dir );
+            logger.log( Level.INFO, logger.getExceptionAsString( noSuchFileExc ) );
+            errorList.add( dir + " -> " + "ERROR " + noSuchFileExc );
+            //return FileVisitResult.TERMINATE;
+            }
+        catch ( java.nio.file.AccessDeniedException exAccessDenied ) 
+            {
+            logger.log( Level.INFO, "WARNING  " + exAccessDenied + ": " + dir );
+            logger.log( Level.INFO, logger.getExceptionAsString( exAccessDenied ) );
+            errorList.add( dir + " -> " + "WARNING " + exAccessDenied );
+            if ( swingWorker != null )  swingWorker.setCloseWhenDoneFlag( false );
+            //return FileVisitResult.TERMINATE;
+            }
+        catch ( java.nio.file.FileAlreadyExistsException faeExc )
+            {
+            logger.log( Level.INFO, "ERROR  " + faeExc + ": " + dir );
+            System.out.println( "ERROR  " + faeExc + ": " + dir );
+            errorList.add( dir + " -> " + "ERROR " + faeExc );
+            message = "ERROR: " + faeExc + ": " + dir;
+            //return FileVisitResult.CONTINUE;
+            }
+        catch ( Exception exc )
+            {
+            logger.log(Level.SEVERE, "ERROR  " + exc + ": " + dir );
+            System.out.println( "ERROR  " + exc + ": " + dir );
+            errorList.add( dir + " -> " + "ERROR " + exc );
+            processStatus = "Error";
+            message = exc + ": " + dir;
+            //return FileVisitResult.TERMINATE;
+            }
+    
         return FileVisitResult.CONTINUE;
         }
 
@@ -345,6 +381,14 @@ public class Copier extends SimpleFileVisitor<Path>
 //        System.out.println( "CAUGHT RUNTIME ERROR  " + "my error msg" + ex3 + ": " + dir );
 //            throw new IOException( "my runtime msg" + ex3.getClass().getSimpleName() + ": " + dir );
 //            }
+        catch ( java.nio.file.AccessDeniedException exAccessDenied ) 
+            {
+            logger.log( Level.INFO, "WARNING  " + exAccessDenied + ": " + dir );
+            logger.log( Level.INFO, logger.getExceptionAsString( exAccessDenied ) );
+            errorList.add( dir + " -> " + "WARNING " + exAccessDenied );
+            if ( swingWorker != null )  swingWorker.setCloseWhenDoneFlag( false );
+            return FileVisitResult.CONTINUE;
+            }
         catch (Exception ex2) 
             {
             logger.log(Level.SEVERE, null, ex2 );
@@ -356,6 +400,38 @@ public class Copier extends SimpleFileVisitor<Path>
         //return FileVisitResult.TERMINATE;
         }
     
+        @Override
+        public FileVisitResult visitFileFailed( Path file, IOException exc ) 
+            {
+            System.out.println( "Copier.visitFileFailed() for file =" + file.toString() );
+            errorList.add( file + " -> " + "ERROR " + exc );
+            return FileVisitResult.SKIP_SUBTREE;
+//            if ( new File( file.toString() ).isDirectory() )
+//                {
+//                System.out.println( "skipping inaccessible folder: " + file.toString() );
+//                if ( exc instanceof java.nio.file.AccessDeniedException )
+//                    {
+//                    BasicFileAttributes attrs;
+//                    try {
+//                        attrs = Files.readAttributes( file, BasicFileAttributes.class );
+//                        processFolder( file, attrs );
+//                        noAccessFolder.put( file, null );
+//            }
+//                    catch (Exception ex) 
+//                        {
+//                        System.out.println( "Error calling processFolder in visitFileFailed()" );
+//                        ex.printStackTrace();
+//                        }
+//                    }
+//                else
+//                    {
+//                    exc.printStackTrace();
+//                    }
+//                return FileVisitResult.SKIP_SUBTREE;
+//                }
+//            return CONTINUE;
+            }
+            
         
     // Prints the total number of
     // matches to standard out.

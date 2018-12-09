@@ -16,12 +16,22 @@ public class StartApp //implements CommandLineRunner
     
 //    @Autowired
 //     JFileFinderWin jFileFinderWin;
+//    static boolean adjustScale = false;
     
     public static void main(String[] args) 
         {
         SpringApplication app;
         final ConfigurableApplicationContext context;
         boolean startServer = false;
+        
+        // java - get screen size using the Toolkit class
+//        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+//        if ( screenSize.getWidth() > 1920.0 )
+//            {
+//            //System.setProperty( "sun.java2d.uiScale", "2" );
+//            adjustScale = true;
+//            System.out.println( "Looks like a hi resolution screen so set uiScale = 2, which can still be overriden with passed arg." );
+//            }
         
         for ( int i = 0; i < args.length; i++ )
             {
@@ -45,7 +55,15 @@ public class StartApp //implements CommandLineRunner
         else
             {
             System.out.println( "*** START CLIENT ***" );
-            JFileFinderWin.main(args);
+            
+//            String[] allArgs = Arrays.copyOf( args, args.length + 2 );
+//            String[] extraArgs = { "sun.java2d.uiScale", "2" };
+//            if ( adjustScale )
+//                {
+//                System.arraycopy( extraArgs, 0, allArgs, args.length, extraArgs.length );
+//                }
+            
+            JFileFinderWin.main( args );
             
 //            context = new SpringApplicationBuilder( JFileFinderWin.class ) .profiles("client").web( WebApplicationType.NONE ).headless(false).run(args);
 //

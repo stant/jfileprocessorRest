@@ -127,16 +127,28 @@ public class FileUtils
             }
         }
     
-    public static void touch( Path path ) 
+    public static void touch( ConnUserInfo connUserInfo, String path ) 
             throws IOException 
         {
-        if (Files.exists(path)) 
+        Path targetPath = Paths.get( path );
+        System.out.println("jfilewin touch()  connUserInfo.isConnectedFlag() =" + connUserInfo.isConnectedFlag() + "=" );
+
+        if ( connUserInfo.isConnectedFlag() )
             {
-            Files.setLastModifiedTime(path, FileTime.from(Instant.now()));
+            Sftp sftp = null;
+            sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), connUserInfo.getToSshPortInt() );
+            sftp.touch( targetPath.toString() );
             }
         else
             {
-            Files.createFile(path);
+            if (Files.exists( targetPath )) 
+                {
+                Files.setLastModifiedTime( targetPath, FileTime.from(Instant.now()));
+                }
+            else
+                {
+                Files.createFile( targetPath );
+                }
             }
         }
 

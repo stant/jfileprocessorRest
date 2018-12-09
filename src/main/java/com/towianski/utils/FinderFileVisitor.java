@@ -200,6 +200,7 @@ public class FinderFileVisitor extends SimpleFileVisitor<Path>
             catch (Exception ex) 
                 {
                 logger.log(Level.SEVERE, null, ex);
+                System.out.println( "preVisitDirectory Exception: " + ex.toString() );
                 }
 
             // Second check is do we go into this folder or skip it?
@@ -261,7 +262,7 @@ public class FinderFileVisitor extends SimpleFileVisitor<Path>
                         attrs = Files.readAttributes( file, BasicFileAttributes.class );
                         processFolder( file, attrs );
                         noAccessFolder.put( file, null );
-                        }
+            }
                     catch (Exception ex) 
                         {
                         System.out.println( "Error calling processFolder in visitFileFailed()" );

@@ -30,6 +30,7 @@ public class TableCellListener implements PropertyChangeListener, Runnable
         private Boolean onOffFlag = true;
         private String skipFirstPath = "";
         private Boolean doingCancel = false;
+        private int filesTblModelType = -1;
         
 	/**
 	 *  Create a TableCellListener.
@@ -53,14 +54,15 @@ public class TableCellListener implements PropertyChangeListener, Runnable
 	 *  @param oldValue  the old data of the changed cell
 	 *  @param newValue  the new data of the changed cell
 	 */
-	private TableCellListener(JTable table, int row, int column, Object oldValue, Object newValue)
-	{
-		this.table = table;
-		this.row = row;
-		this.column = column;
-		this.oldValue = oldValue;
-		this.newValue = newValue;
-	}
+	private TableCellListener(JTable table, int filesTblModelType, int row, int column, Object oldValue, Object newValue)
+            {
+            this.table = table;
+            this.filesTblModelType = filesTblModelType;
+            this.row = row;
+            this.column = column;
+            this.oldValue = oldValue;
+            this.newValue = newValue;
+            }
 
     public Boolean getOnOffFlag() {
         return onOffFlag;
@@ -71,8 +73,9 @@ public class TableCellListener implements PropertyChangeListener, Runnable
         System.out.println( "tbl cell editor SET flag() onOffFlag = " + this.onOffFlag );
     }
 
-    public void skipFirstEditOn( String skipFirstPath )
+    public void skipFirstEditOn( int filesTblModelType, String skipFirstPath )
     {
+        this.filesTblModelType = filesTblModelType;
         this.skipFirstPath = skipFirstPath;
     }
     
@@ -125,6 +128,12 @@ public class TableCellListener implements PropertyChangeListener, Runnable
 	{
             return table;
 	}
+
+    public int getFilesTblModelType() {
+        return filesTblModelType;
+    }
+        
+        
 //
 //  Implement the PropertyChangeListener interface
 //
@@ -275,7 +284,7 @@ public class TableCellListener implements PropertyChangeListener, Runnable
                 else
                     {
                     TableCellListener tcl = new TableCellListener(
-                            getTable(), getRow(), getColumn(), getOldValue(), getNewValue());
+                            getTable(), this.filesTblModelType, getRow(), getColumn(), getOldValue(), getNewValue());
                     //System.out.println( "processEditingStopped() tcl tbl col count =" + filesTblModel.getColumnCount() );
 
                     ActionEvent event = new ActionEvent(
