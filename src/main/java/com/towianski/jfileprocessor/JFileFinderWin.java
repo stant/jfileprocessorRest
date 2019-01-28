@@ -40,6 +40,7 @@ import com.towianski.jfileprocess.actions.ProcessInThread;
 import com.towianski.jfileprocess.actions.NewFolderAction;
 import com.towianski.jfileprocess.actions.ScriptOnSelectedFilesAction;
 import com.towianski.listeners.MyFocusAdapter;
+import com.towianski.listeners.MyRowSorterListener;
 import com.towianski.listeners.ScriptMenuItemListener;
 import com.towianski.models.CircularArrayList;
 import com.towianski.models.ConnUserInfo;
@@ -135,11 +136,13 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JTable;
 import javax.swing.KeyStroke;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
 import javax.swing.SpinnerListModel;
 import javax.swing.SwingWorker;
+import javax.swing.event.RowSorterListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
@@ -190,6 +193,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
     File scriptsFile = new File( JfpHomeDir + "menu-scripts" );
     File scriptsOsFile = null;
     String hostAddress = findHostAddress( "?" );
+
+    int tblColModelSizeLast = -1;
+    boolean alreadySetColumnSizes = false;
+    List <RowSorter.SortKey> sortKeysSaved = null;
     
     CircularArrayList pathsHistoryList = new CircularArrayList(50 );
     SavedPathsPanel savedPathReplacablePanel = new SavedPathsPanel( this );
@@ -237,7 +244,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
                 {
 //                newerVersionLbl.setText( "  newer version <a href=\"\">(" + latest + ")</a></html> " );
                 newerVersionLbl.setText( " newer version (" + latest + ") " );
-                newerVersionLbl.setToolTipText( "browse there" );
+                newerVersionLbl.setToolTipText( "github" );
 //                newerVersionLbl.setMinimumSize( new Dimension( 100, 23 ) );
                 newerVersionLbl.setPreferredSize( new Dimension( 140, 23 ) );
                 newerVersionLbl.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
@@ -261,6 +268,30 @@ public class JFileFinderWin extends javax.swing.JFrame {
                         }  
                     }); 
                 newerVersionLbl.validate();
+
+                newerVersionSpLbl.setText( " (" + latest + ") " );
+                newerVersionSpLbl.setToolTipText( "Softpedia" );
+//                newerVersionSpLbl.setMinimumSize( new Dimension( 100, 23 ) );
+                newerVersionSpLbl.setPreferredSize( new Dimension( 140, 23 ) );
+                newerVersionSpLbl.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+                attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
+                newerVersionSpLbl.setFont(font.deriveFont(attributes));
+                newerVersionSpLbl.addMouseListener(new MouseAdapter()  
+                    {  
+                        public void mouseClicked(MouseEvent e)  
+                        {  
+                        System.out.println( "newerVersionSpLblMouseClicked" );
+                        Desktop desktop = Desktop.getDesktop();
+                            try {
+                                desktop.browse( new URI( "https://www.softpedia.com/get/File-managers/JFileProcessor.shtml" ) );
+                            } catch (URISyntaxException ex) {
+                                Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+                            } catch (IOException ex) {
+                                Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }  
+                    }); 
+                newerVersionSpLbl.validate();
                 }
             //programMemory.extractCurrentValues();
             Rest.saveObjectToFile( "ProgramMemory.json", programMemory );
@@ -272,7 +303,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
     
     public void start() 
         {
-        this.setTitle( JFileProcessorVersion.getName() + " " + JFileProcessorVersion.getVersion() + " - Stan Towianski  (c) 2015-2018" );
+        this.setTitle( JFileProcessorVersion.getName() + " " + JFileProcessorVersion.getVersion() + " - Stan Towianski  (c) 2015-2019" );
         System.out.println( "java.version =" + System.getProperty("java.version") + "=" );
         System.out.println( "JfpHomeTempDir Directory =" + JfpHomeTempDir + "=" );
         System.out.println( "Scripts Directory =" + scriptsFile + "=" );
@@ -291,6 +322,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
         this.addEscapeListener( this );
         filesTbl.addMouseListener( new MyMouseAdapter( jPopupMenu1, this, jScrollPane1 ) );
         jScrollPane1.addMouseListener( new MyMouseAdapter( jPopupMenu2, this, jScrollPane1 ) );
+       // jScrollPane1.setVerticalScrollBarPolicy( JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); 
         this.setLocationRelativeTo( getRootPane() );
 
         filesTblCellListener = new TableCellListener( filesTbl, filesTblCellChangedAction );
@@ -383,7 +415,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
         {
         System.out.println( "readInProgramMemoryFromFile()" );
         try {
-            ProgramMemory programMemory = (ProgramMemory) Rest.readObjectFromFile( "ProgramMemory.json", new TypeReference<ProgramMemory>(){} );
+            programMemory = (ProgramMemory) Rest.readObjectFromFile( "ProgramMemory.json", new TypeReference<ProgramMemory>(){} );
             if ( programMemory == null )
                 {
                 System.out.println( "readInProgramMemoryFromFile() Error reading json file" );
@@ -686,6 +718,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
     public void setShowJustFilenameFlag(boolean showJustFilenameFlag) {
         this.showJustFilenameFlag.setSelected( showJustFilenameFlag );
+        alreadySetColumnSizes = false;
     }
 
     public void setShowGroupFlag(boolean showGroupFlag) {
@@ -876,44 +909,38 @@ public class JFileFinderWin extends javax.swing.JFrame {
         switch( text )
             {
             case PROCESS_STATUS_SEARCH_STARTED:  
-                processStatus.setBackground( Color.GREEN );
-                setSearchBtn( Constants.PROCESS_STATUS_CANCEL_SEARCH, Color.RED );
+                //processStatus.setBackground( Color.GREEN );
+                //setSearchBtn( Constants.PROCESS_STATUS_CANCEL_SEARCH, Color.RED );
+                setSearchBtn( Constants.PROCESS_STATUS_CANCEL_SEARCH, saveColor );
                 setMessage( "" );
                 break;
             case PROCESS_STATUS_FILL_STARTED:
-                processStatus.setBackground( Color.GREEN );
-                setSearchBtn( Constants.PROCESS_STATUS_CANCEL_FILL, Color.RED );
+                //processStatus.setBackground( Color.GREEN );
+                //setSearchBtn( Constants.PROCESS_STATUS_CANCEL_FILL, Color.RED );
+                setSearchBtn( Constants.PROCESS_STATUS_CANCEL_FILL, saveColor );
                 break;
-//            case PROCESS_STATUS_CANCEL_SEARCH:
-//                processStatus.setBackground( Color.RED );
-//                setSearchBtn( this.SEARCH_BTN_STOP_SEARCH, Color.RED );
-//                break;
             case PROCESS_STATUS_SEARCH_CANCELED:
-                processStatus.setBackground( Color.YELLOW );
+                //processStatus.setBackground( Color.YELLOW );
                 setSearchBtn( Constants.PROCESS_STATUS_SEARCH_READY, saveColor );
                 break;
             case PROCESS_STATUS_SEARCH_COMPLETED:
-                processStatus.setBackground( saveColor );
+                //processStatus.setBackground( saveColor );
                 setSearchBtn( Constants.PROCESS_STATUS_SEARCH_READY, saveColor );
                 break;
-//            case PROCESS_STATUS_CANCEL_FILL:
-//                processStatus.setBackground( Color.RED );
-//                setSearchBtn( this.SEARCH_BTN_STOP_SEARCH, Color.RED );
-//                break;
             case PROCESS_STATUS_FILL_CANCELED:
-                processStatus.setBackground( Color.YELLOW );
+                //processStatus.setBackground( Color.YELLOW );
                 setSearchBtn( Constants.PROCESS_STATUS_SEARCH_READY, saveColor );
                 break;
             case PROCESS_STATUS_FILL_COMPLETED:
-                processStatus.setBackground( saveColor );
+                //processStatus.setBackground( saveColor );
                 setSearchBtn( Constants.PROCESS_STATUS_SEARCH_READY, saveColor );
                 break;
             case PROCESS_STATUS_ERROR:
-                processStatus.setBackground( Color.RED );
+                //processStatus.setBackground( Color.RED );
             System.out.println( "process status error !" );
                 break;
             default:
-                processStatus.setBackground( saveColor );
+                //processStatus.setBackground( saveColor );
                 setSearchBtn( Constants.PROCESS_STATUS_SEARCH_READY, saveColor );
                 break;
             }
@@ -1626,6 +1653,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
     
     public void emptyFilesTable()
         {
+            if ( 1 == 1 ) return;
+            
         System.out.println( "entered JFileFinderWin.emptyFilesTable()" );
         filesTbl.setModel( jfilefinder.emptyFilesTableModel( countOnlyFlag ) );
         setNumFilesInTable();
@@ -1633,81 +1662,123 @@ public class JFileFinderWin extends javax.swing.JFrame {
     
     public void setColumnSizes()
         {
-        //System.out.println( "filesTbl.getRowCount() = " + filesTbl.getModel().getRowCount() + "   filesTblModel.getColumnCount()  = " + filesTbl.getModel().getColumnCount() );
-        TableColumnModel tblColModel = filesTbl.getColumnModel();
-        //System.out.println( "setColumnSizes() table col count =" + tblColModel.getColumnCount() );
-        if ( tblColModel.getColumnCount() < 2 )
+        System.out.println( "entered setColumnSizes()" );
+        try {
+            TableColumnModel tblColModel = filesTbl.getColumnModel();
+            System.out.println( "setColumnSizes() table col count =" + tblColModel.getColumnCount() );
+            if ( tblColModel.getColumnCount() < 2 )
+                {
+                return;
+                }
+            System.out.println( "showJustFilenameFlag.isSelected() =" + showJustFilenameFlag.isSelected() );
+            System.out.println( "connUserInfo.getToFilesysType() =" + connUserInfo.getToFilesysType() );
+            tblColModel.getColumn(FilesTblModel.FILESTBLMODEL_FILETYPE ).setMaxWidth( programMemory.getTblColModelWidth( programMemory.TBLCOLMODEL_WIDTH_FILETYPE ) );
+    //        tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_ISLINK ).setCellRenderer( new LinktypeCBCellRenderer() );
+            tblColModel.getColumn(FilesTblModel.FILESTBLMODEL_FILETYPE ).setCellRenderer( new EnumIconCellRenderer() );
+
+            tblColModel.getColumn(FilesTblModel.FILESTBLMODEL_FOLDERTYPE ).setMaxWidth( programMemory.getTblColModelWidth( programMemory.TBLCOLMODEL_WIDTH_FOLDERTYPE ) );
+    //        tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_ISDIR ).setCellRenderer( new FiletypeCBCellRenderer() );
+            tblColModel.getColumn(FilesTblModel.FILESTBLMODEL_FOLDERTYPE ).setCellRenderer( new EnumFolderIconCellRenderer() );
+            if ( showJustFilenameFlag.isSelected() )
+                {
+                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setPreferredWidth( programMemory.getTblColModelWidth( programMemory.TBLCOLMODEL_WIDTH_PATH_SHORT ) );
+                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setCellRenderer( new PathRenderer( connUserInfo.getToFilesysType() ) );
+                }
+            else
+                {
+                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setPreferredWidth( programMemory.getTblColModelWidth( programMemory.TBLCOLMODEL_WIDTH_PATH_LONG ) );
+                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setCellRenderer( new DefaultTableCellRenderer() );
+                }
+    //        if ( connUserInfo.isConnectedFlag() )
+    //            {
+    //            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_MODIFIEDDATE ).setCellRenderer( FormatRenderer.getSftpDateTimeRenderer() );
+    //            }
+    //        else
+    //            {
+                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_MODIFIEDDATE ).setPreferredWidth( programMemory.getTblColModelWidth( programMemory.TBLCOLMODEL_WIDTH_MODIFIEDDATE ) );
+                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_MODIFIEDDATE ).setCellRenderer( FormatRenderer.getDateTimeRenderer() );
+    //            }
+            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_SIZE ).setCellRenderer( NumberRenderer.getIntegerRenderer() );
+            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_OWNER ).setCellRenderer( new DefaultTableCellRenderer() );
+            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_GROUP ).setCellRenderer( new DefaultTableCellRenderer() );
+            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PERMS ).setCellRenderer( new DefaultTableCellRenderer() );
+            if ( ! isShowOwnerFlag() )
+                {
+                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_OWNER ).setPreferredWidth( 0 );
+                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_OWNER ).setMinWidth( 0 );
+                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_OWNER ).setMaxWidth( 0 );
+                }
+            if ( ! getShowGroupFlag() )
+                {
+                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_GROUP ).setPreferredWidth( 0 );
+                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_GROUP ).setMinWidth( 0 );
+                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_GROUP ).setMaxWidth( 0 );
+                }
+            if ( ! isShowPermsFlag() )
+                {
+                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PERMS ).setPreferredWidth( 0 );
+                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PERMS ).setMinWidth( 0 );
+                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PERMS ).setMaxWidth( 0 );
+                }
+
+            alreadySetColumnSizes = true;
+            } 
+        catch (Exception ex) 
             {
-            return;
-            }
-        System.out.println( "setColumnSizes() table col count =" + tblColModel.getColumnCount() );
-        System.out.println( "showJustFilenameFlag.isSelected() =" + showJustFilenameFlag.isSelected() );
-        tblColModel.getColumn(FilesTblModel.FILESTBLMODEL_FILETYPE ).setMaxWidth( 16 );
-//        tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_ISLINK ).setCellRenderer( new LinktypeCBCellRenderer() );
-        tblColModel.getColumn(FilesTblModel.FILESTBLMODEL_FILETYPE ).setCellRenderer( new EnumIconCellRenderer() );
-        
-        tblColModel.getColumn(FilesTblModel.FILESTBLMODEL_FOLDERTYPE ).setMaxWidth( 16 );
-//        tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_ISDIR ).setCellRenderer( new FiletypeCBCellRenderer() );
-        tblColModel.getColumn(FilesTblModel.FILESTBLMODEL_FOLDERTYPE ).setCellRenderer( new EnumFolderIconCellRenderer() );
-        if ( showJustFilenameFlag.isSelected() )
-            {
-            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setPreferredWidth( 300 );
-            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setCellRenderer( new PathRenderer( connUserInfo.getToFilesysType() ) );
-            }
-        else
-            {
-            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setPreferredWidth( 600 );
-            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setCellRenderer( new DefaultTableCellRenderer() );
-            }
-//        if ( connUserInfo.isConnectedFlag() )
-//            {
-//            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_MODIFIEDDATE ).setCellRenderer( FormatRenderer.getSftpDateTimeRenderer() );
-//            }
-//        else
-//            {
-            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_MODIFIEDDATE ).setCellRenderer( FormatRenderer.getDateTimeRenderer() );
-//            }
-        tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_SIZE ).setCellRenderer( NumberRenderer.getIntegerRenderer() );
-        tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_OWNER ).setCellRenderer( new DefaultTableCellRenderer() );
-        tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_GROUP ).setCellRenderer( new DefaultTableCellRenderer() );
-        tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PERMS ).setCellRenderer( new DefaultTableCellRenderer() );
-        if ( ! isShowOwnerFlag() )
-            {
-            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_OWNER ).setPreferredWidth( 0 );
-            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_OWNER ).setMinWidth( 0 );
-            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_OWNER ).setMaxWidth( 0 );
-            }
-        if ( ! getShowGroupFlag() )
-            {
-            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_GROUP ).setPreferredWidth( 0 );
-            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_GROUP ).setMinWidth( 0 );
-            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_GROUP ).setMaxWidth( 0 );
-            }
-        if ( ! isShowPermsFlag() )
-            {
-            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PERMS ).setPreferredWidth( 0 );
-            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PERMS ).setMinWidth( 0 );
-            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PERMS ).setMaxWidth( 0 );
+            logger.log(Level.SEVERE, null, ex);
+            System.out.println( "Error in setColumnSizes()" );
             }
         }
         
+    public int tblColModelSizeViewed( int colSize )
+        {
+        if ( ! isShowOwnerFlag() )
+            {
+            colSize--;
+            }
+        if ( ! getShowGroupFlag() )
+            {
+            colSize--;
+            }
+        if ( ! isShowPermsFlag() )
+            {
+            colSize--;
+            }
+        return colSize;
+        }
+
     public void fillInFilesTable( FilesTblModel filesTblModel )
         {
         System.out.println( "entered JFileFinderWin.fillInFilesTable()" );
-        
-        if ( filesTblModel != null )
+        if ( filesTbl.getRowSorter() != null )
             {
-            filesTbl.getSelectionModel().clearSelection();
-            filesTbl.setModel( filesTblModel );
+            sortKeysSaved = (List<RowSorter.SortKey>) filesTbl.getRowSorter().getSortKeys();
+            }
+
+        filesTbl.getSelectionModel().clearSelection();
+        if ( filesTblModel == null )
+            {
+            filesTblModel = jfilefinder.getFilesTableModel();
+            }
+
+        //System.out.println( "filesTblModel.getColumnCount() =" + filesTblModel.getColumnCount() + "   tblColModelSizeLast = " + tblColModelSizeLast );
+        //System.out.println( "tblColModelSizeViewed( filesTblModel.getColumnCount() ) =" + tblColModelSizeViewed( filesTblModel.getColumnCount() ) + "   tblColModelSizeLast = " + tblColModelSizeLast );
+        if ( tblColModelSizeViewed( filesTblModel.getColumnCount() ) != tblColModelSizeLast 
+                || ! alreadySetColumnSizes )
+            {
+            filesTbl.setAutoCreateColumnsFromModel(true);
+            tblColModelSizeLast = tblColModelSizeViewed( filesTblModel.getColumnCount() );
             }
         else
             {
-            filesTbl.getSelectionModel().clearSelection();
-            filesTbl.setModel( jfilefinder.getFilesTableModel() );
+            filesTbl.setAutoCreateColumnsFromModel( false );
             }
         
+        filesTbl.setModel( filesTblModel );
+        
         System.out.println( "resultsData.getFilesMatched() =" + resultsData.getFilesMatched() );
-        if ( resultsData.getFilesMatched() > 0 || resultsData.getFoldersMatched() > 0 )  // if we found files
+        if ( filesTbl.getAutoCreateColumnsFromModel() && 
+                ( resultsData.getFilesMatched() > 0 || resultsData.getFoldersMatched() > 0 ) )  // if we found files
             {
             setColumnSizes();
             }
@@ -1728,6 +1799,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
         // set up sorting
         TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>( filesTbl.getModel() );
         sorter.setSortsOnUpdates( false );
+
         //TableSorter<TableModel> sorter = new TableSorter<TableModel>( filesTblModel );
         filesTbl.setRowSorter( sorter );
         
@@ -1735,10 +1807,17 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
         if ( filesTbl.getModel().getColumnCount() > 1 )
             {
-            List <RowSorter.SortKey> sortKeys = new ArrayList<RowSorter.SortKey>();
-            sortKeys.add( new RowSorter.SortKey( FilesTblModel.FILESTBLMODEL_FOLDERTYPE, SortOrder.DESCENDING ) );
-            sortKeys.add( new RowSorter.SortKey( FilesTblModel.FILESTBLMODEL_PATH, SortOrder.ASCENDING ) );
-            sorter.setSortKeys( sortKeys );
+            if ( sortKeysSaved == null )
+                {
+                sortKeysSaved = new ArrayList<RowSorter.SortKey>();
+                sortKeysSaved.add( new RowSorter.SortKey( FilesTblModel.FILESTBLMODEL_FOLDERTYPE, SortOrder.DESCENDING ) );
+                sortKeysSaved.add( new RowSorter.SortKey( FilesTblModel.FILESTBLMODEL_PATH, SortOrder.ASCENDING ) );
+                }
+            sorter.setSortKeys( sortKeysSaved );
+        
+            //System.out.println("sortKeysSaved.size() = " + sortKeysSaved.size() );
+            RowSorterListener rowSorterListener = new MyRowSorterListener( sorter, sortKeysSaved.get(1).getColumn(), sortKeysSaved.get(1).getSortOrder() );
+            sorter.addRowSorterListener( rowSorterListener );
             }
         
         System.gc();        
@@ -2293,6 +2372,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             logsBtn = new javax.swing.JButton();
             fsTypeLbl = new javax.swing.JLabel();
             newerVersionLbl = new javax.swing.JLabel();
+            newerVersionSpLbl = new javax.swing.JLabel();
             botPanel = new javax.swing.JPanel();
 
             Copy.setText("Copy   (Ctrl-C)");
@@ -2818,16 +2898,12 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPanel5.setLayout(new java.awt.GridBagLayout());
 
             showHiddenFilesFlag.setText("Show Hidden Files");
-            showHiddenFilesFlag.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    showHiddenFilesFlagActionPerformed(evt);
-                }
-            });
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
             gridBagConstraints.insets = new java.awt.Insets(0, 5, 0, 0);
             jPanel5.add(showHiddenFilesFlag, gridBagConstraints);
 
+            showJustFilenameFlag.setSelected(true);
             showJustFilenameFlag.setText("Show Just Filename");
             showJustFilenameFlag.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -2880,6 +2956,11 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPanel5.add(showOwnerFlag, gridBagConstraints);
 
             showGroupFlag.setText("Show Group");
+            showGroupFlag.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    showGroupFlagActionPerformed(evt);
+                }
+            });
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridx = 2;
             gridBagConstraints.gridy = 1;
@@ -2888,6 +2969,11 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPanel5.add(showGroupFlag, gridBagConstraints);
 
             showPermsFlag.setText("Show Permissions");
+            showPermsFlag.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    showPermsFlagActionPerformed(evt);
+                }
+            });
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridx = 3;
             gridBagConstraints.gridy = 1;
@@ -3424,6 +3510,9 @@ public class JFileFinderWin extends javax.swing.JFrame {
                 jPanel7.setLayout(new java.awt.GridBagLayout());
 
                 searchBtn.setText("Search");
+                searchBtn.setMaximumSize(new java.awt.Dimension(120, 25));
+                searchBtn.setMinimumSize(new java.awt.Dimension(120, 25));
+                searchBtn.setPreferredSize(new java.awt.Dimension(120, 25));
                 searchBtn.addActionListener(new java.awt.event.ActionListener() {
                     public void actionPerformed(java.awt.event.ActionEvent evt) {
                         searchBtnActionPerformed(evt);
@@ -3445,13 +3534,11 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
                 filesTbl.setModel(new javax.swing.table.DefaultTableModel(
                     new Object [][] {
-                        {null, null, null, null},
-                        {null, null, null, null},
-                        {null, null, null, null},
-                        {null, null, null, null}
+                        {0, 0, "", new Date(), 0, "", "", ""}
                     },
                     new String [] {
-                        "Title 1", "Title 2", "Title 3", "Title 4"
+                        "Type", "Dir", "File", "last Modified Time", "Size", "Owner", "Group", "Perms"
+
                     }
                 ));
                 jScrollPane1.setViewportView(filesTbl);
@@ -3468,7 +3555,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
                 processStatus.setMaximumSize(new java.awt.Dimension(999, 23));
                 processStatus.setMinimumSize(new java.awt.Dimension(115, 23));
                 processStatus.setOpaque(true);
-                processStatus.setPreferredSize(new java.awt.Dimension(140, 23));
+                processStatus.setPreferredSize(new java.awt.Dimension(140, 25));
                 gridBagConstraints = new java.awt.GridBagConstraints();
                 gridBagConstraints.gridx = 0;
                 gridBagConstraints.gridy = 1;
@@ -3477,6 +3564,9 @@ public class JFileFinderWin extends javax.swing.JFrame {
                 jPanel7.add(processStatus, gridBagConstraints);
 
                 message.setText(" ");
+                message.setMaximumSize(new java.awt.Dimension(4, 25));
+                message.setMinimumSize(new java.awt.Dimension(4, 25));
+                message.setPreferredSize(new java.awt.Dimension(4, 25));
                 gridBagConstraints = new java.awt.GridBagConstraints();
                 gridBagConstraints.gridx = 2;
                 gridBagConstraints.gridy = 1;
@@ -3487,7 +3577,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
                 gridBagConstraints.insets = new java.awt.Insets(5, 5, 0, 0);
                 jPanel7.add(message, gridBagConstraints);
 
-                numFilesInTable.setText(" ");
+                numFilesInTable.setText("fffffffff");
                 numFilesInTable.setMaximumSize(new java.awt.Dimension(100, 26));
                 numFilesInTable.setMinimumSize(new java.awt.Dimension(100, 26));
                 numFilesInTable.setPreferredSize(new java.awt.Dimension(100, 26));
@@ -3495,6 +3585,9 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
                 upFolder.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/yellow/Folder-Upload-icon-16.png"))); // NOI18N
                 upFolder.setText("Up");
+                upFolder.setMaximumSize(new java.awt.Dimension(73, 25));
+                upFolder.setMinimumSize(new java.awt.Dimension(73, 25));
+                upFolder.setPreferredSize(new java.awt.Dimension(73, 25));
                 upFolder.addActionListener(new java.awt.event.ActionListener() {
                     public void actionPerformed(java.awt.event.ActionEvent evt) {
                         upFolderActionPerformed(evt);
@@ -3534,7 +3627,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
                 jPanel7.add(logsBtn, gridBagConstraints);
 
                 fsTypeLbl.setText("       ");
-                fsTypeLbl.setMaximumSize(new java.awt.Dimension(30, 23));
+                fsTypeLbl.setMaximumSize(new java.awt.Dimension(70, 23));
                 fsTypeLbl.setMinimumSize(new java.awt.Dimension(70, 23));
                 fsTypeLbl.setPreferredSize(new java.awt.Dimension(70, 23));
                 gridBagConstraints = new java.awt.GridBagConstraints();
@@ -3542,12 +3635,17 @@ public class JFileFinderWin extends javax.swing.JFrame {
                 gridBagConstraints.gridy = 0;
                 jPanel7.add(fsTypeLbl, gridBagConstraints);
 
-                newerVersionLbl.setText(" ");
-                newerVersionLbl.setMaximumSize(new java.awt.Dimension(120, 23));
+                newerVersionLbl.setMaximumSize(new java.awt.Dimension(200, 23));
                 gridBagConstraints = new java.awt.GridBagConstraints();
                 gridBagConstraints.gridx = 14;
                 gridBagConstraints.gridy = 0;
                 jPanel7.add(newerVersionLbl, gridBagConstraints);
+
+                newerVersionSpLbl.setMaximumSize(new java.awt.Dimension(150, 23));
+                gridBagConstraints = new java.awt.GridBagConstraints();
+                gridBagConstraints.gridx = 15;
+                gridBagConstraints.gridy = 0;
+                jPanel7.add(newerVersionSpLbl, gridBagConstraints);
 
                 jSplitPane1.setRightComponent(jPanel7);
 
@@ -3745,6 +3843,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
     }                                        
 
     private void fileMgrModeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fileMgrModeActionPerformed
+        alreadySetColumnSizes = false;
         if ( fileMgrMode.isSelected() )
             {
             fileMgrMode.setText( "File Mgr Mode" );
@@ -4003,7 +4102,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
     }                                      
 
     private void showJustFilenameFlagActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_showJustFilenameFlagActionPerformed
-        // TODO add your handling code here:
+        alreadySetColumnSizes = false;
     }//GEN-LAST:event_showJustFilenameFlagActionPerformed
 
     private void CutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CutActionPerformed
@@ -4271,6 +4370,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
         connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", getRmtAskHttpsPort() );
         connUserInfo.setTo( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", getRmtAskHttpsPort() );
         calcFilesysType();  // also sets in connUserInfo
+    
+        setColumnSizes();    
     }//GEN-LAST:event_formWindowOpened
 
     private void startCmdWin1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startCmdWin1ActionPerformed
@@ -4376,6 +4477,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
     }//GEN-LAST:event_stopFolderCountActionPerformed
 
     private void showOwnerFlagActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_showOwnerFlagActionPerformed
+        alreadySetColumnSizes = false;
         if ( isShowOwnerFlag() )
             {
             showGroupFlag.setSelected( true );
@@ -4671,10 +4773,6 @@ public class JFileFinderWin extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_rmtUserActionPerformed
 
-    private void showHiddenFilesFlagActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_showHiddenFilesFlagActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_showHiddenFilesFlagActionPerformed
-
     private void openCodeWin1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openCodeWin1ActionPerformed
         filesTbl.requestFocus();
         openCodeWinActionPerformed( null );
@@ -4761,6 +4859,14 @@ public class JFileFinderWin extends javax.swing.JFrame {
     private void NewFile1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NewFile1ActionPerformed
         NewFileActionPerformed( evt );
     }//GEN-LAST:event_NewFile1ActionPerformed
+
+    private void showGroupFlagActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_showGroupFlagActionPerformed
+        alreadySetColumnSizes = false;
+    }//GEN-LAST:event_showGroupFlagActionPerformed
+
+    private void showPermsFlagActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_showPermsFlagActionPerformed
+        alreadySetColumnSizes = false;
+    }//GEN-LAST:event_showPermsFlagActionPerformed
 
     /**
      * @param args the command line arguments
@@ -5035,6 +5141,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
     private javax.swing.JTextField myEditorCmd;
     private javax.swing.JLabel myEditorLbl;
     private javax.swing.JLabel newerVersionLbl;
+    private javax.swing.JLabel newerVersionSpLbl;
     private javax.swing.JLabel numFilesInTable;
     private javax.swing.JMenuItem openCodeWin;
     private javax.swing.JMenuItem openCodeWin1;
@@ -5093,4 +5200,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
     private javax.swing.JRadioButton useRegexPattern;
     private javax.swing.JLabel webSiteLink;
     // End of variables declaration//GEN-END:variables
+
+    public JTable getFilesTbl() {
+        return filesTbl;
+    }
 }

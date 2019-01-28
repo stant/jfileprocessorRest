@@ -8,6 +8,8 @@ package com.towianski.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.towianski.jfileprocessor.JFileFinderWin;
+import java.util.HashMap;
+import javax.swing.table.TableColumnModel;
 
 /**
  *
@@ -23,10 +25,30 @@ public class ProgramMemory {
     String startConsoleCmd = "";
     String myEditorCmd = "";
     String checkForUpdateDate = "";   // value is only here, which is better
+        public static int TBLCOLMODEL_WIDTH_FILETYPE = 0;
+        public static int TBLCOLMODEL_WIDTH_FOLDERTYPE = 1;
+        public static int TBLCOLMODEL_WIDTH_PATH_SHORT = 2;
+        public static int TBLCOLMODEL_WIDTH_PATH_LONG = 2;
+        public static int TBLCOLMODEL_WIDTH_MODIFIEDDATE = 3;
+        public static int TBLCOLMODEL_WIDTH_SIZE = 4;
+        public static int TBLCOLMODEL_WIDTH_OWNER = 5;
+        public static int TBLCOLMODEL_WIDTH_GROUP = 6;
+        public static int TBLCOLMODEL_WIDTH_PERMS = 7;
+    HashMap<Integer,Integer> tblColModelWidths = new HashMap<Integer,Integer>();
     
     public ProgramMemory()
         {
         System.out.println( "ProgramMemory constructor()" );
+            
+        setTblColModelWidth( TBLCOLMODEL_WIDTH_FILETYPE, 16 );
+        setTblColModelWidth( TBLCOLMODEL_WIDTH_FOLDERTYPE, 16 );
+        setTblColModelWidth( TBLCOLMODEL_WIDTH_PATH_SHORT, 300 );
+        setTblColModelWidth( TBLCOLMODEL_WIDTH_PATH_LONG, 600 );
+        setTblColModelWidth( TBLCOLMODEL_WIDTH_MODIFIEDDATE, 95 );
+        setTblColModelWidth( TBLCOLMODEL_WIDTH_SIZE, 73 );
+        setTblColModelWidth( TBLCOLMODEL_WIDTH_OWNER, 73 );
+        setTblColModelWidth( TBLCOLMODEL_WIDTH_GROUP, 73 );
+        setTblColModelWidth( TBLCOLMODEL_WIDTH_PERMS, 73 );
         }
     
     @JsonIgnore
@@ -125,6 +147,17 @@ public class ProgramMemory {
             this.showPermsFlag = jFileFinderWin.isShowPermsFlag();
             this.startConsoleCmd = jFileFinderWin.getStartConsoleCmd();
             this.myEditorCmd = jFileFinderWin.getMyEditorCmd();
+            
+            TableColumnModel tblColModel = jFileFinderWin.getFilesTbl().getColumnModel();
+            setTblColModelWidth( TBLCOLMODEL_WIDTH_FILETYPE, tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_FILETYPE ).getWidth() );
+            setTblColModelWidth( TBLCOLMODEL_WIDTH_FOLDERTYPE, tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_FOLDERTYPE ).getWidth() );
+            setTblColModelWidth( TBLCOLMODEL_WIDTH_PATH_SHORT, tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).getWidth() );
+            setTblColModelWidth( TBLCOLMODEL_WIDTH_PATH_LONG, tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).getWidth() );
+            setTblColModelWidth( TBLCOLMODEL_WIDTH_MODIFIEDDATE, tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_MODIFIEDDATE ).getWidth() );
+            setTblColModelWidth( TBLCOLMODEL_WIDTH_SIZE, tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_SIZE ).getWidth() );
+            setTblColModelWidth( TBLCOLMODEL_WIDTH_OWNER, tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_OWNER ).getWidth() );
+            setTblColModelWidth( TBLCOLMODEL_WIDTH_GROUP, tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_GROUP ).getWidth() );
+            setTblColModelWidth( TBLCOLMODEL_WIDTH_PERMS, tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PERMS ).getWidth() );
             }
         catch( Exception exc )
             {
@@ -133,6 +166,28 @@ public class ProgramMemory {
         System.out.println( "ProgramMemory showHiddenFilesFlag =" + showHiddenFilesFlag );
         System.out.println( "ProgramMemory showOwnerFlag =" + showOwnerFlag );
         }
+
+        public HashMap<Integer,Integer> getTblColModelWidths()
+            {
+            return this.tblColModelWidths;
+            }
+
+        void setTblColModelWidths( HashMap<Integer,Integer> tblColModelWidths )
+            {
+            this.tblColModelWidths = tblColModelWidths;
+            }
+
+        @JsonIgnore
+        public int getTblColModelWidth( int i )
+            {
+            return this.tblColModelWidths.get( i );
+            }
+
+        @JsonIgnore
+        void setTblColModelWidth( int i, int value )
+            {
+            this.tblColModelWidths.put( i, value );
+            }
 
 }
 

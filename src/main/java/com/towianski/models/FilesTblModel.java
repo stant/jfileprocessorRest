@@ -39,7 +39,7 @@ public class FilesTblModel extends AbstractTableModel
     public static int FILESTBLMODEL_GROUP = 6;
     public static int FILESTBLMODEL_PERMS = 7;
     private HashMap<String,Boolean> editableCells = new HashMap<String,Boolean>(); // 2d array to represent rows and columns
-        
+
 //    public PreviewImportTblModel( ArrayList<String> colNamesArg, String[][] dataArg )
 //        {
 //        colNames = colNamesArg;
@@ -140,7 +140,10 @@ public class FilesTblModel extends AbstractTableModel
             if ( row < data.size() && col < data.get( row ).size() )
                 {
                 if ( col == FILESTBLMODEL_MODIFIEDDATE )
-                    data.get( row ).set( col, (Date) aValue );
+                    if ( aValue == null )
+                        data.get( row ).set( col, new Date() );
+                    else
+                        data.get( row ).set( col, (Date) aValue );
                 else if ( col == FILESTBLMODEL_SIZE )
                     data.get( row ).set( col, (Long) aValue );
                 else if ( col == FILESTBLMODEL_FOLDERTYPE )
@@ -153,6 +156,7 @@ public class FilesTblModel extends AbstractTableModel
             } 
         catch( Exception ex )
             {
+            System.out.println( "setValueAt  Exception for value =" + aValue + "=  row =" + row + "  col =" + col );
             ex.printStackTrace();
             }
         //refresh();   NOTE:  DOING THIS CAUSED IT TO DROP A WHOLE COLUMN ! !

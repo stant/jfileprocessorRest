@@ -7,6 +7,7 @@ package com.towianski.renderers;
 
 import java.text.Format;
 import java.text.DateFormat;
+import java.util.Date;
 import javax.swing.table.DefaultTableCellRenderer;
 
 /*
@@ -20,23 +21,35 @@ public class FormatRenderer extends DefaultTableCellRenderer
      *   Use the specified formatter to format the Object
      */
     public FormatRenderer(Format formatter)
-    {
+        {
+        //System.out.println( "entered FormatRenderer() set formatter" );
         this.formatter = formatter;
-    }
+        }
 
     public void setValue(Object value)
-    {
+        {
         //  Format the Object before setting its value in the renderer
 
         try
             {
-            if (value != null)
+            //System.out.println( "entered FormatRenderer() setValue()" );
+            if ( value instanceof Date )
+                {
+                if ( value != null )
                     value = formatter.format(value);
+                else
+                    value = formatter.format( new Date() ); //(Date)value);
+                }
+            else
+                {
+                value = formatter.format(value);
+                }
             }
-        catch(IllegalArgumentException e) {}
+        catch(IllegalArgumentException e) { System.out.println( "FormatRenderer() setValue() caught error." ); }
+        catch(Exception e) { System.out.println( "FormatRenderer() setValue() caught error." ); }
 
         super.setValue(value);
-    }
+        }
 
     /*
      *  Use the default date/time formatter for the default locale

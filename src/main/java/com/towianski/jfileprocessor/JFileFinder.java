@@ -20,7 +20,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.DosFileAttributes;
-import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFileAttributes;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.text.SimpleDateFormat;
@@ -120,8 +119,10 @@ public class JFileFinder //  implements Runnable
 
             if ( PathsInfoList.size() < 1 )
                 {
-                HeaderList.add( " " );
+//                HeaderList.add( " " );
                 ArrayList<Object> newRow = new ArrayList<Object>();
+                    newRow.add( "" );
+                    newRow.add( "" );
 //                newRow.add( false );
 //                newRow.add( true );
                 if ( noAccessFolder.size() > 0 )
@@ -133,12 +134,17 @@ public class JFileFinder //  implements Runnable
                     {
                     newRow.add( "No Files Found" );
                     }
+                    newRow.add( "" );
+                    newRow.add( "" );
+                    newRow.add( "" );
+                    newRow.add( "" );
+                    newRow.add( "" );
 //                newRow.add( Calendar.getInstance().getTime() );
 //                newRow.add( (long) 0 );
                 PathsInfoList.add( newRow );
                 }
-            else
-                {
+  //          else
+  //              {
                 HeaderList.add( "Type" );
                 HeaderList.add( "Dir" );
                 HeaderList.add( "File" );
@@ -156,7 +162,7 @@ public class JFileFinder //  implements Runnable
                     {
                     HeaderList.add( "Perms" );
                     }
-                }
+//                }
 
             FilesTblModel filesTblModel = new FilesTblModel( HeaderList, PathsInfoList );
             resultsData.setFilesTblModel(filesTblModel);
@@ -213,12 +219,12 @@ public class JFileFinder //  implements Runnable
 
 //                    if ( jFileFinderWin.isShowOwnerFlag() )
                     {
-                    rowList.add( fsattr.owner() );
+                    rowList.add( fsattr.owner().toString() );
 //                    System.out.println( "JFIleFinder set owner =" + fsattr.owner() + "=" );
                     }
 //                    if ( jFileFinderWin.isShowGroupFlag() )
                     {
-                    rowList.add( fsattr.group() );
+                    rowList.add( fsattr.group().toString() );
                     }
 //                    if ( jFileFinderWin.isShowPermsFlag() )
                     {
@@ -312,7 +318,7 @@ public class JFileFinder //  implements Runnable
 //                    if ( jFileFinderWin.isShowOwnerFlag() )
                         {
                         try {
-                            rowList.add( Files.getOwner( fpath ) );
+                            rowList.add( Files.getOwner( fpath ).toString() );
                             } 
                         catch (Exception ex) 
                             {
