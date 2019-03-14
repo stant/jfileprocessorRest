@@ -1807,11 +1807,19 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
         if ( filesTbl.getModel().getColumnCount() > 1 )
             {
-            if ( sortKeysSaved == null )
+            if ( sortKeysSaved == null || sortKeysSaved.size() < 1)
                 {
                 sortKeysSaved = new ArrayList<RowSorter.SortKey>();
                 sortKeysSaved.add( new RowSorter.SortKey( FilesTblModel.FILESTBLMODEL_FOLDERTYPE, SortOrder.DESCENDING ) );
                 sortKeysSaved.add( new RowSorter.SortKey( FilesTblModel.FILESTBLMODEL_PATH, SortOrder.ASCENDING ) );
+                }
+            else if ( sortKeysSaved.size() < 2 )
+                {
+                //System.out.println("sortKeysSaved.size() = " + sortKeysSaved.size() );
+                RowSorter.SortKey rsk = sortKeysSaved.get( 0 );
+                sortKeysSaved = new ArrayList<RowSorter.SortKey>();
+                sortKeysSaved.add( new RowSorter.SortKey( FilesTblModel.FILESTBLMODEL_FOLDERTYPE, SortOrder.DESCENDING ) );
+                sortKeysSaved.add( rsk );
                 }
             sorter.setSortKeys( sortKeysSaved );
         

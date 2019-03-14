@@ -51,12 +51,25 @@ public class ProcessInThread {
                 File.separator + "bin" +
                 File.separator + "java";
         String classpath = System.getProperty("java.class.path");
+        String[] runJarList = classpath.split( System.getProperty( "path.separator" ) );
+        //System.out.println( "classpath = " + classpath + "=" );
+        //System.out.println( "runJarList = " + runJarList );
+        String runJar = null;
+        for ( String tmp : runJarList )
+            {
+            //System.out.println( "runJar tmp = " + tmp + "=" );
+            if ( tmp.indexOf( "JFileProcessor" ) >= 0 )
+                {   
+                runJar = tmp;
+                break;
+                }
+            }
 //        String className = klass.getCanonicalName();
         String className = "com.towianski.boot.StartApp";
         
 //        String[] runArgs = { javaBin, "-cp", classpath, className };
-        String[] runPosixArgs = { javaBin, "-Dserver.port=" + System.getProperty( "server.port", "8443" ), "-jar", classpath };
-        String[] runWinArgs = { "powershell.exe", "Start-Process", "-FilePath", "\"" + javaBin + "-Dserver.port=" + System.getProperty( "server.port", "8443" ) + "-jar" + classpath + "\"", "-Wait" };
+        String[] runPosixArgs = { javaBin, "-Dserver.port=" + System.getProperty( "server.port", "8443" ), "-cp", classpath, "org.springframework.boot.loader.JarLauncher" };
+        String[] runWinArgs = { "powershell.exe", "Start-Process", "-FilePath", "\"" + javaBin + "-Dserver.port=" + System.getProperty( "server.port", "8443" ) + "-cp" + classpath + "org.springframework.boot.loader.JarLauncher" + "\"", "-Wait" };
 
 //        String[] runArgs = System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) ? runWinArgs : runPosixArgs;
         String[] runArgs = runPosixArgs;

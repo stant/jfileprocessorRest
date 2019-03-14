@@ -6,20 +6,18 @@ buildscript {
         maven { url "https://plugins.gradle.org/m2" }
     }
     dependencies {
-      classpath("org.springframework.boot:spring-boot-gradle-plugin:2.0.3.RELEASE")
-	classpath "gradle.plugin.com.dorongold.plugins:task-tree:1.3"
+      classpath("org.springframework.boot:spring-boot-gradle-plugin:2.1.3.RELEASE")
+	//classpath "gradle.plugin.com.dorongold.plugins:task-tree:1.3"
         }
 }
 
 group 'com.towianski'
-version '1.7'
-
-// tried using boot 2.0.4 but it causes some ssl keystore problem
+version '1.8.1'
 
 apply plugin: 'java'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'application'
-apply plugin: com.dorongold.gradle.tasktree.TaskTreePlugin
+//apply plugin: com.dorongold.gradle.tasktree.TaskTreePlugin
 
 mainClassName = 'com.towianski.boot.StartApp'
 
@@ -44,6 +42,14 @@ task copy(type: Copy) {
         }
         destinationDir file( '../../programs/jfp' )
         destinationDir.mkdirs()
+}
+
+task copyLib(type: Copy) {
+        //from("/net2/github/JfpLib/dist") {
+        from("${projectDir}/../JfpLib/dist") {
+            include "JfpLib.jar" 
+        }
+        destinationDir file( '../../programs/jfp' )
 }
 
 task packageDistribution(type: Zip) {
@@ -142,7 +148,8 @@ task generateRunScriptPosix {
 # Another option that works for me lately. I think this can unfortunately only be whole numbers
 # java -Dsun.java2d.uiScale=2 -jar ${rootProject.name}-${version}.jar
 
-java -jar ${rootProject.name}-${version}.jar
+# java -jar ${rootProject.name}-${version}.jar
+java -cp "*" org.springframework.boot.loader.JarLauncher
 """
         }
 }
@@ -163,7 +170,8 @@ task generateRunScript2Posix {
 export JAVA_HOME=/net2/programs/jdk-11;
 export PATH=\$JAVA_HOME/bin:\$PATH;
 
-java -Dsun.java2d.uiScale=2 -jar ${rootProject.name}-${version}.jar
+# java -Dsun.java2d.uiScale=2 -jar ${rootProject.name}-${version}.jar
+java  -Dsun.java2d.uiScale=2 -cp "*" org.springframework.boot.loader.JarLauncher
 """
         }
 }
@@ -181,7 +189,9 @@ rem it will work normal in Java 10
 rem set JAVA_HOME=F:\\programs\\Java\\jdk10
 rem set PATH=%JAVA_HOME%\\bin;%PATH%
 
-start \"\" javaw -jar ${rootProject.name}-${version}.jar
+rem start \"\" javaw -jar ${rootProject.name}-${version}.jar
+
+start \"\" javaw -cp \"*\" org.springframework.boot.loader.JarLauncher
 """
         }
 }
@@ -199,7 +209,9 @@ rem it will work normal in Java 10
 set JAVA_HOME=F:\\programs\\Java\\jdk10
 set PATH=%JAVA_HOME%\\bin;%PATH%
 
-start \"\" javaw -Dsun.java2d.uiScale=2 -jar ${rootProject.name}-${version}.jar
+rem start \"\" javaw -Dsun.java2d.uiScale=2 -jar ${rootProject.name}-${version}.jar
+        
+start \"\" javaw -Dsun.java2d.uiScale=2 -cp \"*\" org.springframework.boot.loader.JarLauncher
 """
         }
 }
@@ -219,7 +231,7 @@ packageDistribution.dependsOn generateRunScriptPosix,generateRunScript2Posix,gen
 
 //generateRunScriptWindows.dependsOn generateRunScriptPosix
 
-packageDistribution.dependsOn copy
+packageDistribution.dependsOn copy,copyLib
 
 distZip.dependsOn packageDistribution
 
@@ -240,16 +252,16 @@ repositories {
 }
 
 dependencies {
-    compile("org.springframework.boot:spring-boot-starter:2.0.3.RELEASE")
-    compile("org.springframework.boot:spring-boot-starter-web:2.0.3.RELEASE")
-    compile("org.springframework.boot:spring-boot-starter-security:2.0.3.RELEASE")
+    compile("org.springframework.boot:spring-boot-starter:2.1.3.RELEASE")
+    compile("org.springframework.boot:spring-boot-starter-web:2.1.3.RELEASE")
+    compile("org.springframework.boot:spring-boot-starter-security:2.1.3.RELEASE")
 //    compile group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: '2.0.0.RELEASE'
-    compile("org.springframework:spring-web:5.0.4.RELEASE")
-    compile 'org.apache.httpcomponents:httpclient:4.5.5'
-    compile("com.fasterxml.jackson.core:jackson-databind:2.9.4")
-    compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.13'
+//    compile("org.springframework:spring-web:5.0.4.RELEASE")
+    compile 'org.apache.httpcomponents:httpclient:4.5.7'
+//    compile("com.fasterxml.jackson.core:jackson-databind:2.9.4")
+    compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.6'
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.jcraft:jsch:0.1.54'
+    compile 'com.jcraft:jsch:0.1.55'
 //    compile 'org.slf4j:slf4j-api:1.7.25'
 //    compile 'org.slf4j:slf4j-simple:1.7.25'
     testCompile group: 'junit', name: 'junit', version: '4.12'

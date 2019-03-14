@@ -96,7 +96,7 @@ public class FillTableModelSwingWorker extends SwingWorker<ResultsData, Object> 
                 {
                 why = e.getMessage();
                 }
-            System.out.println("Error FillTableModelSwingWorker() retrieving file: " + why);
+            System.out.println("Error FillTableModelSwingWorker() retrieving file. cause: " + why);
             e.printStackTrace();
             }
         }    
