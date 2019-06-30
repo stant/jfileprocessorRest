@@ -32,7 +32,8 @@ class Test {
         int numItems = defaultComboBoxModel.getSize();
         System.out.println( "defaultComboBoxModel.getSize() num of items =" + numItems + "=" );
         
-        RenameFiles renameFiles = new windows.RenameFiles();
+        windows.RenameFiles renameFiles = new windows.RenameFiles();
+        renameFiles.setVisible(true);
         System.out.println( "renameFiles.getFindText() =" + renameFiles.getFindText() + "=" );
         System.out.println( "renameFiles.getReplaceText() =" + renameFiles.getReplaceText() + "=" );
         if ( ! renameFiles.getContinueFlag() )

@@ -6,18 +6,24 @@ buildscript {
         maven { url "https://plugins.gradle.org/m2" }
     }
     dependencies {
-      classpath("org.springframework.boot:spring-boot-gradle-plugin:2.1.3.RELEASE")
+      classpath("org.springframework.boot:spring-boot-gradle-plugin:2.1.6.RELEASE")
 	//classpath "gradle.plugin.com.dorongold.plugins:task-tree:1.3"
         }
 }
 
-group 'com.towianski'
-version '1.8.1'
+plugins {
+   id 'org.springframework.boot' version '2.1.6.RELEASE'
+}
+
 
 apply plugin: 'java'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'application'
+apply plugin: 'war'
 //apply plugin: com.dorongold.gradle.tasktree.TaskTreePlugin
+
+group 'com.towianski'
+version '1.8.5'
 
 mainClassName = 'com.towianski.boot.StartApp'
 
@@ -34,6 +40,7 @@ task cleanPackageFolder(type: Delete) {
 
 task copy(type: Copy) {
         from jar // here it automatically reads jar file produced from jar task
+        from war // here it automatically reads war file produced from war task
         from("${projectDir}") {
             include "groovy/**" 
             include "menu-scripts/**" 
@@ -68,6 +75,10 @@ bootJar {
 //    executable = 'true'
 }
 
+bootWar {
+        mainClassName = 'com.towianski.boot.StartApp'
+}
+
 sourceCompatibility = 1.8
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
@@ -87,7 +98,7 @@ sourceCompatibility = 1.8
 task runApp(type: JavaExec) {
   classpath = sourceSets.main.runtimeClasspath
 
-  main = 'com.towianski.boot.StartApp'
+main = 'com.towianski.boot.StartApp'
 //  main = 'testit.TomcatApp'
 
   // arguments to pass to the application
@@ -123,6 +134,10 @@ public class JFileProcessorVersion {
     public static String getName() {
             return "$project.name";
     }
+\n\
+    public static String getFileName() {
+            return "$project.name" + "-" + "$project.version" + ".war";
+    }
 }
 """
 	}
@@ -148,8 +163,8 @@ task generateRunScriptPosix {
 # Another option that works for me lately. I think this can unfortunately only be whole numbers
 # java -Dsun.java2d.uiScale=2 -jar ${rootProject.name}-${version}.jar
 
-# java -jar ${rootProject.name}-${version}.jar
-java -cp "*" org.springframework.boot.loader.JarLauncher
+java -jar ${rootProject.name}-${version}.war
+# java -cp "*" org.springframework.boot.loader.JarLauncher
 """
         }
 }
@@ -170,8 +185,8 @@ task generateRunScript2Posix {
 export JAVA_HOME=/net2/programs/jdk-11;
 export PATH=\$JAVA_HOME/bin:\$PATH;
 
-# java -Dsun.java2d.uiScale=2 -jar ${rootProject.name}-${version}.jar
-java  -Dsun.java2d.uiScale=2 -cp "*" org.springframework.boot.loader.JarLauncher
+java -Dsun.java2d.uiScale=2 -jar ${rootProject.name}-${version}.war
+# java  -Dsun.java2d.uiScale=2 -cp "*" org.springframework.boot.loader.JarLauncher
 """
         }
 }
@@ -189,9 +204,9 @@ rem it will work normal in Java 10
 rem set JAVA_HOME=F:\\programs\\Java\\jdk10
 rem set PATH=%JAVA_HOME%\\bin;%PATH%
 
-rem start \"\" javaw -jar ${rootProject.name}-${version}.jar
+start \"\" javaw -jar ${rootProject.name}-${version}.war
 
-start \"\" javaw -cp \"*\" org.springframework.boot.loader.JarLauncher
+rem start \"\" javaw -cp \"*\" org.springframework.boot.loader.JarLauncher
 """
         }
 }
@@ -209,9 +224,9 @@ rem it will work normal in Java 10
 set JAVA_HOME=F:\\programs\\Java\\jdk10
 set PATH=%JAVA_HOME%\\bin;%PATH%
 
-rem start \"\" javaw -Dsun.java2d.uiScale=2 -jar ${rootProject.name}-${version}.jar
+start \"\" javaw -Dsun.java2d.uiScale=2 -jar ${rootProject.name}-${version}.war
         
-start \"\" javaw -Dsun.java2d.uiScale=2 -cp \"*\" org.springframework.boot.loader.JarLauncher
+rem start \"\" javaw -Dsun.java2d.uiScale=2 -cp \"*\" org.springframework.boot.loader.JarLauncher
 """
         }
 }
@@ -252,11 +267,28 @@ repositories {
 }
 
 dependencies {
-    compile("org.springframework.boot:spring-boot-starter:2.1.3.RELEASE")
-    compile("org.springframework.boot:spring-boot-starter-web:2.1.3.RELEASE")
-    compile("org.springframework.boot:spring-boot-starter-security:2.1.3.RELEASE")
+    compile("org.springframework.boot:spring-boot-starter:2.1.6.RELEASE")
+//    compile("org.springframework:spring-context:5.1.8.RELEASE")
+    compile("org.springframework.boot:spring-boot-starter-web:2.1.6.RELEASE") 
+    compile("org.springframework.boot:spring-boot-starter-actuator:2.1.6.RELEASE") 
+    compile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '9.0.21'
+////{
+//    exclude module: "spring-boot-starter-tomcat"
+//    exclude group: 'org.apache.tomcat'
+//}
+//    providedCompile 'org.springframework.boot:spring-boot-starter-tomcat:2.1.6.RELEASE'    
+//    providedCompile group: 'org.springframework.boot', name: 'spring-boot-loader', version: '2.1.6.RELEASE'
+//    compile("org.springframework:spring-core:5.1.8.RELEASE")
+    
+//    compile("com.fasterxml.jackson.core:jackson-databind:2.9.9")
+//    compile("org.springframework:spring-web:5.1.8.RELEASE")
+//    compile("org.springframework:spring-webmvc:5.1.8.RELEASE")
+    
+    compile("org.springframework.boot:spring-boot-starter-security:2.1.6.RELEASE")
 //    compile group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: '2.0.0.RELEASE'
 //    compile("org.springframework:spring-web:5.0.4.RELEASE")
+
+    
     compile 'org.apache.httpcomponents:httpclient:4.5.7'
 //    compile("com.fasterxml.jackson.core:jackson-databind:2.9.4")
     compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.6'
@@ -264,6 +296,9 @@ dependencies {
     compile 'com.jcraft:jsch:0.1.55'
 //    compile 'org.slf4j:slf4j-api:1.7.25'
 //    compile 'org.slf4j:slf4j-simple:1.7.25'
+
+// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-loader
+    
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
 //    compile( "com.fasterxml.jackson.core:jackson-databind:2.9.4")
@@ -275,3 +310,24 @@ dependencies {
 //    testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
+
+war {
+    enabled = false
+//    classifier = 'boot'
+    manifest {
+    attributes(
+        'Start-Class': 'com.towianski.boot.StartApp',
+        'Spring-Boot-Classes': 'WEB-INF/classes/',
+        'Spring-Boot-Lib': 'WEB-INF/lib/',
+        'Spring-Boot-Version': '2.1.6.RELEASE',
+        'Main-Class': 'org.springframework.boot.loader.WarLauncher'
+//        'Main-Class': 'org.springframework.boot.loader.PropertiesLauncher'
+//        'Class-Path': configurations.runtimeClasspath.files.collect { it.getName() }.join(' ')
+    )
+    }
+//        'Class-Path': '*'
+
+}
+
+//        'Main-Class': 'com.towianski.boot.StartApp'
+//      'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
