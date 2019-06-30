@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.towianski.models.ProgramMemory;
 import com.towianski.models.ResultsData;
-import static com.towianski.utils.DesktopUtils.getJfpHome;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,6 +25,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
+import static com.towianski.utils.DesktopUtils.getJfpConfigHome;
 
 public class Rest {
 
@@ -34,7 +34,7 @@ public class Rest {
     static File programMemoryFile = null;
 
     static {
-        programMemoryFile = getJfpHome( "ProgramMemory.json", "file" );
+        programMemoryFile = getJfpConfigHome( "ProgramMemory.json", "file" );
         }
 
 //    @Override
@@ -55,7 +55,7 @@ public class Rest {
 
         try {
 //            File fromFile = new File( System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + fileName );
-            File fromFile = getJfpHome( fileName, "file" );
+            File fromFile = getJfpConfigHome( fileName, "file" );
             if ( ! fromFile.exists() )
                 {
                 System.out.println( "REST.readObjectFromFile() read file =" + fromFile.toString() + " does not exist." );
@@ -115,7 +115,7 @@ public class Rest {
 
             //writing to console, can write to any output stream such as file
 //            toFile = new File( System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + fileName );
-            toFile = getJfpHome( fileName, "file" );
+            toFile = getJfpConfigHome( fileName, "file" );
 
     //        StringWriter stringEmp = new StringWriter();
             objectMapper.writeValue( toFile, obj );
@@ -129,7 +129,7 @@ public class Rest {
         {
         //writing to console, can write to any output stream such as file
         try {
-            File toFile = getJfpHome( fileName, "file" );
+            File toFile = getJfpConfigHome( fileName, "file" );
             PrintWriter out = new PrintWriter( toFile );
 
             out.println( outs );

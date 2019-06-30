@@ -5,6 +5,7 @@
  */
 package com.towianski.jfileprocess.actions;
 
+import com.towianski.utils.DesktopUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -51,12 +52,20 @@ public class ProcessInThread {
         String javaBin = javaHome +
                 File.separator + "bin" +
                 File.separator + "java";
+        String javaW = javaBin + "w";
+        if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
+            {
+            javaBin += ".exe";
+            javaW += ".exe";
+            }
         String classpath = System.getProperty("java.class.path");
         ArrayList<String> cmdList = new ArrayList<String>();
         for ( String tmp : cmdListArg )
             {
-            tmp = tmp.replace( "$JAVABIN", javaBin );
+            tmp = tmp.replace( "$JAVA", javaBin );
+            tmp = tmp.replace( "$JAVAW", javaW );
             tmp = tmp.replace( "$CLASSPATH", classpath );
+            tmp = tmp.replace( "$HOMETMP", DesktopUtils.getJfpHomeTmpDir( false ) );
             cmdList.add( tmp );
             System.out.println( "cmdList tmp = " + tmp + "=" );
             }
@@ -107,7 +116,7 @@ public class ProcessInThread {
         ArrayList<String> cmdList = new ArrayList<String>();
 //        for ( String tmp : cmdListArg )
 //            {
-//            tmp = tmp.replace( "$JAVABIN", javaBin );
+//            tmp = tmp.replace( "$JAVA", javaBin );
 //            tmp = tmp.replace( "$CLASSPATH", classpath );
 //            cmdList.add( tmp );
 //            System.out.println( "cmdList tmp = " + tmp + "=" );
@@ -141,6 +150,12 @@ public class ProcessInThread {
         String javaBin = javaHome +
                 File.separator + "bin" +
                 File.separator + "java";
+        String javaW = javaBin + "w";
+        if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
+            {
+            javaBin += ".exe";
+            javaW += ".exe";
+            }
         String classpath = System.getProperty("java.class.path");
         String[] runJarList = classpath.split( System.getProperty( "path.separator" ) );
         //System.out.println( "classpath = " + classpath + "=" );

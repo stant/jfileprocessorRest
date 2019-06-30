@@ -683,8 +683,15 @@ private static void addJarToClasspath(File file) {
                 fileAssocList = new FileAssocList();
                 fileAssocList.addFileAssoc( new FileAssoc( JfpConstants.ASSOC_TYPE_SUFFIX, 
                         "", JfpConstants.MATCH_TYPE_GLOB, "**.war", 
-                        "java -Dspring.profiles.active=warserver -jar " + JFileProcessorVersion.getFileName() + 
-                                " --warfile=%f --path=/%F --port=8070 --warserver --logging.file=" + DesktopUtils.getTmpDir() + "%F.log",
+                        "$JAVA -Dspring.profiles.active=warserver -jar " + JfpHomeDir + JFileProcessorVersion.getFileName() + 
+                                " --warfile=%f --path=/%F --port=8070 --warserver --logging.file=" + 
+                                JfpHomeTempDir + "%F.log",
+                        "url:https://localhost:8070/jfp/sys/stop" ) );
+                fileAssocList.addFileAssoc( new FileAssoc( JfpConstants.ASSOC_TYPE_SUFFIX, 
+                        "", JfpConstants.MATCH_TYPE_REGEX, ".*[.]war", 
+                        "$JAVA -Dspring.profiles.active=warserver -jar " + JfpHomeDir + JFileProcessorVersion.getFileName() + 
+                                " --warfile=%f --path=/%F --port=8070 --warserver --logging.file=" + 
+                                JfpHomeTempDir + "%F.log",
                         "url:https://localhost:8070/jfp/sys/stop" ) );
                 Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
                 }
@@ -2155,7 +2162,7 @@ private static void addJarToClasspath(File file) {
             
             ProcessInThread jp = new ProcessInThread();
             ArrayList<String> cmdList = new ArrayList<String>();
-//            cmdList.add( "$JAVABIN" );
+//            cmdList.add( "$JAVA" );
 ////            cmdList.add( "-cp" );
 ////            cmdList.add( "$CLASSPATH" );
 //            cmdList.add( "-jar" );
@@ -2166,7 +2173,7 @@ private static void addJarToClasspath(File file) {
 //            cmdList.add( "8074" );
 ////            cmdList.add( "/home/stan/Downloads/sample.war" );
 
-//            cmdList.add( "$JAVABIN" );
+//            cmdList.add( "$JAVA" );
 //            cmdList.add( "-Dspring.profiles.active=warserver" );
 ////            cmdList.add( "-cp" );
 ////            cmdList.add( "$CLASSPATH" );
@@ -4906,7 +4913,7 @@ private static void addJarToClasspath(File file) {
                 ProcessInThread jp = new ProcessInThread();
 //                int rc = jp.execJava(com.towianski.jfileprocessor.JFileFinderWin.class, true, file.getParent() );
                 ArrayList<String> cmdList = new ArrayList<String>(); 
-                cmdList.add( "$JAVABIN" );
+                cmdList.add( "$JAVA" );
     //            cmdList.add( "-cp" );
     //            cmdList.add( "$CLASSPATH" );
                 cmdList.add( "-jar" );

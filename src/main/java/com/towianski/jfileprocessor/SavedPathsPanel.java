@@ -180,7 +180,7 @@ public class SavedPathsPanel extends javax.swing.JPanel {
                 ProcessInThread jp = new ProcessInThread();
                 //int rc = jp.execJava( com.towianski.jfileprocessor.JFileFinderWin.class, true );
                 ArrayList<String> cmdList = new ArrayList<String>(); 
-                cmdList.add( "$JAVABIN" );
+                cmdList.add( "$JAVA" );
     //            cmdList.add( "-cp" );
     //            cmdList.add( "$CLASSPATH" );
                 cmdList.add( "-jar" );
@@ -202,7 +202,7 @@ public class SavedPathsPanel extends javax.swing.JPanel {
                 ProcessInThread jp = new ProcessInThread();
 //                int rc = jp.execJava( com.towianski.jfileprocessor.JFileFinderWin.class, true, DesktopUtils.getTrashFolder().toString() );
                 ArrayList<String> cmdList = new ArrayList<String>(); 
-                cmdList.add( "$JAVABIN" );
+                cmdList.add( "$JAVA" );
     //            cmdList.add( "-cp" );
     //            cmdList.add( "$CLASSPATH" );
                 cmdList.add( "-jar" );

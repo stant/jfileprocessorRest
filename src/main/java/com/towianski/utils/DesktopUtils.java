@@ -12,6 +12,11 @@ import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
@@ -23,33 +28,74 @@ import javax.swing.JOptionPane;
  */
 public class DesktopUtils 
 {
+   
+   public static File getBookmarks()
+   {
+      return getJfpConfigHome( "Bookmarks.txt", "file" );
+   }
     
    public static File getTrashFolder()
    {
-      return getJfpHome( "TrashFolder", "folder" );
-   }
-    
-   public static File getBookmarks()
-   {
-      return getJfpHome( "Bookmarks.txt", "file" );
+      return getJfpConfigHome( "TrashFolder", "folder" );
    }
 
-   public static String getTmpDir()
+   public static String getJfpHomeTmpDir( boolean addEndingSlash )
    {
-        String tmp = System.getProperty("java.io.tmpdir");
-        if ( ! tmp.endsWith( System.getProperty("file.separator") ) )
-            tmp = tmp + System.getProperty("file.separator");
-//        if ( tmp.endsWith( System.getProperty("file.separator") ) )
-//            tmp = tmp.substring( 0, tmp.length() - 1);
-        return tmp;
-   }
     
+    String jfpTmp = getJfpHome( "temp", "folder" );;
+    return addEndingSlash ? jfpTmp + System.getProperty("file.separator") : jfpTmp;
+   }
+
+   public static String getJfpHomeTmpFile( String filename )
+   {
+      return getJfpHomeTmpDir( true ) + filename;
+   }
+        
+   public static String getJfpHome( String specificFolder, String fType )
+   {
+       try {
+            File jfpHome = new File( getJfpHome( false ), specificFolder );
+            System.out.println( "jfpHome from specificFolder(" + specificFolder + ") =" + jfpHome.toString() + "=" );
+      
+        if ( ! jfpHome.exists() )
+            {
+            boolean ok = false;
+            ok = fType.equals( "folder" ) ? jfpHome.mkdirs() : jfpHome.createNewFile();
+            if ( ! isHeadlessProperty() )  JOptionPane.showMessageDialog( null, "Could not find its JFileProcessor " + specificFolder + " file so I created one here: \n\n" + jfpHome
+                        );
+            }
+        return jfpHome.toString();
+       } catch (IOException ex) {
+           Logger.getLogger(DesktopUtils.class.getName()).log(Level.SEVERE, null, ex);
+       }
+    return null;
+   }
+
+        
+   public static File getJfpHome( boolean addEndingSlash )
+    {
+       try {
+//            System.out.println( "toURI() =" + JFileFinderWin.class.getProtectionDomain().getCodeSource().getLocation().toURI() + "=" );
+//           File jfpHome = new File( JFileFinderWin.class.getProtectionDomain().getCodeSource().getLocation().toURI() ).getParentFile();
+//            URL url = getLocation( JFileFinderWin.class );
+//            System.out.println( "URL =" + url.toString() + "=" );
+//            String urlStr = (new File( url.toString() )).getParent();
+//            File jfpHome = urlToFile( new URL( urlStr ) );
+            String JfpHomeDir = addEndingSlash ? System.getProperty( "user.dir" ) + System.getProperty( "file.separator" ) : System.getProperty( "user.dir" );
+            System.out.println( "jfpHome =" + JfpHomeDir + "=" );
+            return new File( JfpHomeDir );
+       } catch (Exception ex) {
+           Logger.getLogger(DesktopUtils.class.getName()).log(Level.SEVERE, null, ex);
+       }
+    return null;
+   }
+
    public static boolean isHeadlessProperty()
         {
         return System.getProperty( "java.awt.headless", "false" ).equalsIgnoreCase( "TRUE" ) ? true : false ;
         }
    
-   public static File getJfpHome( String specificFolder, String fType )
+   public static File getJfpConfigHome( String specificFolder, String fType )
    {
       System.out.println( "os.name =" + System.getProperty( "os.name" ) + "=" );
       File jfpHome = null;
@@ -106,7 +152,7 @@ public class DesktopUtils
                         + jfpHome4 + "\n";
             }
         }
-      else  // windows + Linux : test for moneydance folder
+      else  // windows + Linux : test for .JFileProcessor folder
         {
         jfpHome1 = new File( System.getProperty( "user.home" ), ".JFileProcessor" );
         System.out.println( "try jfpHome folder =" + jfpHome1 + "=" );
@@ -154,6 +200,117 @@ public class DesktopUtils
       return jfpHome;
    }
     
+    /**
+     * Gets the base location of the given class.
+     * <p>
+     * If the class is directly on the file system (e.g.,
+     * "/path/to/my/package/MyClass.class") then it will return the base directory
+     * (e.g., "file:/path/to").
+     * </p>
+     * <p>
+     * If the class is within a JAR file (e.g.,
+     * "/path/to/my-jar.jar!/my/package/MyClass.class") then it will return the
+     * path to the JAR (e.g., "file:/path/to/my-jar.jar").
+     * </p>
+     *
+     * @param c The class whose location is desired.
+     * @see FileUtils#urlToFile(URL) to convert the result to a {@link File}.
+     */
+    public static URL getLocation(final Class<?> c) {
+        if (c == null) return null; // could not load the class
+
+        // try the easy way first
+        try {
+            final URL codeSourceLocation =
+                c.getProtectionDomain().getCodeSource().getLocation();
+            if (codeSourceLocation != null) return codeSourceLocation;
+        }
+        catch (final SecurityException e) {
+            // NB: Cannot access protection domain.
+        }
+        catch (final NullPointerException e) {
+            // NB: Protection domain or code source is null.
+        }
+
+        // NB: The easy way failed, so we try the hard way. We ask for the class
+        // itself as a resource, then strip the class's path from the URL string,
+        // leaving the base path.
+
+        // get the class's raw resource path
+        final URL classResource = c.getResource(c.getSimpleName() + ".class");
+        if (classResource == null) return null; // cannot find class resource
+
+        final String url = classResource.toString();
+        final String suffix = c.getCanonicalName().replace('.', '/') + ".class";
+        if (!url.endsWith(suffix)) return null; // weird URL
+
+        // strip the class's path from the URL string
+        final String base = url.substring(0, url.length() - suffix.length());
+
+        String path = base;
+
+        // remove the "jar:" prefix and "!/" suffix, if present
+        if (path.startsWith("jar:")) path = path.substring(4, path.length() - 2);
+
+        try {
+            return new URL(path);
+        }
+        catch (final MalformedURLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    } 
+
+    /**
+     * Converts the given {@link URL} to its corresponding {@link File}.
+     * <p>
+     * This method is similar to calling {@code new File(url.toURI())} except that
+     * it also handles "jar:file:" URLs, returning the path to the JAR file.
+     * </p>
+     * 
+     * @param url The URL to convert.
+     * @return A file path suitable for use with e.g. {@link FileInputStream}
+     * @throws IllegalArgumentException if the URL does not correspond to a file.
+     */
+    public static File urlToFile(final URL url) {
+        return url == null ? null : urlToFile(url.toString());
+    }
+
+    /**
+     * Converts the given URL string to its corresponding {@link File}.
+     * 
+     * @param url The URL to convert.
+     * @return A file path suitable for use with e.g. {@link FileInputStream}
+     * @throws IllegalArgumentException if the URL does not correspond to a file.
+     */
+    public static File urlToFile(final String url) {
+        String path = url;
+        if (path.startsWith("jar:")) {
+            // remove "jar:" prefix and "!/" suffix
+            final int index = path.indexOf("!/");
+            path = path.substring(4, index);
+        }
+        try {
+            if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) 
+                 && path.matches("file:[A-Za-z]:.*")) {
+                path = "file:/" + path.substring(5);
+            }
+            return new File(new URL(path).toURI());
+        }
+        catch (final MalformedURLException e) {
+            // NB: URL is not completely well-formed.
+        }
+        catch (final URISyntaxException e) {
+            // NB: URL is not completely well-formed.
+        }
+        if (path.startsWith("file:")) {
+            // pass through the URL as-is, minus "file:" prefix
+            path = path.substring(5);
+            return new File(path);
+        }
+        throw new IllegalArgumentException("Invalid URL: " + url);
+    }
+
     //public static Rectangle getScreenViewableBounds(Window window) {
     //    return getScreenViewableBounds((Component) window);
     //}

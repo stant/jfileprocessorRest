@@ -806,8 +806,8 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
                         System.out.println( "Error 1st attempt for sourceFolderStr =" + sourceFolderStr + "=    destinationFolderStr =" + destinationFolderStr + "=" );
                         System.out.println( "      for connUserInfo =" + connUserInfo + "=" );
 
-                        File tmpTransferFile = DesktopUtils.getJfpHome( "xxx", "file" );
-                        String tmpTransferFileStr = DesktopUtils.getJfpHome( "xxx", "file" ).toString();
+                        File tmpTransferFile = DesktopUtils.getJfpConfigHome( "xxx", "file" );
+                        String tmpTransferFileStr = DesktopUtils.getJfpConfigHome( "xxx", "file" ).toString();
                         if ( tmpTransferFile.exists() )  tmpTransferFile.delete();
                         chanSftpSrc.get( sourceFolderStr, tmpTransferFileStr );
                         chanSftp.put( tmpTransferFileStr, destinationFolderStr );

@@ -203,7 +203,7 @@ public class FileAssocWin extends javax.swing.JDialog {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 2;
-        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.gridwidth = 3;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.ipadx = 223;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
@@ -221,7 +221,7 @@ public class FileAssocWin extends javax.swing.JDialog {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 3;
-        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.gridwidth = 3;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.ipadx = 223;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
@@ -310,29 +310,30 @@ public class FileAssocWin extends javax.swing.JDialog {
         editClass.setMinimumSize(new java.awt.Dimension(300, 25));
         editClass.setPreferredSize(new java.awt.Dimension(300, 25));
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 2;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.gridx = 4;
+        gridBagConstraints.gridy = 0;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
         gridBagConstraints.insets = new java.awt.Insets(10, 7, 0, 10);
         getContentPane().add(editClass, gridBagConstraints);
 
         jLabel2.setText("Editor Class");
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+        gridBagConstraints.gridx = 3;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+        gridBagConstraints.insets = new java.awt.Insets(10, 15, 0, 5);
         getContentPane().add(jLabel2, gridBagConstraints);
 
         jTextPane1.setEditable(false);
-        jTextPane1.setText("get replaced in commands:\n%f - full file path     %F - filename");
-        jTextPane1.setMinimumSize(new java.awt.Dimension(48, 50));
-        jTextPane1.setPreferredSize(new java.awt.Dimension(91, 50));
+        jTextPane1.setText("get replaced in commands:\n%f - full file path     %F - filename\n$JAVA   $JAVAW   $CLASSPATH   $HOMETMP");
+        jTextPane1.setMinimumSize(new java.awt.Dimension(200, 75));
+        jTextPane1.setPreferredSize(new java.awt.Dimension(200, 75));
         jScrollPane1.setViewportView(jTextPane1);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 3;
         gridBagConstraints.gridy = 6;
+        gridBagConstraints.gridwidth = 2;
         gridBagConstraints.gridheight = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.insets = new java.awt.Insets(10, 10, 7, 10);
@@ -348,7 +349,7 @@ public class FileAssocWin extends javax.swing.JDialog {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 4;
-        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.gridwidth = 3;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
         gridBagConstraints.weightx = 1.0;
