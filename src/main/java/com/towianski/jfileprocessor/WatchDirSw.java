@@ -9,7 +9,8 @@ import com.towianski.jfileprocess.actions.ProcessInThread;
 import com.towianski.jfileprocess.actions.WatchDir;
 import com.towianski.jfileprocess.actions.WatchDirPost;
 import com.towianski.models.Constants;
-import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,10 +30,15 @@ public class WatchDirSw {
     WatchDir watchDir = null;
     static long count = 0;
     Object LockObj = "";
+    ArrayList<String> pathsToNotWatch;
+    Path watchFolder;
     
-    public WatchDirSw( JFileFinderWin jFileFinderWin )
+    public WatchDirSw( JFileFinderWin jFileFinderWin, ArrayList<String> pathsToNotWatch, Path watchFolder )
         {
         this.jFileFinderWin = jFileFinderWin;
+        this.pathsToNotWatch = pathsToNotWatch;
+        this.watchFolder = watchFolder;
+        System.out.println( "enter watchDirSw() with watchFolder =" + watchFolder );
         }
 
     public synchronized void cancelWatch() 
@@ -60,7 +66,7 @@ public class WatchDirSw {
         System.out.println( "exit watchDirSw.cancelWatch()" );
         }
 
-    public void actionPerformed(java.awt.event.ActionEvent evt) {                                         
+    public void actionPerformed( ArrayList<String> pathsToNotWatch, Path watchFolder ) {                                         
         if ( jFileFinderWin.searchBtn.getText().equalsIgnoreCase( Constants.PROCESS_STATUS_SEARCH_CANCELED ) )
             {
             this.cancelWatch();
@@ -70,6 +76,8 @@ public class WatchDirSw {
             try {
                 System.out.println( "WatchDirSw doCmdBtnActionPerformed start" );
                 System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+                this.pathsToNotWatch = pathsToNotWatch;
+                this.watchFolder = watchFolder;
 //                watchDirSwingWorker = new WatchDirSwingWorker( jFileFinderWin, this, startingPath );
 //                watchDir = watchDirSwingWorker.getWatchDir();
 //                watchDirSwingWorker.execute();   //doInBackground();
@@ -78,10 +86,10 @@ public class WatchDirSw {
                 watchDirPostThread = ProcessInThread.newThread( "watchDirPost", count++, true, watchDirPost );
                 watchDirPostThread.start();
 
-                watchDir = new WatchDir( jFileFinderWin, LockObj, watchDirPostThread, watchDirPost, Paths.get( jFileFinderWin.getStartingFolder() ), this, false );
+                watchDir = new WatchDir( pathsToNotWatch, LockObj, watchDirPostThread, watchDirPost, watchFolder, this, false );
                 watchThread = ProcessInThread.newThread( "watchDir", count++, true, watchDir );
                 watchThread.start();
-                System.out.println( "WatchDirSw after start watch thread, now exit actionPerformed" );
+                System.out.println( "WatchDirSw (" + watchFolder + ") after start watch thread, now exit actionPerformed" );
                 } 
             catch (Exception ex) {
                 Logger.getLogger(WatchDir.class.getName()).log(Level.SEVERE, null, ex);

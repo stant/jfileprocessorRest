@@ -37,8 +37,10 @@ public class DesktopUtils
    public static String getTmpDir()
    {
         String tmp = System.getProperty("java.io.tmpdir");
-        if ( tmp.endsWith( System.getProperty("file.separator") ) )
-            tmp = tmp.substring( 0, tmp.length() - 1);
+        if ( ! tmp.endsWith( System.getProperty("file.separator") ) )
+            tmp = tmp + System.getProperty("file.separator");
+//        if ( tmp.endsWith( System.getProperty("file.separator") ) )
+//            tmp = tmp.substring( 0, tmp.length() - 1);
         return tmp;
    }
     

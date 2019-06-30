@@ -1,0 +1,36 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.towianski.boot.server;
+
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.server.WebServerFactoryCustomizer;
+import org.springframework.stereotype.Component;
+
+/**
+ *
+ * @author stan
+ */
+//@Component
+public class CustomerTomcatContainer {
+    
+//        static {
+//        System.out.println( "CustomerTomcatContainer.customize()" );
+//        }
+//        
+//
+//public class CustomContainer implements
+//        
+//        
+//  WebServerFactoryCustomizer<TomcatServletWebServerFactory> {
+// 
+//    @Override
+//    public void customize(TomcatServletWebServerFactory factory) {
+//        System.out.println( "CustomerTomcatContainer.customize()" );
+//        factory.setContextPath("and");
+//        factory.setPort(8888);
+//    }
+//}    
+}

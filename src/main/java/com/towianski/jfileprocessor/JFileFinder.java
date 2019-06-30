@@ -9,6 +9,8 @@ import com.towianski.models.ResultsData;
 import com.towianski.models.FilesTblModel;
 import com.towianski.chainfilters.FilterChain;
 import com.towianski.models.Constants;
+import static com.towianski.models.FilesTblModel.FILETYPE_NORMAL;
+import static com.towianski.models.FilesTblModel.FOLDERTYPE_FOLDER;
 import com.towianski.utils.FinderFileVisitor;
 import com.towianski.utils.MyLogger;
 import java.io.IOException;
@@ -117,14 +119,13 @@ public class JFileFinder //  implements Runnable
                 getDosFileInfo( PathsInfoList );
                 }
 
+//            System.out.println( "getFilesTableModel PathsInfoList.size() =" + PathsInfoList.size() + "=" );
+//            System.err.println( "getFilesTableModel PathsInfoList.size() =" + PathsInfoList.size() + "=" );
             if ( PathsInfoList.size() < 1 )
                 {
-//                HeaderList.add( " " );
                 ArrayList<Object> newRow = new ArrayList<Object>();
-                    newRow.add( "" );
-                    newRow.add( "" );
-//                newRow.add( false );
-//                newRow.add( true );
+                newRow.add( FILETYPE_NORMAL );
+                newRow.add( FOLDERTYPE_FOLDER  );
                 if ( noAccessFolder.size() > 0 )
                     {
                     newRow.add( "Inaccessible" );
@@ -134,13 +135,11 @@ public class JFileFinder //  implements Runnable
                     {
                     newRow.add( "No Files Found" );
                     }
-                    newRow.add( "" );
-                    newRow.add( "" );
-                    newRow.add( "" );
-                    newRow.add( "" );
-                    newRow.add( "" );
-//                newRow.add( Calendar.getInstance().getTime() );
-//                newRow.add( (long) 0 );
+                newRow.add( Calendar.getInstance().getTime() );
+                newRow.add( (long) 0 );
+                newRow.add( "" );
+                newRow.add( "" );
+                newRow.add( "---" );
                 PathsInfoList.add( newRow );
                 }
   //          else
@@ -183,6 +182,8 @@ public class JFileFinder //  implements Runnable
             try {
                 attr = Files.readAttributes( fpath, BasicFileAttributes.class );
                 PosixFileAttributes fsattr = Files.readAttributes( fpath, PosixFileAttributes.class );
+//                System.out.println("lookin at file          = " + fpath.toString() );
+//                System.out.println("isDirectory      = " + attr.isDirectory());
 
                 int ftype = FilesTblModel.FILETYPE_NORMAL;
                 if ( Files.isSymbolicLink( fpath ) )

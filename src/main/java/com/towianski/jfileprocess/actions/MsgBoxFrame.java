@@ -5,7 +5,6 @@
  */
 package com.towianski.jfileprocess.actions;
 
-import java.awt.event.WindowEvent;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,12 +19,18 @@ public class MsgBoxFrame extends javax.swing.JFrame {
      */
     public MsgBoxFrame() {
         initComponents();
+//        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+//        this.setLocation(dim.width/2-this.getSize().width/2, dim.height/2-this.getSize().height/2);
+        this.setLocationRelativeTo( null );
+    }
+
+    public MsgBoxFrame( String ss ) {
+        this();
+        setMessage(ss);
     }
 
     public void setMessage( String text ) {
-        this.message.setText(text);
-        this.validate();
-        this.setVisible(true);
+        message.setText( text );
     }
 
     /**
@@ -38,11 +43,12 @@ public class MsgBoxFrame extends javax.swing.JFrame {
     private void initComponents() {
         java.awt.GridBagConstraints gridBagConstraints;
 
-        message = new javax.swing.JLabel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        message = new javax.swing.JEditorPane();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setMinimumSize(new java.awt.Dimension(150, 50));
-        setPreferredSize(new java.awt.Dimension(150, 55));
+        setMinimumSize(new java.awt.Dimension(400, 70));
+        setPreferredSize(new java.awt.Dimension(400, 70));
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowOpened(java.awt.event.WindowEvent evt) {
                 formWindowOpened(evt);
@@ -50,26 +56,31 @@ public class MsgBoxFrame extends javax.swing.JFrame {
         });
         getContentPane().setLayout(new java.awt.GridBagLayout());
 
-        message.setMaximumSize(new java.awt.Dimension(2147483647, 2147483647));
-        message.setMinimumSize(new java.awt.Dimension(100, 40));
-        message.setPreferredSize(new java.awt.Dimension(140, 40));
+        jScrollPane1.setMinimumSize(new java.awt.Dimension(350, 60));
+        jScrollPane1.setPreferredSize(new java.awt.Dimension(350, 60));
+
+        message.setEditable(false);
+        message.setText("what the world");
+        message.setMinimumSize(new java.awt.Dimension(250, 50));
+        message.setPreferredSize(new java.awt.Dimension(250, 50));
+        jScrollPane1.setViewportView(message);
+
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        gridBagConstraints.insets = new java.awt.Insets(116, 169, 169, 186);
-        getContentPane().add(message, gridBagConstraints);
+        gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
+        getContentPane().add(jScrollPane1, gridBagConstraints);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
         try {
-            Thread.sleep( 2000 );
-            this.dispatchEvent( new WindowEvent( this, WindowEvent.WINDOW_CLOSING ));
-            this.dispose();
-        } catch (InterruptedException ex) {
+//            Thread.sleep( 4000 );
+//            this.dispatchEvent( new WindowEvent( this, WindowEvent.WINDOW_CLOSING ));
+//            this.dispose();
+
+            new CloseWinOnTimer( this, "noMove", 3000 ){{setRepeats(false);}}.start();
+        } catch (Exception ex) {
             Logger.getLogger(MsgBoxFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
 
@@ -100,24 +111,18 @@ public class MsgBoxFrame extends javax.swing.JFrame {
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(MsgBoxFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
+
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new MsgBoxFrame().setVisible(true);
+                new MsgBoxFrame( "Test Message" ).setVisible( true );
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel message;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JEditorPane message;
     // End of variables declaration//GEN-END:variables
 }

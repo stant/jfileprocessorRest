@@ -1,0 +1,246 @@
+package com.towianski.newunused;
+
+import com.towianski.jfileprocessor.ListOfFilesPanel;
+import com.towianski.models.ProcessorTblModel;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JTable;
+import javax.swing.KeyStroke;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumnModel;
+
+/**
+ *
+ * @author stan
+ */
+
+
+public class ProcessorWin1 extends javax.swing.JFrame {
+
+    ListOfFilesPanel listOfFilesPanel = null;
+    
+    /**
+     * Creates new form PreviewImportWin
+     */
+    public ProcessorWin1() {
+        try {
+            initComponents();
+            this.listOfFilesPanel = listOfFilesPanel;
+//            this.setSize( 50, 60 );
+            this.setLocationRelativeTo( getRootPane() );
+            this.pack();
+            this.setVisible( true );
+            this.validate();
+            this.addEscapeListener( this );
+            }
+        catch( Exception fex )
+            {
+                ;
+            }
+    }
+
+//    public void myInit( String[] filepathArr )
+//    {
+//    String[] rowArr = filepathArr;
+//    if ( filepathArr[0].equals( "" ) )
+//        {
+//        rowArr = new String[filepathArr.length - 1];
+//        System.arraycopy( filepathArr, 1, rowArr, 0, rowArr.length );
+//        }
+//    String[][] data = { rowArr };
+//    ArrayList<String> hdrs = new ArrayList<String>();
+//    int max = rowArr.length;
+//    for ( int i = 0; i < max; i++ )
+//        {
+//        hdrs.add( "" + i );
+//        }
+//    processorTbl.setModel( new ProcessorTblModel( hdrs, data ) );
+//    processorTbl.setAutoResizeMode(JTable.AUTO_RESIZE_NEXT_COLUMN);
+//    resizeColumnWidth( processorTbl );
+////    processorTbl.setTableHeader(null);
+//    processorTbl.getTableHeader().setUI(null);
+//    this.pack();
+//    this.validate();
+//    }
+    
+    public void resizeColumnWidth(JTable table) {
+    final TableColumnModel columnModel = table.getColumnModel();
+    for (int column = 0; column < table.getColumnCount(); column++) {
+        int width = 5; // Min width
+        for (int row = 0; row < table.getRowCount(); row++) {
+            TableCellRenderer renderer = table.getCellRenderer(row, column);
+            Component comp = table.prepareRenderer(renderer, row, column);
+            width = Math.max(comp.getPreferredSize().width +1 , width);
+        }
+        if(width > 300)
+            width=300;
+        columnModel.getColumn(column).setPreferredWidth(width);
+    }
+    }
+    
+    public void addEscapeListener(final JFrame win) {
+        ActionListener escListener = new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                win.dispatchEvent( new WindowEvent( win, WindowEvent.WINDOW_CLOSING )); 
+                win.dispose();
+            }
+        };
+
+        win.getRootPane().registerKeyboardAction(escListener,
+                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+                JComponent.WHEN_IN_FOCUSED_WINDOW);
+    }    
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        java.awt.EventQueue.invokeLater(new Runnable() {
+
+            public void run() {
+                ProcessorWin1 dialog = new ProcessorWin1();
+                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+
+                    public void windowClosing(java.awt.event.WindowEvent e) {
+                        System.exit(0);
+                    }
+                });
+                    ArrayList<String> header = new ArrayList<String>(Arrays.asList( "button", "Status", "button", "Start", "button", "Stop" ) );
+            ArrayList data = new ArrayList(); 
+            ArrayList newRow = new ArrayList(); 
+            newRow.add( new JButton( "status" ) );
+            newRow.add( "" );
+            newRow.add( new JButton( "start" ) );
+            newRow.add( "" );
+            newRow.add( new JButton( "stop" ) );
+            newRow.add( "" );            
+            data.add( newRow );
+                newRow = new ArrayList(); 
+            newRow.add( new JButton( "status 2" ) );
+            newRow.add( "2" );
+            newRow.add( new JButton( "start 2" ) );
+            newRow.add( "2" );
+            newRow.add( new JButton( "stop 2" ) );
+            newRow.add( "2" );            
+            data.add( newRow );
+                    
+                //dialog.myInit( null, null );
+                dialog.processorTbl.setModel( new ProcessorTblModel( header, data ) );
+                dialog.setSize( 800, 600 );
+                dialog.setVisible(true);
+                dialog.addEscapeListener( dialog );
+            }
+        });
+    }
+    
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+        java.awt.GridBagConstraints gridBagConstraints;
+
+        jScrollPane1 = new javax.swing.JScrollPane();
+        processorTbl = new javax.swing.JTable();
+        parseFileBtn = new javax.swing.JButton();
+        jLabel1 = new javax.swing.JLabel();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setMinimumSize(new java.awt.Dimension(60, 130));
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
+        getContentPane().setLayout(new java.awt.GridBagLayout());
+
+        jScrollPane1.setMinimumSize(new java.awt.Dimension(20, 20));
+        jScrollPane1.setPreferredSize(new java.awt.Dimension(400, 90));
+
+        processorTbl.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4"
+            }
+        ));
+        processorTbl.setCellSelectionEnabled(true);
+        processorTbl.setFillsViewportHeight(true);
+        processorTbl.setMinimumSize(new java.awt.Dimension(40, 40));
+        processorTbl.setPreferredSize(new java.awt.Dimension(300, 40));
+        jScrollPane1.setViewportView(processorTbl);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.ipadx = 1;
+        gridBagConstraints.ipady = 1;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 2.0;
+        gridBagConstraints.insets = new java.awt.Insets(1, 1, 1, 1);
+        getContentPane().add(jScrollPane1, gridBagConstraints);
+
+        parseFileBtn.setText("Ok");
+        parseFileBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                parseFileBtnActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.insets = new java.awt.Insets(10, 10, 0, 0);
+        getContentPane().add(parseFileBtn, gridBagConstraints);
+
+        jLabel1.setText("Select root level of folder:");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+        gridBagConstraints.insets = new java.awt.Insets(10, 5, 0, 5);
+        getContentPane().add(jLabel1, gridBagConstraints);
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        try {
+            System.err.println( "previewImportWin formWindowClosing()" );
+        } catch (Exception ex) {
+            Logger.getLogger(ProcessorWin1.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_formWindowClosing
+
+    private void parseFileBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_parseFileBtnActionPerformed
+        listOfFilesPanel.setSelectedPathPiece( processorTbl.getSelectedColumn() );
+    }//GEN-LAST:event_parseFileBtnActionPerformed
+
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JButton parseFileBtn;
+    private javax.swing.JTable processorTbl;
+    // End of variables declaration//GEN-END:variables
+}

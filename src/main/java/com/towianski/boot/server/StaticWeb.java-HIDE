@@ -1,0 +1,166 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.towianski.boot.server;
+
+/**
+ *
+ * @author stan
+ */
+import ch.qos.logback.core.Context;
+import java.io.File;
+import java.io.PrintStream;
+import java.util.Properties;
+import org.apache.catalina.connector.Connector;
+import org.apache.tomcat.util.descriptor.web.SecurityCollection;
+import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.springframework.context.annotation.Bean;
+
+@SpringBootApplication
+public class StaticWeb extends SpringBootServletInitializer {
+
+	@Override
+	protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+		return application.sources(StaticWeb.class);
+	}
+
+	public static void main(String[] args) {
+
+        SpringApplication app = new SpringApplication(StaticWeb.class);
+        System.out.println( "Entered StaticWeb.main");
+
+        String loggingFile = "";
+        String dir = "";
+
+        for ( int i = 0; i < args.length; i++ )
+            {
+//            logger.info( "** args [" + i + "] =" + args[i] + "=" );
+            System.out.println( "** args [" + i + "] =" + args[i] + "=" );
+            if ( args[i].toLowerCase().startsWith( "-dir" ) )
+                {
+                dir = args[i].substring( "-dir=".length() );
+                }
+            else if ( args[i].toLowerCase().startsWith( "--logging.file" ) )
+                {
+                loggingFile = args[i].substring( "--logging.file=".length() );
+                stdOutFilePropertyChange( loggingFile );
+                stdErrFilePropertyChange( loggingFile );
+                }
+            }
+
+        Properties properties = new Properties();
+        properties.setProperty( "server.servlet.contextPath", "/whatever" );
+//        properties.setProperty("spring.resources.static-locations",
+//                               "classpath:/newLocation1/, classpath:/newLocation2/");
+        properties.setProperty( "spring.resources.static-locations",
+//                               "classpath:/net2/data/websites/aaa/:/net2/data/java/CraftersClearance/code/web/:/home/stan/Downloads/sample.war");
+//                               "file:/net2/data/java/CraftersClearance/code/web/");
+//                               "file:/net2/tmp/");
+//                               "file:" + dir + "/,classpath:/home/stan/Downloads/sample.war" );
+                               "file:/,classpath:/home/stan/Downloads/sample.war" );
+//                               "classpath:/home/stan/Downloads/sample.war");
+        properties.setProperty( "server.port", "8070" );
+        properties.setProperty( "spring.security.user.name", "stan" );
+        properties.setProperty( "spring.security.user.password", "stan" );
+        System.out.println( "Entered StaticWeb.main after set properties");
+        app.setDefaultProperties(properties);
+        System.out.println( "Entered StaticWeb.main after call set props. before app.run");
+        
+        app.run(args);
+        System.out.println( "Entered StaticWeb.main after app.run()");
+	}
+        
+//@Bean
+//public ServletWebServerFactory servletContainer() {
+//    TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory() {
+//        @Override
+//        protected void postProcessContext(Context context) {
+//            SecurityConstraint securityConstraint = new SecurityConstraint();
+//            securityConstraint.setUserConstraint("CONFIDENTIAL");
+//            SecurityCollection collection = new SecurityCollection();
+//            collection.addPattern("/*");
+//            securityConstraint.addCollection(collection);
+//            context.addConstraint(securityConstraint);
+//        }
+//    };
+//    tomcat.addAdditionalTomcatConnectors(redirectConnector());
+//    return tomcat;
+//}
+//
+//private Connector redirectConnector() {
+//    Connector connector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
+//    connector.setScheme("http");
+//    connector.setPort(8080);
+//    connector.setSecure(false);
+//    connector.setRedirectPort(8443);
+//    return connector;
+//}
+
+    private static void stdOutFilePropertyChange( String stdOutFile )
+    {
+        try {
+//            System.out.println( "stdOutFilePropertyChange() do nothing for now !" );
+//            if ( 1 == 1 ) return;
+            
+            System.out.println( "stdOutFilePropertyChange() set to file =" + stdOutFile + "=" );
+            if ( stdOutFile != null && ! stdOutFile.equals( "" ) )
+                {
+                System.setOut(new PrintStream(new File( stdOutFile ) ) );
+                }
+//            else
+//                {
+//                    //  should go to stderr but oh well for now
+//                System.setOut( console );
+//                }
+            } 
+        catch (Exception e) 
+            {
+            e.printStackTrace();
+            }
+    }                                         
+
+    private static void stdErrFilePropertyChange( String stdErrFile )
+    {
+        try {
+//            System.out.println( "stdErrFilePropertyChange() do nothing for now !" );
+//            if ( 1 == 1 ) return;
+            
+            System.out.println( "stdErrFilePropertyChange() set to file =" + stdErrFile + "=" );
+            if ( stdErrFile != null && ! stdErrFile.equals( "" ) )
+                {
+                System.setErr(new PrintStream(new File( stdErrFile ) ) );
+                }
+//            else
+//                {
+//                    //  should go to stderr but oh well for now
+//                System.setErr( console );
+//                }
+            } 
+        catch (Exception e) 
+            {
+            e.printStackTrace();
+            }
+    }                                         
+
+        
+/*
+@Configuration
+public class ServletConfig {
+    @Bean
+    public EmbeddedServletContainerCustomizer containerCustomizer() {
+        return (container -> {
+            container.setPort(1089);
+        });
+    }
+}
+*/
+        
+}

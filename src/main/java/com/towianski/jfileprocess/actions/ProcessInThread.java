@@ -7,6 +7,7 @@ package com.towianski.jfileprocess.actions;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -43,6 +44,96 @@ public class ProcessInThread {
 //        return process.exitValue();
 //    }
 
+    public int execJava2( ArrayList<String> cmdListArg, Boolean daemonFlag, String... passArgs)
+            throws IOException, InterruptedException 
+        {
+        String javaHome = System.getProperty("java.home");
+        String javaBin = javaHome +
+                File.separator + "bin" +
+                File.separator + "java";
+        String classpath = System.getProperty("java.class.path");
+        ArrayList<String> cmdList = new ArrayList<String>();
+        for ( String tmp : cmdListArg )
+            {
+            tmp = tmp.replace( "$JAVABIN", javaBin );
+            tmp = tmp.replace( "$CLASSPATH", classpath );
+            cmdList.add( tmp );
+            System.out.println( "cmdList tmp = " + tmp + "=" );
+            }
+        
+        String[] runJarList = classpath.split( System.getProperty( "path.separator" ) );
+        //System.out.println( "classpath = " + classpath + "=" );
+        //System.out.println( "runJarList = " + runJarList );
+        String runJar = null;
+        for ( String tmp : runJarList )
+            {
+            //System.out.println( "runJar tmp = " + tmp + "=" );
+            if ( tmp.indexOf( "JFileProcessor" ) >= 0 )
+                {   
+                runJar = tmp;
+                break;
+                }
+            }
+//        String className = klass.getCanonicalName();
+//        String className = "com.towianski.boot.StartApp";
+        
+//        String[] runArgs = { javaBin, "-cp", classpath, className };
+//        String[] runPosixArgs = { javaBin, "-Dserver.port=" + System.getProperty( "server.port", "8443" ), "-cp", classpath, "org.springframework.boot.loader.JarLauncher" };
+//        String[] runWinArgs = { "powershell.exe", "Start-Process", "-FilePath", "\"" + javaBin + "-Dserver.port=" + System.getProperty( "server.port", "8443" ) + "-cp" + classpath + "org.springframework.boot.loader.JarLauncher" + "\"", "-Wait" };
+//        String[] runPosixArgs = { javaBin, "-cp", classpath, "org.springframework.boot.loader.JarLauncher" };
+//        String[] runWinArgs = { "powershell.exe", "Start-Process", "-FilePath", "\"" + javaBin + "-cp" + classpath + "org.springframework.boot.loader.JarLauncher" + "\"", "-Wait" };
+
+//        String[] runArgs = System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) ? runWinArgs : runPosixArgs;
+//        String[] runArgs = runPosixArgs;
+        String[] runArgs = cmdList.toArray( new String[0] );
+        
+        String[] allArgs = Arrays.copyOf( runArgs, runArgs.length + passArgs.length);
+        System.arraycopy( passArgs, 0, allArgs, runArgs.length, passArgs.length );
+  
+        ProcessRunnable proc = new ProcessRunnable( null, allArgs );
+        Thread bgThread = newThread( "ProcessInThread.execJava2", 0, daemonFlag, proc );
+        bgThread.start();
+        return proc.getExitValue();
+    }
+
+    public int execJavaString( String cmd, Boolean daemonFlag )
+            throws IOException, InterruptedException 
+        {
+        String javaHome = System.getProperty("java.home");
+        String javaBin = javaHome +
+                File.separator + "bin" +
+                File.separator + "java";
+        String classpath = System.getProperty("java.class.path");
+        ArrayList<String> cmdList = new ArrayList<String>();
+//        for ( String tmp : cmdListArg )
+//            {
+//            tmp = tmp.replace( "$JAVABIN", javaBin );
+//            tmp = tmp.replace( "$CLASSPATH", classpath );
+//            cmdList.add( tmp );
+//            System.out.println( "cmdList tmp = " + tmp + "=" );
+//            }
+        
+//        String[] runJarList = classpath.split( System.getProperty( "path.separator" ) );
+//        //System.out.println( "classpath = " + classpath + "=" );
+//        //System.out.println( "runJarList = " + runJarList );
+//        String runJar = null;
+//        for ( String tmp : runJarList )
+//            {
+//            //System.out.println( "runJar tmp = " + tmp + "=" );
+//            if ( tmp.indexOf( "JFileProcessor" ) >= 0 )
+//                {   
+//                runJar = tmp;
+//                break;
+//                }
+//            }
+
+  
+        ProcessRunnableString proc = new ProcessRunnableString( null, cmd );
+        Thread bgThread = newThread( "ProcessInThread.execJavaString", 0, daemonFlag, proc );
+        bgThread.start();
+        return proc.getExitValue();
+    }
+
     public int execJava(Class klass, Boolean daemonFlag, String... passArgs)
             throws IOException, InterruptedException 
         {
@@ -68,8 +159,10 @@ public class ProcessInThread {
         String className = "com.towianski.boot.StartApp";
         
 //        String[] runArgs = { javaBin, "-cp", classpath, className };
-        String[] runPosixArgs = { javaBin, "-Dserver.port=" + System.getProperty( "server.port", "8443" ), "-cp", classpath, "org.springframework.boot.loader.JarLauncher" };
-        String[] runWinArgs = { "powershell.exe", "Start-Process", "-FilePath", "\"" + javaBin + "-Dserver.port=" + System.getProperty( "server.port", "8443" ) + "-cp" + classpath + "org.springframework.boot.loader.JarLauncher" + "\"", "-Wait" };
+//        String[] runPosixArgs = { javaBin, "-Dserver.port=" + System.getProperty( "server.port", "8443" ), "-cp", classpath, "org.springframework.boot.loader.JarLauncher" };
+//        String[] runWinArgs = { "powershell.exe", "Start-Process", "-FilePath", "\"" + javaBin + "-Dserver.port=" + System.getProperty( "server.port", "8443" ) + "-cp" + classpath + "org.springframework.boot.loader.JarLauncher" + "\"", "-Wait" };
+        String[] runPosixArgs = { javaBin, "-cp", classpath, "org.springframework.boot.loader.JarLauncher" };
+        String[] runWinArgs = { "powershell.exe", "Start-Process", "-FilePath", "\"" + javaBin + "-cp" + classpath + "org.springframework.boot.loader.JarLauncher" + "\"", "-Wait" };
 
 //        String[] runArgs = System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) ? runWinArgs : runPosixArgs;
         String[] runArgs = runPosixArgs;

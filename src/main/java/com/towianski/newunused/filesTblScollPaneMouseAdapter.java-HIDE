@@ -9,7 +9,6 @@ import com.towianski.models.FilesTblModel;
 import com.towianski.jfileprocessor.JFileFinderWin;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;

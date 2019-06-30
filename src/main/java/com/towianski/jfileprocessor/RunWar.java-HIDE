@@ -1,0 +1,301 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.towianski.jfileprocessor;
+
+import com.towianski.jfileprocess.actions.ProcessInThread;
+import com.towianski.jfileprocess.actions.TomcatAppThread;
+import com.towianski.jfileprocess.actions.TomcatWarMonitor;
+import com.towianski.models.ConnUserInfo;
+import com.towianski.models.Constants;
+import com.towianski.models.JfpRestURIConstants;
+import com.towianski.utils.Rest;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.web.client.RestTemplate;
+
+/**
+ *
+ * @author stan
+ */
+public class RunWar {
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+    ConnUserInfo connUserInfo = null;
+    JFileFinderWin jFileFinderWin = null;
+    boolean cancelFlag = false;
+    TomcatWarMonitor tomcatWarMonitor = null;
+    Thread runThread = null;
+    int count = 0;
+    
+    public RunWar( ConnUserInfo connUserInfo, JFileFinderWin jFileFinderWin )
+        {
+        this.connUserInfo = connUserInfo;
+        this.jFileFinderWin = jFileFinderWin;
+        }
+
+    public RestTemplate timeoutRestTemplate( RestTemplateBuilder restTemplateBuilder )
+        {
+        return restTemplateBuilder
+                .setConnectTimeout(100)
+                .setReadTimeout(100)
+                .build();
+        }
+
+    public void cancelRestServer( boolean forceStop ) 
+        {
+        System.out.println( "enter RunWar.cancelRestServer()" );
+        connUserInfo.setState( ConnUserInfo.STATE_CANCEL );
+        if ( tomcatWarMonitor != null )
+            {
+            if ( runThread != null && runThread.isAlive() )
+                {
+                tomcatWarMonitor.cancelTomcatWarMonitor( forceStop );
+                try
+                    {
+                    //runThread.interrupt();
+                    runThread.join();
+                    System.out.println( "RunWar.cancelRestServer() - after runThread.join()" );
+                    } 
+                catch (InterruptedException ex)
+                    {
+                    System.out.println( "RunWar.cancelRestServer() - InterruptedException on runThread.join()" );
+                    ex.printStackTrace();
+                    Logger.getLogger(RunWar.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        else   // no thread already running
+            {
+            TomcatAppThread tomcatAppThread = new TomcatAppThread( connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin );
+            tomcatAppThread.cancelTomcatAppThread(forceStop);
+            }
+        System.out.println( "exit RunWar.cancelRestServer()" );
+        }
+
+    public void actionPerformed(java.awt.event.ActionEvent evt) {                                         
+//        if ( jFileFinderWin.searchBtn.getText().equalsIgnoreCase( Constants.PROCESS_STATUS_SEARCH_CANCELED ) )
+        if ( 1 ==2  && ! connUserInfo.isConnectedFlag() )
+            {
+            this.cancelRestServer( false );
+            }
+        else
+            {
+            try {
+                System.out.println( "RunWar doCmdBtnActionPerformed start" );
+                System.out.println( "   on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+                System.out.println( "   connUserInfo = " + connUserInfo );
+//                RunWaringWorker = new TomcatAppSwingWorker( jFileFinderWin, this, startingPath );
+//                tomcatApp = RunWaringWorker.getTomcatApp();
+//                RunWaringWorker.execute();   //doInBackground();
+
+//                TomcatAppPost tomcatAppPost = new TomcatAppPost( jFileFinderWin, LockObj );
+//                tomcatAppPostThread = newThread( tomcatAppPost );
+//                tomcatAppPostThread.setName( "watchdirPostThread=" + count );
+//                tomcatAppPostThread.start();
+
+                if ( runThread != null && runThread.isAlive() )
+                    {
+                    cancelRestServer( false );
+                    }
+                tomcatWarMonitor = new TomcatWarMonitor( this, connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin );
+                runThread = ProcessInThread.newThread( "TomcatWarMonitor", count++, true, tomcatWarMonitor );
+                runThread.start();
+
+      // TEST          waitUntilStarted();
+                System.out.println( "RunWar after start watch thread, now exit actionPerformed" );
+                } 
+            catch (Exception ex) 
+                {
+                Logger.getLogger(RunWar.class.getName()).log(Level.SEVERE, null, ex);
+                } 
+            }
+        }
+
+//    public void keepRunning() 
+//        {
+//        System.out.println( "entered RunWar keepRunning()" );
+//        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+//        RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
+//
+//        cancelFlag = false;
+//        int downTimes = 99;
+//        String response = null;
+//        boolean didFirstStart = false;
+//        
+//        while ( ! cancelFlag )
+//            {
+//            try
+//                {
+//                System.out.println( "RunWar.run() make rest /jfp/sys/ping call" );
+//                try
+//                    {
+//                    response = noHostVerifyRestTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.SYS_PING, String.class );
+//                    }
+//                catch( Exception exc )
+//                    {
+//                    System.out.println( "RunWar.run() ping threw Exception !!" );
+//                    response = null;
+//                    SwingUtilities.invokeLater(new Runnable() 
+//                        {
+//                        public void run() {
+//                            jFileFinderWin.setRmtConnectBtnBackground( Color.yellow );
+//                            }
+//                        });
+//                    exc.printStackTrace();
+//                    }
+//                System.out.println( "RunWar.run() ping response =" + response + "=" );
+//                if ( ! cancelFlag && 
+//                    ( response == null || ! response.equalsIgnoreCase( "RUNNING" ) ) )
+//                    {
+//                    if ( ++downTimes > 5 )
+//                        {
+//                tomcatWarMonitor = new TomcatWarMonitor( connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin, this );
+//                runThread = newThread( tomcatWarMonitor );
+//                runThread.setName( "tomcatWarMonitor=" + count++ );
+//                runThread.start();
+//                
+//                if ( tomcatWarMonitor.isStartedServer() )
+//                    {
+//                    Thread.sleep( 15000 );
+//                    }
+//                        SwingUtilities.invokeLater(new Runnable() 
+//                            {
+//                            public void run() {
+//                                jFileFinderWin.setRmtConnectBtnBackground( Color.yellow );
+//                                }
+//                            });
+//                        System.out.println( "after start remote jfp server" );
+////                        Thread.sleep( 30000 );
+//                        downTimes = 0;
+//                        }
+//                    else
+//                        {
+//                        Thread.sleep( 1000 );
+//                        }
+//                    }
+//                else if ( didFirstStart ) // is running or first start ?
+//                    {
+//                    Thread.sleep( 4000 );
+//                    }
+//                else if ( ! didFirstStart ) // is running or first start ?
+//                    {
+//                    // already running
+//                    downTimes = 0;
+//                    connUserInfo.setConnectedFlag( true );
+//                    SwingUtilities.invokeLater(new Runnable() 
+//                        {
+//                        public void run() {
+//                            jFileFinderWin.setRmtConnectBtnBackground( Color.green );
+//                            }
+//                        });
+//                    }
+//                }
+//            catch( InterruptedException intexc )
+//                {
+//                System.out.println( "RunWar sleep interrupted" );
+//                SwingUtilities.invokeLater(new Runnable() 
+//                    {
+//                    public void run() {
+//                        jFileFinderWin.setRmtConnectBtnBackground( Color.yellow );
+//                        }
+//                    });
+//                }
+//            catch( Exception exc )
+//                {
+//                SwingUtilities.invokeLater(new Runnable() 
+//                    {
+//                    public void run() {
+//                        jFileFinderWin.setRmtConnectBtnBackground( Color.yellow );
+//                        }
+//                    });
+//                exc.printStackTrace();
+//                }
+//            didFirstStart = true;
+//            } // while
+//        
+//        connUserInfo.setConnectedFlag( false );
+//        SwingUtilities.invokeLater(new Runnable() 
+//            {
+//            public void run() {
+//                jFileFinderWin.setRmtConnectBtnBackgroundReset();
+//                }
+//            });
+//        System.out.println( "Exiting RunWar run() - Done" );
+//        }
+
+    public void waitUntilStarted()    // not called at this point
+        {
+        System.out.println( "entered RunWar waitUntilStarted()" );
+        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+        RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
+        
+        boolean isRunning = false;
+        boolean firstWaitFlag = true;
+        int response = -9;
+        int waitCount = 15;
+        
+        while ( response < 0 || ! (response == Constants.FILESYSTEM_DOS || response == Constants.FILESYSTEM_POSIX) )
+            {
+            System.out.println( "RunWar.run() make rest " + JfpRestURIConstants.SYS_GET_FILESYS + " call" );
+            try
+                {
+                response = noHostVerifyRestTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.SYS_GET_FILESYS, Integer.class );
+                System.out.println( "RunWar.run() SYS_GET_FILESYS response =" + response );
+//                connUserInfo.setToFilesysType(response);
+//                System.out.println( "connUserInfo.getToFilesysType() =" + connUserInfo.getToFilesysType() );
+                jFileFinderWin.setFilesysType(response);
+                System.out.println( "jFileFinderWin.getFilesysType() =" + jFileFinderWin.getFilesysType() );
+                }
+            catch( Exception exc )
+                {
+                System.out.println( "RunWar.run() get filesys rest threw Exception !!" );
+                exc.printStackTrace();
+                response = -9;
+                }
+            System.out.println( "waitUntilStarted response =" + response + "=" );
+            try
+                {
+                if ( response < 0 || ! (response == Constants.FILESYSTEM_DOS || response == Constants.FILESYSTEM_POSIX) )
+                    {
+                    if ( firstWaitFlag )
+                        {
+                        firstWaitFlag = false;
+                        System.out.println( "pause 12 seconds first time. give longer pause to let server start." );
+                        Thread.sleep( 12000 );
+                        }
+                    else
+                        {
+                        Thread.sleep( 4000 );
+                        }
+                    }
+                } 
+            catch (InterruptedException ex)
+                {
+                Logger.getLogger(RunWar.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+            if ( --waitCount < 1 )  break;
+            }
+        }
+                
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+
+        /* Create and display the form */
+//        java.awt.EventQueue.invokeLater(new Runnable() {
+//            public void run() {
+//                new TomcatAppSwFrame().setVisible(true);
+//            }
+//        });
+    }
+}

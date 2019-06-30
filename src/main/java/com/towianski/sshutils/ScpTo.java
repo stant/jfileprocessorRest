@@ -60,6 +60,12 @@ public void copyTo( String lfile, String user, String password, String rhost, St
       session.connect();
     System.out.println( "at 5" );
 
+      session.setConfig("cipher.s2c", "none,aes128-cbc,3des-cbc,blowfish-cbc");
+      session.setConfig("cipher.c2s", "none,aes128-cbc,3des-cbc,blowfish-cbc");
+
+      session.rekey();
+    System.out.println( "at 6 - after rekey for no cipher" );
+      
       boolean ptimestamp = true;
 
       // exec 'scp -t rfile' remotely

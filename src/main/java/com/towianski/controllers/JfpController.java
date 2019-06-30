@@ -28,7 +28,8 @@ import org.springframework.http.ResponseEntity;
  */
 @Controller
 @EnableAutoConfiguration
-@Profile("server")
+@Profile({"server|warserver"})
+//@Profile("warserver")
 public class JfpController {
 	
 	private static final Logger logger = LoggerFactory.getLogger(JfpController.class);

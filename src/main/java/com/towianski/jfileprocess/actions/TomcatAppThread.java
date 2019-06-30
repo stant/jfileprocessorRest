@@ -66,6 +66,14 @@ public class TomcatAppThread implements Runnable
         else
             {
             System.out.println( "TomcatAppThread.cancelTomcatAppThread() - I did Not start server so just stop myself" );
+            // Start a msgBox
+            {
+                java.awt.EventQueue.invokeLater(new Runnable() {
+                    public void run() {
+                        new MsgBoxFrame( "I did Not start server so just disconnect myself." ).setVisible( true );
+                    }
+                });
+            }
             //notify();
             }
 //        else
@@ -121,7 +129,7 @@ public class TomcatAppThread implements Runnable
                 String fpath = System.getProperty( "user.dir" ) + System.getProperty( "file.separator" );
 //                    fpath = fpath.replace( "-Gui", "-Server" );
 //                    System.out.println( "jfpFilename =" + jfpFilename + "=" );
-                String jfpFilename = JFileProcessorVersion.getName() + "-" + JFileProcessorVersion.getVersion() + ".jar";  //"JFileProcessor-1.6.0.jar";
+                String jfpFilename = JFileProcessorVersion.getFileName();
                 System.out.println( "set jfpFilename =" + jfpFilename + "=" );
                 System.out.println( "try jschSftpUtils   file =" + fpath + jfpFilename + "=   to remote =" + user + "@" + rmtHost + ":" + jfpFilename + "=" );
 

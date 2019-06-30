@@ -15,6 +15,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,6 +45,9 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
         String currentDirectory = "";
         String currentFile = "";
         int selectedPathPiece = 0;
+        
+        WatchDirSw watchDirSw = null;
+        
     /**
      * Creates new form SavedPathsPanel
      */
@@ -61,6 +65,7 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
             {
             currentDirectory = jFileFinderWin.getStartingFolder();
             }
+        this.setWatchFolder( currentDirectory );
         PathsList.setSelectionMode( ListSelectionModel.MULTIPLE_INTERVAL_SELECTION );
         filesysType = jFileFinderWin.filesysType;
         this.setLocationRelativeTo( getRootPane() );
@@ -86,6 +91,14 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
 
     public void setModel( DefaultComboBoxModel model ) {
         PathsList.setModel( model );
+    }
+
+    public String getWatchFolder() {
+        return watchFolder.getText();
+    }
+
+    public void setWatchFolder(String watchFolder) {
+        this.setWatchFolder( watchFolder );
     }
 
     public void setSavedPathsList(JList<String> savedPathsList) {
@@ -149,6 +162,28 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
         setCount();
     }
 
+    public synchronized void stopDirWatcher()
+        {
+        if ( watchDirSw != null )
+            {
+            watchDirSw.cancelWatch();
+            }
+        }
+
+    public synchronized void startDirWatcher()
+        {
+//        if ( ! stopFileWatchTb.isSelected()  // if On/Auto
+//            && ( ! maxDepth.getText().trim().equals( "" ) )
+//            && ( maxDepth.getText().trim().equals( maxDepth.getText().trim() ) )   )  // don't watch on a searched list
+//            {
+            if ( watchDirSw == null )
+                {
+                watchDirSw = new WatchDirSw( null, new ArrayList<String>() , Paths.get( watchFolder.getText().trim() ) );
+                }
+            watchDirSw.actionPerformed( new ArrayList<String>() , Paths.get( watchFolder.getText().trim() ) );
+//            }
+        }
+
     public int getSelectedPathPiece()
         {
         return selectedPathPiece;
@@ -208,6 +243,9 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
         saveToFile = new javax.swing.JButton();
         readFile = new javax.swing.JButton();
         count = new javax.swing.JLabel();
+        watchFolder = new javax.swing.JTextField();
+        jButton3 = new javax.swing.JButton();
+        watchFolderFlag = new javax.swing.JCheckBox();
 
         setMinimumSize(new java.awt.Dimension(700, 550));
         setPreferredSize(new java.awt.Dimension(700, 550));
@@ -223,6 +261,11 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
         cmdCb.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Add from List", "Subtract from List", "Files Exist in Both Lists", "Files Exist Only in This List" }));
         cmdCb.setMinimumSize(new java.awt.Dimension(150, 25));
         cmdCb.setPreferredSize(new java.awt.Dimension(150, 25));
+        cmdCb.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmdCbActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
@@ -266,7 +309,7 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridy = 2;
         gridBagConstraints.gridwidth = 7;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 0.5;
@@ -303,6 +346,44 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
         gridBagConstraints.gridy = 0;
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
         jPanel1.add(count, gridBagConstraints);
+
+        watchFolder.setEnabled(false);
+        watchFolder.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                watchFolderActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridwidth = 5;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        jPanel1.add(watchFolder, gridBagConstraints);
+
+        jButton3.setText("Browse...");
+        jButton3.setEnabled(false);
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 6;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.insets = new java.awt.Insets(0, 12, 0, 0);
+        jPanel1.add(jButton3, gridBagConstraints);
+
+        watchFolderFlag.setText("Watch Folder");
+        watchFolderFlag.setEnabled(false);
+        watchFolderFlag.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                watchFolderFlagActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        jPanel1.add(watchFolderFlag, gridBagConstraints);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
@@ -634,6 +715,29 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
         jFileFinderWin.removeListPanel( this.name );
     }//GEN-LAST:event_formWindowClosing
 
+    private void watchFolderFlagActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_watchFolderFlagActionPerformed
+        if ( watchFolderFlag.isSelected() )
+        {
+            
+        }
+        else
+        {
+            
+        }
+    }//GEN-LAST:event_watchFolderFlagActionPerformed
+
+    private void watchFolderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_watchFolderActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_watchFolderActionPerformed
+
+    private void cmdCbActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdCbActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cmdCbActionPerformed
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton3ActionPerformed
+
         
     /**
      * @param args the command line arguments
@@ -666,10 +770,13 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
     private javax.swing.JLabel count;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButton3;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JComboBox<String> listOfLists;
     private javax.swing.JButton readFile;
     private javax.swing.JButton saveToFile;
+    private javax.swing.JTextField watchFolder;
+    private javax.swing.JCheckBox watchFolderFlag;
     // End of variables declaration//GEN-END:variables
 }

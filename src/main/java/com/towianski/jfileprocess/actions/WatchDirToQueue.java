@@ -46,7 +46,7 @@ import java.util.logging.Logger;
  * Example to watch a directory (or tree) for changes to files.
  * @author stan
  */
-public class WatchDir implements Runnable
+public class WatchDirToQueue implements Runnable
     {
     ArrayList<String> pathsToNotWatch = null;
     private WatchService watcher = null;
@@ -65,7 +65,7 @@ public class WatchDir implements Runnable
     /**
      * Creates a WatchService and registers the given directory
      */
-    public WatchDir( ArrayList<String> pathsToNotWatch, Object lockObj, Thread watchDirPostThread, WatchDirPost watchDirPost, Path dirToWatch, WatchDirSw watchDirSw, boolean recursiveFlag )
+    public WatchDirToQueue( ArrayList<String> pathsToNotWatch, Object lockObj, Thread watchDirPostThread, WatchDirPost watchDirPost, Path dirToWatch, WatchDirSw watchDirSw, boolean recursiveFlag )
         {
         this.pathsToNotWatch = pathsToNotWatch;
         this.lockObj = lockObj;
@@ -92,7 +92,7 @@ public class WatchDir implements Runnable
         catch (Exception ex)
             {
             System.out.println("WatchDir set cancelFlag caught error !");
-            Logger.getLogger(WatchDir.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(WatchDirToQueue.class.getName()).log(Level.SEVERE, null, ex);
             }
         System.out.println("WatchDir exit cancelSearch()");
         }
@@ -192,7 +192,7 @@ public class WatchDir implements Runnable
                 }
             });
         } catch (IOException ex) {
-            Logger.getLogger(WatchDir.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(WatchDirToQueue.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -205,7 +205,7 @@ public class WatchDir implements Runnable
         triggerSearchFlag = false;
         while ( ! cancelFlag && ! triggerSearchFlag ) 
             {
-//            System.out.println("watchDir.processEvents() start loop" );
+            System.out.println("watchDir.processEvents() start loop" );
 
             // wait for key to be signalled
             WatchKey key = null;
@@ -267,14 +267,14 @@ public class WatchDir implements Runnable
                     boolean foundIgnore = false;
                     for ( String ignorePath : pathsToNotWatch )
                         {
-//                        System.out.println( "watchDir child      =" + child + "=" );
-//                        System.out.println( "watchDir ignorePath =" + ignorePath + "=" );
+                        System.out.println( "watchDir child      =" + child + "=" );
+                        System.out.println( "watchDir ignorePath =" + ignorePath + "=" );
                         if ( child.toString().trim().equals( ignorePath ) )
                             {
                             foundIgnore = true;
                             }
                         }
-//                    System.out.println( "watchDir  foundIgnore flag = " + foundIgnore );
+                    System.out.println( "watchDir  foundIgnore flag = " + foundIgnore );
                     if ( ! foundIgnore )
                         {   
                         triggerSearchFlag = true;
@@ -340,7 +340,7 @@ public class WatchDir implements Runnable
             }
         catch (IOException ex)
             {
-            Logger.getLogger(WatchDir.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(WatchDirToQueue.class.getName()).log(Level.SEVERE, null, ex);
             }
     System.out.println( "exiting watchDir process loop !" );
     }
@@ -361,7 +361,7 @@ public class WatchDir implements Runnable
             } 
         catch (IOException ex)
             {
-            Logger.getLogger(WatchDir.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(WatchDirToQueue.class.getName()).log(Level.SEVERE, null, ex);
             }
 
         System.out.println("WatchDir() dir =" + dirToWatch + "=" );

@@ -133,6 +133,9 @@ public class ProgramMemory {
         jFileFinderWin.setShowPermsFlag(showPermsFlag);
         jFileFinderWin.setStartConsoleCmd( startConsoleCmd );
         jFileFinderWin.setMyEditorCmd( myEditorCmd );
+        
+        setTblColModelWidth( TBLCOLMODEL_WIDTH_FILETYPE, 16 );
+        setTblColModelWidth( TBLCOLMODEL_WIDTH_FOLDERTYPE, 16 );
         }
     
     //---------

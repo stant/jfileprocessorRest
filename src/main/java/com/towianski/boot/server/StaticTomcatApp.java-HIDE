@@ -21,6 +21,7 @@ import java.io.PrintStream;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
+import java.util.Properties;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -45,15 +46,15 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 
-@ComponentScan({ "com.towianski.controllers" })
+//@ComponentScan({ "com.towianski.controllers" })
 @SpringBootApplication
 @Profile("server")
-public class TomcatApp {
+public class StaticTomcatApp {
 
-    private static Log logger = LogFactory.getLog(TomcatApp.class);
+    private static Log logger = LogFactory.getLog(StaticTomcatApp.class);
     
     @Bean
-    protected ServletContextListener listener() {
+    protected ServletContextListener listener2() {
         return new ServletContextListener() {
 
             @Override
@@ -230,11 +231,28 @@ public class TomcatApp {
 //        logger.info( "** -Dmyarg2 =" + System.getProperty("myarg2") + "=" );
         
 //        SpringApplication.run(TomcatApp.class, args);
-        context = new SpringApplicationBuilder(TomcatApp.class).profiles("server").run(args);
+
+        SpringApplication app2 = new SpringApplication(StaticWeb.class);
+        System.out.println( "Entered StaticWeb.main");
+
+        Properties properties = new Properties();
+//        properties.setProperty("spring.resources.static-locations",
+//                               "classpath:/newLocation1/, classpath:/newLocation2/");
+        properties.setProperty("spring.resources.static-locations",
+                               "classpath:/net2/data/websites/aaa/");
+        properties.setProperty( "server.port", "8070" );
+        System.out.println( "Entered StaticWeb.main after set properties");
+        app2.setDefaultProperties(properties);
+        System.out.println( "Entered StaticWeb.main after call set props. before app.run");
+        
+        //app2.run(args);
+        System.out.println( "Entered StaticWeb.main after app.run()");
+
+        context = new SpringApplicationBuilder(StaticTomcatApp.class).profiles("server").run(args);
 
         logger.info( "*** after SpringApplication.run(TomcatApp.class, args)" );
         
-            System.out.println( "server using port =" + context.getEnvironment().getProperty("local.server.port") + "=" );
+        System.out.println( "server using port =" + context.getEnvironment().getProperty("local.server.port") + "=" );
 
         stdOutFilePropertyChange( loggingFile );
         stdErrFilePropertyChange( loggingFile );

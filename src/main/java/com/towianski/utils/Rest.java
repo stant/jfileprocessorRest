@@ -69,7 +69,7 @@ public class Rest {
 
             //convert json string to object
             obj = objectMapper.readValue( fromFile, typeRef );
-            System.out.println( "REST.readObjectFromFile() ppobj.getShowHiddenFilesFlag() =" + ((ProgramMemory)obj).isShowHiddenFilesFlag() + "=" );
+            //System.out.println( "REST.readObjectFromFile() ppobj.getShowHiddenFilesFlag() =" + ((typeRef)obj).isShowHiddenFilesFlag() + "=" );
             //JSON from file to Object
 //            Staff obj = mapper.readValue(new File("c:\\file.json"), Staff.class);
 
@@ -146,6 +146,7 @@ public class Rest {
         {
         try //throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException
             {
+            System.out.println( "entered createNoHostVerifyRestTemplate()" );
             SSLContext sslContext = SSLContexts.custom()
                 .loadTrustMaterial(null, new TrustSelfSignedStrategy())
                 .build();
@@ -184,6 +185,7 @@ public class Rest {
         {
         try
             {
+            System.out.println( "entered createNoHostVerifyShortTimeoutRestTemplate()" );
             SSLContext sslContext = SSLContexts.custom()
                 .loadTrustMaterial(null, new TrustSelfSignedStrategy())
                 .build();

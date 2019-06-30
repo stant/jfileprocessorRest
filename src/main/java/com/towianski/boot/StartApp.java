@@ -1,8 +1,11 @@
 package com.towianski.boot;
 
 import com.towianski.boot.server.TomcatApp;
+import com.towianski.boot.server.WarRun;
 import com.towianski.jfileprocessor.JFileFinderWin;
 import com.towianski.utils.MyLogger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.PreDestroy;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -23,6 +26,9 @@ public class StartApp //implements CommandLineRunner
         SpringApplication app;
         final ConfigurableApplicationContext context;
         boolean startServer = false;
+        boolean startWebServer = false;
+        boolean startWarServer = false;
+        String loggingFile = "";
         
         // java - get screen size using the Toolkit class
 //        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -41,6 +47,14 @@ public class StartApp //implements CommandLineRunner
                 {
                 startServer = true;
                 }
+            else if ( args[i].equalsIgnoreCase( "--webserver" ) )
+                {
+                startWebServer = true;
+                }
+            else if ( args[i].equalsIgnoreCase( "--warserver" ) )
+                {
+                startWarServer = true;
+                }
             }
         
         if ( startServer )
@@ -52,6 +66,19 @@ public class StartApp //implements CommandLineRunner
 //            args = (String[])ArrayUtils.add(args, "--spring.jpa.hibernate.ddl-auto=create");
 //            context = app.run(args);
             } 
+        else if ( startWebServer )
+            {
+            System.out.println( "*** START WEB SERVER ***" );
+            }
+        else if ( startWarServer )
+            {
+            System.out.println( "*** START WAR SERVER ***" );
+            try {
+                WarRun.main(args);
+            } catch (Exception ex) {
+                Logger.getLogger(StartApp.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            }
         else
             {
             System.out.println( "*** START CLIENT ***" );

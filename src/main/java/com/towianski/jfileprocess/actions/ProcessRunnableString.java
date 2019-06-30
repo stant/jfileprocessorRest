@@ -14,16 +14,16 @@ import java.util.logging.Logger;
  *
  * @author stan
  */
-public final class ProcessRunnable implements Runnable {
+public final class ProcessRunnableString implements Runnable {
 
     String startDir = null;
-    String[] allArgs = {};
+    String cmd = null;
     int exitValue = 0;
     
-    public ProcessRunnable( String startDir, String[] allArgs )
+    public ProcessRunnableString( String startDir, String cmd )
         {
         this.startDir = startDir;
-        this.allArgs = allArgs;
+        this.cmd = cmd;
         }
 
     @Override
@@ -31,11 +31,8 @@ public final class ProcessRunnable implements Runnable {
         {
         try {
             System.out.println( "ProcessRunnable start()" );
-            for ( String tmp : allArgs )
-                {
-                System.out.println( "(" + tmp + ") " );
-                }
-            ProcessBuilder builder = new ProcessBuilder( allArgs );
+            System.out.println( "(" + cmd + ") " );
+            ProcessBuilder builder = new ProcessBuilder( cmd );
             if ( startDir != null )
                 {
                 builder.directory( new File( startDir ) );
@@ -47,9 +44,9 @@ public final class ProcessRunnable implements Runnable {
             exitValue = process.exitValue();
             System.out.println( "process.waitFor() rc = " + exitValue );
         } catch (IOException ex) {
-            Logger.getLogger(ProcessRunnable.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ProcessRunnableString.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InterruptedException ex) {
-            Logger.getLogger(ProcessRunnable.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ProcessRunnableString.class.getName()).log(Level.SEVERE, null, ex);
         }
 	}
 

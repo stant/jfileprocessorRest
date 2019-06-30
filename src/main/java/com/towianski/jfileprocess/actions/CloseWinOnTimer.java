@@ -21,6 +21,11 @@ public class CloseWinOnTimer extends Timer
     
     public CloseWinOnTimer( final JFrame jframe, final int delay )
     {
+         this( jframe, "moveToBottom", delay );
+    }
+    
+    public CloseWinOnTimer( final JFrame jframe, final String doMove, final int delay )
+    {
     super( delay, new ActionListener() {
 
                @Override
@@ -36,7 +41,9 @@ public class CloseWinOnTimer extends Timer
                }
             } );
 //        jframe.setState ( JFrame.ICONIFIED );
-        DesktopUtils.moveJframeToBottomScreen(jframe);
+
+        if ( doMove.equalsIgnoreCase( "moveToBottom" ) )
+            DesktopUtils.moveJframeToBottomScreen(jframe);
 //    {{setRepeats(false);}}.start();    
     }
 }

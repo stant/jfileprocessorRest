@@ -53,8 +53,13 @@ public Sftp( String user, String password, String rhost, int sshPort )
 
         Properties config = new Properties();
         config.put("StrictHostKeyChecking","no");
-        System.out.println( "Sftp at 3" );
+        System.out.println( "Sftp at StrictHostKeyChecking" );
+//        config.put("cipher.s2c", "arcfour,aes128-cbc,3des-cbc,blowfish-cbc");
+//        System.out.println( "Sftp at cipher s2c" );
+//        config.put("cipher.c2s", "arcfour,aes128-cbc,3des-cbc,blowfish-cbc");
+//        System.out.println( "Sftp at cipher c2s" );
         session.setConfig(config);
+        System.out.println( "Sftp at 3" );
 
           // username and password will be given via UserInfo interface.
     //      UserInfo ui=new MyUserInfo();
@@ -65,12 +70,20 @@ public Sftp( String user, String password, String rhost, int sshPort )
         session.connect();
         System.out.println( "Sftp at 5" );
 
+//        session.setConfig("cipher.s2c", "arcfour,aes128-cbc,3des-cbc,blowfish-cbc");
+//        System.out.println( "Sftp at 6a" );
+//        session.setConfig("cipher.c2s", "arcfour,aes128-cbc,3des-cbc,blowfish-cbc");
+//        System.out.println( "Sftp at 6b" );
+
+//        session.rekey();
+//        System.out.println( "Sftp at 6 - after rekey for no cipher" );
+
         channel=session.openChannel( "sftp" );
-        System.out.println( "Sftp at 6" );
-        channel.connect();
         System.out.println( "Sftp at 7" );
-        chanSftp = (com.jcraft.jsch.ChannelSftp)channel;
+        channel.connect();
         System.out.println( "Sftp at 8" );
+        chanSftp = (com.jcraft.jsch.ChannelSftp)channel;
+        System.out.println( "Sftp at 9" );
         isConnected = true;
         message = "";
         System.out.println( "Sftp done" );

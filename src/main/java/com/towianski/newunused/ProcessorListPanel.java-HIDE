@@ -3,10 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.towianski.jfileprocessor;
+package com.towianski.newunused;
 
 import com.towianski.boot.JFileProcessorVersion;
 import com.towianski.jfileprocess.actions.ProcessInThread;
+import com.towianski.jfileprocessor.JFileFinderWin;
+import com.towianski.jfileprocessor.TextEditPanel;
 import com.towianski.utils.DesktopUtils;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -24,7 +26,7 @@ import javax.swing.JOptionPane;
  *
  * @author stan
  */
-public class SavedPathsPanel extends javax.swing.JPanel {
+public class ProcessorListPanel extends javax.swing.JPanel {
 
         HashMap<String,String> savedPathsHm = new HashMap<String,String>();
         JFileFinderWin jFileFinderWin = null;
@@ -32,7 +34,7 @@ public class SavedPathsPanel extends javax.swing.JPanel {
     /**
      * Creates new form SavedPathsPanel
      */
-    public SavedPathsPanel( JFileFinderWin jFileFinderWin ) {
+    public ProcessorListPanel( JFileFinderWin jFileFinderWin ) {
         initComponents();
         this.jFileFinderWin = jFileFinderWin;
     }
@@ -184,7 +186,7 @@ public class SavedPathsPanel extends javax.swing.JPanel {
     //            cmdList.add( "-cp" );
     //            cmdList.add( "$CLASSPATH" );
                 cmdList.add( "-jar" );
-                cmdList.add( JFileProcessorVersion.getFileName() );
+                cmdList.add( JFileProcessorVersion.getName() + "-" + JFileProcessorVersion.getVersion() + ".war" );
 
                 int rc = jp.execJava2( cmdList, true );
                 System.out.println( "SavedPathsPanel.javaprocess.exec start new window rc = " + rc + "=" );
@@ -206,7 +208,7 @@ public class SavedPathsPanel extends javax.swing.JPanel {
     //            cmdList.add( "-cp" );
     //            cmdList.add( "$CLASSPATH" );
                 cmdList.add( "-jar" );
-                cmdList.add( JFileProcessorVersion.getFileName() );
+                cmdList.add( JFileProcessorVersion.getName() + "-" + JFileProcessorVersion.getVersion() + ".war" );
                 cmdList.add( DesktopUtils.getTrashFolder().toString() );
                 
                 int rc = jp.execJava2( cmdList, true );

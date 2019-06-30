@@ -33,12 +33,14 @@ import com.towianski.jfileprocess.actions.CutAction;
 import com.towianski.jfileprocess.actions.DeleteAction;
 import com.towianski.jfileprocess.actions.EnterAction;
 import com.towianski.jfileprocess.actions.ForwardFolderAction;
+import com.towianski.jfileprocess.actions.MsgBoxFrame;
 import com.towianski.jfileprocess.actions.PasteAction;
 import com.towianski.jfileprocess.actions.RenameAction;
 import com.towianski.jfileprocess.actions.UpFolderAction;
 import com.towianski.jfileprocess.actions.ProcessInThread;
 import com.towianski.jfileprocess.actions.NewFolderAction;
 import com.towianski.jfileprocess.actions.ScriptOnSelectedFilesAction;
+import com.towianski.jfileprocess.actions.TomcatAppThread;
 import com.towianski.listeners.MyFocusAdapter;
 import com.towianski.listeners.MyRowSorterListener;
 import com.towianski.listeners.ScriptMenuItemListener;
@@ -58,6 +60,9 @@ import static com.towianski.models.Constants.SHOWFILESFOLDERSCB_BOTH;
 import static com.towianski.models.Constants.SHOWFILESFOLDERSCB_FILES_ONLY;
 import static com.towianski.models.Constants.SHOWFILESFOLDERSCB_FOLDERS_ONLY;
 import static com.towianski.models.Constants.SHOWFILESFOLDERSCB_NEITHER;
+import com.towianski.models.FileAssoc;
+import com.towianski.models.FileAssocList;
+import com.towianski.models.JfpConstants;
 import com.towianski.models.ProgramMemory;
 import com.towianski.models.SearchModel;
 import com.towianski.renderers.EnumFolderIconCellRenderer;
@@ -68,6 +73,7 @@ import com.towianski.sshutils.JschSftpUtils;
 import static com.towianski.utils.ClipboardUtils.getClipboardStringsList;
 import static com.towianski.utils.ClipboardUtils.setClipboardContents;
 import com.towianski.utils.DesktopUtils;
+import com.towianski.utils.FileAssocWin;
 import com.towianski.utils.FileUtils;
 import com.towianski.utils.GithubClient;
 import com.towianski.utils.MyLogger;
@@ -97,12 +103,16 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -160,6 +170,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
@@ -168,6 +179,7 @@ import org.springframework.web.client.RestTemplate;
  *
  * @author Stan Towianski - June 2015
  */
+@ComponentScan("com.towianski.boot.server")
 @SpringBootApplication
 @Profile("client")
 public class JFileFinderWin extends javax.swing.JFrame {
@@ -207,14 +219,11 @@ public class JFileFinderWin extends javax.swing.JFrame {
     DefaultComboBoxModel listOfFilesPanelsModel = new DefaultComboBoxModel(data);
 //    DefaultComboBoxModel listOfFilesPanelsModel = new DefaultComboBoxModel();
 
-    ConnUserInfo connUserInfo = null;
+    ConnUserInfo connUserInfo = new ConnUserInfo();
     int filesysType = Constants.FILESYSTEM_POSIX;
     ProgramMemory programMemory = null;
-    
+    FileAssocList fileAssocList = new FileAssocList();
     PrintStream console = System.out;            
-
-//    JDatePickerImpl date1 = null;
-//    JDatePickerImpl date2 = null;
     
     JFileFinderWin jFileFinderWin = this;
         
@@ -226,7 +235,17 @@ public class JFileFinderWin extends javax.swing.JFrame {
         System.out.println("*** JFileFinderWin() Constructor ***" );
         initComponents();
 
-        start();       
+        start();
+    }
+
+    public JFileFinderWin( String startPath ) {
+
+        System.out.println("*** JFileFinderWin() Constructor with starting Path ***" );
+        initComponents();
+        startingFolder.setText( startPath );
+
+        start();
+        searchBtn.doClick();
     }
 
     public void checkForUpdate() 
@@ -300,13 +319,42 @@ public class JFileFinderWin extends javax.swing.JFrame {
             ex.printStackTrace();
             }
         }
+        
+private static void addJarToClasspath(File file) {
+    try {
+        Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
+        method.setAccessible(true);
+        method.invoke(ClassLoader.getSystemClassLoader(), new Object[]{file.toURI().toURL()});
+        }
+    catch (Exception ex) {
+        ex.printStackTrace();
+        }
+}
     
     public void start() 
         {
+//        System.out.println( "enter start()" );
+//        System.err.println( "enter start()" );
         this.setTitle( JFileProcessorVersion.getName() + " " + JFileProcessorVersion.getVersion() + " - Stan Towianski  (c) 2015-2019" );
         System.out.println( "java.version =" + System.getProperty("java.version") + "=" );
+
+        addJarToClasspath( new File( "JfpLib.jar" ) );
+        System.out.println( "======= java classpath(s) ======>" );
+        ClassLoader cl = ClassLoader.getSystemClassLoader();
+
+        URL[] urls = ((URLClassLoader)cl).getURLs();
+
+        for(URL url: urls){
+        	System.out.println(url.getFile());
+        }
+        System.out.println( "=================================" );
+        
         System.out.println( "JfpHomeTempDir Directory =" + JfpHomeTempDir + "=" );
         System.out.println( "Scripts Directory =" + scriptsFile + "=" );
+
+        connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", getRmtAskHttpsPort() );
+        connUserInfo.setTo( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", getRmtAskHttpsPort() );
+        calcFilesysType();  // also sets in connUserInfo
         
         jSplitPane2.setLeftComponent( savedPathReplacablePanel );
 
@@ -344,50 +392,38 @@ public class JFileFinderWin extends javax.swing.JFrame {
         
         startingFolder.requestFocus();
         
-//        filesTbl.getInputMap().put(
-//            KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "startEditing");
+        jSplitPane2.setDividerLocation( 170 );  // 150
+        System.out.println( "at start jSplitPane1.getLastDividerLocation() =" + jSplitPane1.getLastDividerLocation() );
+        programMemory = readInProgramMemoryFromFile();
 
-//        System.out.println( "create spinner");
-//        String[] andOrSpinModelList = { "", "And", "Or" };
-//        SpinnerListModel andOrSpinModel = new CyclingSpinnerListModel( andOrSpinModelList );
-//        jSpinner1 = new javax.swing.JSpinner( andOrSpinModel );        
+        readInBookmarks();
+        fileAssocList = readInFileAssocList();
 
-    jSplitPane2.setDividerLocation( 170 );  // 150
-    System.out.println( "at start jSplitPane1.getLastDividerLocation() =" + jSplitPane1.getLastDividerLocation() );
-    programMemory = readInProgramMemoryFromFile();
-    
-    readInBookmarks();
-    
-    checkForUpdate();
-    setupReportIssueLink();
-    
-    if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "mac" ) )
-        {
-        scriptsOsFile = new File( JfpHomeDir + "menu-scripts" + System.getProperty( "file.separator" ) + "mac" );
-        }
-    else if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
-        {
-        scriptsOsFile = new File( JfpHomeDir + "menu-scripts" + System.getProperty( "file.separator" ) + "windows" );
-        }
-    else if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "linux" ) )
-        {
-        scriptsOsFile = new File( JfpHomeDir + "menu-scripts" + System.getProperty( "file.separator" ) + "linux" );
-        }
-    System.out.println( "read scriptsFile/menu-scripts from  =" + scriptsFile + "=" );
-    System.out.println( "read OS scriptsOsFile/menu-scripts from  =" + scriptsOsFile + "=" );
-    
-    (new File( JfpHomeTempDir )).mkdirs();
-    
-//    RestServerSw restServer = null;
-//    if ( restServer == null )
-//        {
-//        restServer = new RestServerSw( this );
-//        }
-//    restServer.actionPerformed(null);
+        checkForUpdate();
+        setupReportIssueLink();
 
-    setLookAndFeel();
-    this.setVisible(true);
-    }
+        if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "mac" ) )
+            {
+            scriptsOsFile = new File( JfpHomeDir + "menu-scripts" + System.getProperty( "file.separator" ) + "mac" );
+            }
+        else if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
+            {
+            scriptsOsFile = new File( JfpHomeDir + "menu-scripts" + System.getProperty( "file.separator" ) + "windows" );
+            }
+        else if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "linux" ) )
+            {
+            scriptsOsFile = new File( JfpHomeDir + "menu-scripts" + System.getProperty( "file.separator" ) + "linux" );
+            }
+        System.out.println( "read scriptsFile/menu-scripts from  =" + scriptsFile + "=" );
+        System.out.println( "read OS scriptsOsFile/menu-scripts from  =" + scriptsOsFile + "=" );
+
+        (new File( JfpHomeTempDir )).mkdirs();
+
+        setLookAndFeel();
+        this.setVisible(true);
+//        System.out.println( "leaving start()" );
+//        System.err.println( "leaving start()" );
+        }
     
     public static void setLookAndFeel()
         {
@@ -635,6 +671,38 @@ public class JFileFinderWin extends javax.swing.JFrame {
             {
 
             }
+    }
+
+    public FileAssocList readInFileAssocList() {
+        System.out.println( "readInFileAssocList()" );
+        try {
+            fileAssocList = (FileAssocList) Rest.readObjectFromFile( "FileAssocList.json", new TypeReference<FileAssocList>(){} );
+            if ( fileAssocList == null )
+                {
+                System.out.println( "readInFileAssocFromFile() Error reading json file" );
+                fileAssocList = new FileAssocList();
+                fileAssocList.addFileAssoc( new FileAssoc( JfpConstants.ASSOC_TYPE_SUFFIX, 
+                        "", JfpConstants.MATCH_TYPE_GLOB, "**.war", 
+                        "java -Dspring.profiles.active=warserver -jar " + JFileProcessorVersion.getFileName() + 
+                                " --warfile=%f --path=/%F --port=8070 --warserver --logging.file=" + DesktopUtils.getTmpDir() + "%F.log",
+                        "url:https://localhost:8070/jfp/sys/stop" ) );
+                Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
+                }
+            else
+                {
+                System.out.println( "readInFileAssocFromFile() read in json ok" );
+                //fileAssoc.setJFileFinderWin( this );
+//                fileAssoc.infuseSavedValues();
+                }
+    //        if ( jFileFinderWin == null )
+    //            return;
+            return fileAssocList;
+            }
+        catch( Exception exc )
+            {
+            exc.printStackTrace();
+            }
+        return new FileAssocList();
     }
 
     public void saveBookmarks() {
@@ -1199,9 +1267,9 @@ public class JFileFinderWin extends javax.swing.JFrame {
             {
             if ( watchDirSw == null )
                 {
-                watchDirSw = new WatchDirSw( this );
+                watchDirSw = new WatchDirSw( this, jFileFinderWin.pathsToNotWatch(), Paths.get( jFileFinderWin.getStartingFolder() ) );
                 }
-            watchDirSw.actionPerformed(null);
+            watchDirSw.actionPerformed( jFileFinderWin.pathsToNotWatch(), Paths.get( jFileFinderWin.getStartingFolder() ) );
             }
         }
 
@@ -1494,6 +1562,17 @@ public class JFileFinderWin extends javax.swing.JFrame {
     public void searchBtnAction( java.awt.event.ActionEvent evt )
         {
         System.out.println( "searchBtnAction() with connUserInfo =" + connUserInfo + "=" );
+//        try
+//        {
+//            int x = 2/0;
+//        }
+//        catch( Exception ex)
+//        {
+//        System.out.println( "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^6" );
+//        System.err.println( "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^6" );
+//            ex.printStackTrace();
+//            return;
+//        }
         if ( connUserInfo.isConnectedFlag() )
             {
             searchBtnActionRest( evt );
@@ -1662,46 +1741,37 @@ public class JFileFinderWin extends javax.swing.JFrame {
     
     public void setColumnSizes()
         {
-        System.out.println( "entered setColumnSizes()" );
+//        System.out.println( "entered setColumnSizes()" );
+//        System.err.println( "entered setColumnSizes()" );
         try {
             TableColumnModel tblColModel = filesTbl.getColumnModel();
-            System.out.println( "setColumnSizes() table col count =" + tblColModel.getColumnCount() );
+//            System.err.println( "setColumnSizes() table col count =" + tblColModel.getColumnCount() );
             if ( tblColModel.getColumnCount() < 2 )
                 {
                 return;
                 }
-            System.out.println( "showJustFilenameFlag.isSelected() =" + showJustFilenameFlag.isSelected() );
-            System.out.println( "connUserInfo.getToFilesysType() =" + connUserInfo.getToFilesysType() );
+//            System.err.println( "showJustFilenameFlag.isSelected() =" + showJustFilenameFlag.isSelected() );
+//            System.err.println( "connUserInfo.getToFilesysType() =" + connUserInfo.getToFilesysType() );
+            
+            setColumnRenderers();
+
             tblColModel.getColumn(FilesTblModel.FILESTBLMODEL_FILETYPE ).setMaxWidth( programMemory.getTblColModelWidth( programMemory.TBLCOLMODEL_WIDTH_FILETYPE ) );
-    //        tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_ISLINK ).setCellRenderer( new LinktypeCBCellRenderer() );
-            tblColModel.getColumn(FilesTblModel.FILESTBLMODEL_FILETYPE ).setCellRenderer( new EnumIconCellRenderer() );
 
             tblColModel.getColumn(FilesTblModel.FILESTBLMODEL_FOLDERTYPE ).setMaxWidth( programMemory.getTblColModelWidth( programMemory.TBLCOLMODEL_WIDTH_FOLDERTYPE ) );
-    //        tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_ISDIR ).setCellRenderer( new FiletypeCBCellRenderer() );
-            tblColModel.getColumn(FilesTblModel.FILESTBLMODEL_FOLDERTYPE ).setCellRenderer( new EnumFolderIconCellRenderer() );
+
             if ( showJustFilenameFlag.isSelected() )
                 {
                 tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setPreferredWidth( programMemory.getTblColModelWidth( programMemory.TBLCOLMODEL_WIDTH_PATH_SHORT ) );
-                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setCellRenderer( new PathRenderer( connUserInfo.getToFilesysType() ) );
                 }
             else
                 {
                 tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setPreferredWidth( programMemory.getTblColModelWidth( programMemory.TBLCOLMODEL_WIDTH_PATH_LONG ) );
-                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setCellRenderer( new DefaultTableCellRenderer() );
                 }
-    //        if ( connUserInfo.isConnectedFlag() )
-    //            {
-    //            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_MODIFIEDDATE ).setCellRenderer( FormatRenderer.getSftpDateTimeRenderer() );
-    //            }
-    //        else
-    //            {
-                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_MODIFIEDDATE ).setPreferredWidth( programMemory.getTblColModelWidth( programMemory.TBLCOLMODEL_WIDTH_MODIFIEDDATE ) );
-                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_MODIFIEDDATE ).setCellRenderer( FormatRenderer.getDateTimeRenderer() );
-    //            }
+
+            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_MODIFIEDDATE ).setPreferredWidth( programMemory.getTblColModelWidth( programMemory.TBLCOLMODEL_WIDTH_MODIFIEDDATE ) );
+
             tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_SIZE ).setCellRenderer( NumberRenderer.getIntegerRenderer() );
-            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_OWNER ).setCellRenderer( new DefaultTableCellRenderer() );
-            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_GROUP ).setCellRenderer( new DefaultTableCellRenderer() );
-            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PERMS ).setCellRenderer( new DefaultTableCellRenderer() );
+            
             if ( ! isShowOwnerFlag() )
                 {
                 tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_OWNER ).setPreferredWidth( 0 );
@@ -1726,7 +1796,49 @@ public class JFileFinderWin extends javax.swing.JFrame {
         catch (Exception ex) 
             {
             logger.log(Level.SEVERE, null, ex);
-            System.out.println( "Error in setColumnSizes()" );
+            System.err.println( "Error in setColumnSizes()" );
+            }
+        }
+        
+    public void setColumnRenderers()
+        {
+//        System.out.println( "entered setColumnRenderers()" );
+//        System.err.println( "entered setColumnRenderers()" );
+        try {
+            TableColumnModel tblColModel = filesTbl.getColumnModel();
+//            System.err.println( "setColumnRenderers() table col count =" + tblColModel.getColumnCount() );
+            if ( tblColModel.getColumnCount() < 2 )
+                {
+                return;
+                }
+//            System.err.println( "showJustFilenameFlag.isSelected() =" + showJustFilenameFlag.isSelected() );
+//            System.err.println( "connUserInfo.getToFilesysType() =" + connUserInfo.getToFilesysType() );
+
+            tblColModel.getColumn(FilesTblModel.FILESTBLMODEL_FILETYPE ).setCellRenderer( new EnumIconCellRenderer() );
+
+            tblColModel.getColumn(FilesTblModel.FILESTBLMODEL_FOLDERTYPE ).setCellRenderer( new EnumFolderIconCellRenderer() );
+
+            if ( showJustFilenameFlag.isSelected() )
+                {
+                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setCellRenderer( new PathRenderer( connUserInfo.getToFilesysType() ) );
+                }
+            else
+                {
+                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setCellRenderer( new DefaultTableCellRenderer() );
+                }
+
+            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_MODIFIEDDATE ).setCellRenderer( FormatRenderer.getDateTimeRenderer() );
+
+            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_SIZE ).setCellRenderer( NumberRenderer.getIntegerRenderer() );
+
+            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_OWNER ).setCellRenderer( new DefaultTableCellRenderer() );
+            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_GROUP ).setCellRenderer( new DefaultTableCellRenderer() );
+            tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PERMS ).setCellRenderer( new DefaultTableCellRenderer() );
+            } 
+        catch (Exception ex) 
+            {
+            logger.log(Level.SEVERE, null, ex);
+            System.err.println( "Error in setColumnRenderers()" );
             }
         }
         
@@ -1758,11 +1870,22 @@ public class JFileFinderWin extends javax.swing.JFrame {
         filesTbl.getSelectionModel().clearSelection();
         if ( filesTblModel == null )
             {
+//            System.out.println( "JFileFinderWin.fillInFilesTable()  passed fileTblModel is NULL" );
+//            System.err.println( "JFileFinderWin.fillInFilesTable()  passed fileTblModel is NULL" );
             filesTblModel = jfilefinder.getFilesTableModel();
+//            System.out.println( "JFileFinderWin.fillInFilesTable()  so got jfilefinder.getFilesTableModel() rows =" + filesTblModel.getRowCount() );
+//            System.err.println( "JFileFinderWin.fillInFilesTable()  so got jfilefinder.getFilesTableModel() rows =" + filesTblModel.getRowCount() );
             }
-
-        //System.out.println( "filesTblModel.getColumnCount() =" + filesTblModel.getColumnCount() + "   tblColModelSizeLast = " + tblColModelSizeLast );
-        //System.out.println( "tblColModelSizeViewed( filesTblModel.getColumnCount() ) =" + tblColModelSizeViewed( filesTblModel.getColumnCount() ) + "   tblColModelSizeLast = " + tblColModelSizeLast );
+//        else
+//            {
+//            System.out.println( "JFileFinderWin.fillInFilesTable()  passed fileTblModel is with rows =" + filesTblModel.getRowCount() );
+//            System.err.println( "JFileFinderWin.fillInFilesTable()  passed fileTblModel is with rows =" + filesTblModel.getRowCount() );
+//            }
+        
+//        System.out.println( "filesTblModel.getColumnCount() =" + filesTblModel.getColumnCount() + "   tblColModelSizeLast = " + tblColModelSizeLast );
+//        System.out.println( "tblColModelSizeViewed( filesTblModel.getColumnCount() ) =" + tblColModelSizeViewed( filesTblModel.getColumnCount() ) + "   tblColModelSizeLast = " + tblColModelSizeLast );
+//        System.err.println( "filesTblModel.getColumnCount() =" + filesTblModel.getColumnCount() + "   tblColModelSizeLast = " + tblColModelSizeLast );
+//        System.err.println( "tblColModelSizeViewed( filesTblModel.getColumnCount() ) =" + tblColModelSizeViewed( filesTblModel.getColumnCount() ) + "   tblColModelSizeLast = " + tblColModelSizeLast );
         if ( tblColModelSizeViewed( filesTblModel.getColumnCount() ) != tblColModelSizeLast 
                 || ! alreadySetColumnSizes )
             {
@@ -1778,7 +1901,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
         
         System.out.println( "resultsData.getFilesMatched() =" + resultsData.getFilesMatched() );
         if ( filesTbl.getAutoCreateColumnsFromModel() && 
-                ( resultsData.getFilesMatched() > 0 || resultsData.getFoldersMatched() > 0 ) )  // if we found files
+                ( resultsData.getFilesMatched() > 0 || resultsData.getFoldersMatched() > 0 
+                  || filesTblModel.getColumnCount() > 0 ) )  // if we found files or have No Files Found to display !
             {
             setColumnSizes();
             }
@@ -1844,7 +1968,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
 //        System.out.println( "filestr              =" + filestr + "=" );
 //        System.out.println( "stdOutFile.getText() =" + stdOutFile.getText() + "=" );
 
-        System.out.println( "do Desktop Open" );
+        System.out.println( "do Desktop Open for filestr =" + filestr + "=" );
         Desktop desktop = Desktop.getDesktop();
         try {
             if ( connUserInfo.isConnectedFlag()  &&   //rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) &&
@@ -1942,7 +2066,181 @@ public class JFileFinderWin extends javax.swing.JFrame {
             }
         }
         
-    
+    public void jfpExecOrStop( String cmd )
+    {
+        try {
+            //System.out.println( "RenameActionPerformed evt.getSource() =" + evt.getSource() );
+            if ( filesTbl.getSelectedRow() < 0 )
+                {
+                JOptionPane.showMessageDialog( this, "Please select an item first.", "Error", JOptionPane.ERROR_MESSAGE );
+                return;
+                }
+            int rowIndex = filesTbl.convertRowIndexToModel( filesTbl.getSelectedRow() );
+            System.out.println( "rename filesTbl.getSelectedRow() =" + filesTbl.getSelectedRow() + "   rowIndex = " + rowIndex );
+            FilesTblModel filesTblModel = (FilesTblModel) filesTbl.getModel();
+            String selectedPath = (String) filesTblModel.getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH );
+            System.out.println( "start webserver at selectedPath =" + selectedPath + "   rowIndex = " + rowIndex );
+            
+            String runCmdString = "";
+            PathMatcher matcher = null;
+//            System.out.println( "------- BEG DUMP FILE ASSOC LIST");
+//            for(Map.Entry<String,FileAssoc> entry : fileAssocList.getFileAssocList().entrySet()) {
+//                String key = entry.getKey();
+//                FileAssoc value = entry.getValue();
+//
+//                System.out.println( "matched and got fa.getAssocType =" + value.getAssocType() + "=" );
+//                System.out.println( "matched and got fa.getMatchPattern =" + value.getMatchPattern() + "=" );
+//                System.out.println( "matched and got fa.exec =" + value.getExec() + "=" );
+//                }
+//            System.out.println( "------- END DUMP FILE ASSOC LIST");
+            
+            FileAssoc fa = fileAssocList.getFileAssoc(JfpConstants.ASSOC_TYPE_EXACT_FILE, selectedPath );
+            if ( fa != null )
+                {
+                System.out.println( "matched and got ASSOC_TYPE_1_FILE fa.exec =" + fa.getExec() + "=" );
+                if ( cmd.equalsIgnoreCase( "stop" ) )
+                    runCmdString = fa.getStop();
+                else
+                    runCmdString = fa.getExec();
+                }
+            else
+                {
+                fa = fileAssocList.getFileAssoc( JfpConstants.ASSOC_TYPE_FILENAME, selectedPath );
+                if ( fa != null )
+                    {
+                    System.out.println( "matched and got ASSOC_TYPE_FILENAME fa.exec =" + fa.getExec() + "=" );
+                    if ( cmd.equalsIgnoreCase( "stop" ) )
+                        runCmdString = fa.getStop();
+                    else
+                        runCmdString = fa.getExec();
+                    }
+                else
+                    {
+                    fa = fileAssocList.getFileAssoc(JfpConstants.ASSOC_TYPE_SUFFIX, selectedPath );
+                    if ( fa != null )
+                        {
+                        System.out.println( "matched and got ASSOC_TYPE_SUFFIX fa.exec =" + fa.getExec() + "=" );
+                        if ( cmd.equalsIgnoreCase( "stop" ) )
+                            runCmdString = fa.getStop();
+                        else
+                            runCmdString = fa.getExec();
+                        }
+                    else
+                        {
+                        System.out.println( "No File Assoc Found" );
+                        com.towianski.utils.FileAssocWin fileAssocWin = new FileAssocWin( "New", selectedPath, null );
+                        fa = new FileAssoc( fileAssocWin.getAssocType(), fileAssocWin.getEditClass(), 
+                                fileAssocWin.getMatchType(), fileAssocWin.getMatchPattern(), fileAssocWin.getExec(), fileAssocWin.getStop() );
+                        System.out.println( "matched and got fa.getAssocType =" + fa.getAssocType() + "=" );
+                        System.out.println( "matched and got fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
+                        System.out.println( "matched and got fa.exec =" + fa.getExec() + "=" );
+                        if ( cmd.equalsIgnoreCase( "stop" ) )
+                            runCmdString = fa.getStop();
+                        else
+                            runCmdString = fa.getExec();
+                        if ( fileAssocWin.isOkFlag() )
+                            {
+                            fileAssocList.addFileAssoc( fa );
+                            Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
+                            }
+                        else
+                            {
+                            fileAssocWin = null;
+                            return;
+                            }
+                        fileAssocWin = null;
+                        }
+                    }
+                }
+            
+            ProcessInThread jp = new ProcessInThread();
+            ArrayList<String> cmdList = new ArrayList<String>();
+//            cmdList.add( "$JAVABIN" );
+////            cmdList.add( "-cp" );
+////            cmdList.add( "$CLASSPATH" );
+//            cmdList.add( "-jar" );
+//            cmdList.add( "jetty-runner-9.4.19.v20190610.jar" );
+//            cmdList.add( "--path" );
+//            cmdList.add( "/what" );
+//            cmdList.add( "--port" );
+//            cmdList.add( "8074" );
+////            cmdList.add( "/home/stan/Downloads/sample.war" );
+
+//            cmdList.add( "$JAVABIN" );
+//            cmdList.add( "-Dspring.profiles.active=warserver" );
+////            cmdList.add( "-cp" );
+////            cmdList.add( "$CLASSPATH" );
+//            cmdList.add( "-jar" );
+//            cmdList.add( "JFileProcessor-1.8.2.war" );
+//            cmdList.add( "--warfile=" + selectedPath );
+//            cmdList.add( "--path=/" +  (selectedPath.indexOf( "/SampleWebApp.war" ) > 0 ? "swa" : "sample" ) );
+//            cmdList.add( "--port=" + (selectedPath.indexOf( "/SampleWebApp.war" ) > 0 ? "8075" : "8060" ) );
+//            cmdList.add( "--logging.file=" + (selectedPath.indexOf( "/SampleWebApp.war" ) > 0 ? "/tmp/swa.log" : "/tmp/sample.log" ) );
+//            cmdList.add( "--warserver" );
+
+//            int rc = jp.execJava2( cmdList, true, "--logging.file=" + "/tmp/webserver.log", "-dir=" + selectedPath );
+//            int rc = jp.execJava2( cmdList, true );
+            System.out.println( "runCmdString =" + runCmdString + "=" );
+            runCmdString = runCmdString.replace( "%f", selectedPath );
+            Path fpath = Paths.get( selectedPath );
+            runCmdString = runCmdString.replace( "%F", fpath.getFileName().toString() );
+            System.out.println( "runCmdString =" + runCmdString + "=" );
+
+            String rcStr = "";
+            if ( runCmdString.startsWith( "url:" ) )
+                {
+                try
+                    {
+                    RestTemplate restTemplate = Rest.createNoHostVerifyRestTemplate();
+                    restTemplate.getForObject( runCmdString.substring( "url:".length() ), String.class );
+                    } 
+                catch (Exception ex)
+                    {
+                    Logger.getLogger(TomcatAppThread.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                rcStr = "ran " + runCmdString;
+                }
+            else
+                {
+                // split by spaces and assume that will work.
+                String[] cmdAr = runCmdString.split( " " );
+                cmdList = new ArrayList<String>(Arrays.asList( cmdAr )); 
+
+                int rc = jp.execJava2( cmdList, true );
+                if ( cmd.equalsIgnoreCase( "stop" ) )
+                    rcStr = "stop returned code =" + rc + "=";
+                else
+                    rcStr = "start returned code =" + rc + "=";
+                System.out.println( rcStr );
+                }
+
+            // Start a msgBox
+            {
+                final String tmp = rcStr;
+                java.awt.EventQueue.invokeLater(new Runnable() {
+                    public void run() {
+                        new MsgBoxFrame( tmp ).setVisible( true );
+                    }
+                });
+            }
+        
+//                if ( selectedPath.toUpperCase().endsWith( ".GROOVY" ) )
+//                    {
+//                    openCodeWinPanel( this, selectedPath, null );
+//                    openedFlag = true;
+//                    }
+//                }
+//            if ( ! openedFlag )
+//                {
+//                openCodeWinPanel( this, null, null ).setTitle( "code" );
+//                }
+        } catch (IOException ex) {
+            Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     public static void addEscapeListener(final JFrame win) {
         ActionListener escListener = new ActionListener() {
 
@@ -2241,8 +2539,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
         NewFile = new javax.swing.JMenuItem();
         copyFilename = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
-        Edit = new javax.swing.JMenuItem();
         openFile = new javax.swing.JMenuItem();
+        jfpExec = new javax.swing.JMenuItem();
+        jfpStop = new javax.swing.JMenuItem();
+        myEdit = new javax.swing.JMenuItem();
         openFolderOfFiles = new javax.swing.JMenuItem();
         startCmdWin = new javax.swing.JMenuItem();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
@@ -2252,6 +2552,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
         openCodeWin = new javax.swing.JMenuItem();
         jSeparator3 = new javax.swing.JPopupMenu.Separator();
         scriptsMenu = new javax.swing.JMenu();
+        jfpExecEdit = new javax.swing.JMenuItem();
         buttonGroup2 = new javax.swing.ButtonGroup();
         jPopupMenu2 = new javax.swing.JPopupMenu();
         Paste1 = new javax.swing.JMenuItem();
@@ -2452,14 +2753,6 @@ public class JFileFinderWin extends javax.swing.JFrame {
             jPopupMenu1.add(copyFilename);
             jPopupMenu1.add(jSeparator1);
 
-            Edit.setText("my Edit File");
-            Edit.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    EditActionPerformed(evt);
-                }
-            });
-            jPopupMenu1.add(Edit);
-
             openFile.setText("System Open File");
             openFile.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -2467,6 +2760,30 @@ public class JFileFinderWin extends javax.swing.JFrame {
                 }
             });
             jPopupMenu1.add(openFile);
+
+            jfpExec.setText("jfp Open/Run");
+            jfpExec.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    jfpExecActionPerformed(evt);
+                }
+            });
+            jPopupMenu1.add(jfpExec);
+
+            jfpStop.setText("jfp Stop");
+            jfpStop.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    jfpStopActionPerformed(evt);
+                }
+            });
+            jPopupMenu1.add(jfpStop);
+
+            myEdit.setText("my Edit File");
+            myEdit.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    myEditActionPerformed(evt);
+                }
+            });
+            jPopupMenu1.add(myEdit);
 
             openFolderOfFiles.setText("Open Folder Containing File(s)");
             openFolderOfFiles.addActionListener(new java.awt.event.ActionListener() {
@@ -2529,6 +2846,14 @@ public class JFileFinderWin extends javax.swing.JFrame {
                 }
             });
             jPopupMenu1.add(scriptsMenu);
+
+            jfpExecEdit.setText("jfp File Assoc");
+            jfpExecEdit.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    jfpExecEditActionPerformed(evt);
+                }
+            });
+            jPopupMenu1.add(jfpExecEdit);
 
             Paste1.setText("Paste   (Ctrl-P)");
             Paste1.addActionListener(new java.awt.event.ActionListener() {
@@ -3747,12 +4072,12 @@ public class JFileFinderWin extends javax.swing.JFrame {
         desktopOpen( (String) filesTbl.getModel().getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) );
     }//GEN-LAST:event_openFileActionPerformed
 
-    private void EditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_EditActionPerformed
+    private void myEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_myEditActionPerformed
         int rowIndex = filesTbl.convertRowIndexToModel( filesTbl.getSelectedRow() );
 //        File selectedPath = new File( (String) filesTbl.getModel().getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) );
         //System.out.println( "selected row file =" + selectedPath );
         desktopEdit( (String) filesTbl.getModel().getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) );
-    }//GEN-LAST:event_EditActionPerformed
+    }//GEN-LAST:event_myEditActionPerformed
 
     private void copyFilenameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_copyFilenameActionPerformed
         int rowIndex = filesTbl.convertRowIndexToModel( filesTbl.getSelectedRow() );
@@ -4268,6 +4593,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             {
             programMemory.extractCurrentValues();
             Rest.saveObjectToFile( "ProgramMemory.json", programMemory );
+            Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
 
             if ( stdOutFile.getText() != null && ! stdOutFile.getText().equals( "" ) )
                 {
@@ -4326,7 +4652,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
         
-        System.out.println( "Entered formWindowOpened()" );
+//        System.out.println( "Entered formWindowOpened()" );
+//        System.err.println( "Entered formWindowOpened()" );
+        setColumnRenderers();
+        
         if ( startConsoleCmd.getText() == null || startConsoleCmd.getText().equals( "" ) )
             {
             if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "mac" ) )
@@ -4375,11 +4704,9 @@ public class JFileFinderWin extends javax.swing.JFrame {
                     }
                 }
             }
-        connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", getRmtAskHttpsPort() );
-        connUserInfo.setTo( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", getRmtAskHttpsPort() );
-        calcFilesysType();  // also sets in connUserInfo
-    
-        setColumnSizes();    
+        
+//        System.out.println( "leaving formWindowOpened()" );
+//        System.err.println( "leaving formWindowOpened()" );
     }//GEN-LAST:event_formWindowOpened
 
     private void startCmdWin1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startCmdWin1ActionPerformed
@@ -4512,6 +4839,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
     private void scriptsMenuMenuSelected(javax.swing.event.MenuEvent evt) {//GEN-FIRST:event_scriptsMenuMenuSelected
         
+        System.out.println( "entered scriptsMenuMenuSelected" );
         scriptsMenu.removeAll();
         ArrayList<File> files = new ArrayList<File>(Arrays.asList( scriptsFile.listFiles() ));
         files.addAll( new ArrayList<File>(Arrays.asList( scriptsOsFile.listFiles() ) ) );
@@ -4576,7 +4904,16 @@ public class JFileFinderWin extends javax.swing.JFrame {
                 try {
 //                    int rc = JavaProcess.execJava( com.towianski.jfileprocessor.JFileFinderWin.class, file.getParent() );
                 ProcessInThread jp = new ProcessInThread();
-                int rc = jp.execJava(com.towianski.jfileprocessor.JFileFinderWin.class, true, file.getParent() );
+//                int rc = jp.execJava(com.towianski.jfileprocessor.JFileFinderWin.class, true, file.getParent() );
+                ArrayList<String> cmdList = new ArrayList<String>(); 
+                cmdList.add( "$JAVABIN" );
+    //            cmdList.add( "-cp" );
+    //            cmdList.add( "$CLASSPATH" );
+                cmdList.add( "-jar" );
+                cmdList.add( JFileProcessorVersion.getFileName() );
+                cmdList.add( file.getParent() );
+                
+                int rc = jp.execJava2( cmdList, true );
                     System.out.println( "javaprocess.exec start new window rc = " + rc + "=" );
                     } 
                 catch (IOException ex) 
@@ -4604,7 +4941,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
                 try {
                     //System.out.println( "try scpTo   file =" + tmp + "=   to remote =" + DesktopUtils.getUserTmp() + System.getProperty( "file.separator") + tmp + "=" );
                     String fpath = System.getProperty( "user.dir" ) + System.getProperty( "file.separator" );
-                    String jfpFilename = JFileProcessorVersion.getName() + "-" + JFileProcessorVersion.getVersion() + ".jar";
+                    String jfpFilename = JFileProcessorVersion.getFileName();
                     System.out.println( "set jfpFilename =" + jfpFilename + "=" );
                     System.out.println( "try jschSftpUtils   file =" + fpath + jfpFilename + "=   to remote =" + rmtUser.getText() + "@" + rmtHost + ":" + jfpFilename + "=" );
 
@@ -4876,6 +5213,91 @@ public class JFileFinderWin extends javax.swing.JFrame {
         alreadySetColumnSizes = false;
     }//GEN-LAST:event_showPermsFlagActionPerformed
 
+    private void jfpExecActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jfpExecActionPerformed
+        jfpExecOrStop( "exec" );
+    }//GEN-LAST:event_jfpExecActionPerformed
+
+    private void jfpExecEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jfpExecEditActionPerformed
+        try {
+            //System.out.println( "RenameActionPerformed evt.getSource() =" + evt.getSource() );
+            if ( filesTbl.getSelectedRow() < 0 )
+                {
+                JOptionPane.showMessageDialog( this, "Please select an item first.", "Error", JOptionPane.ERROR_MESSAGE );
+                return;
+                }
+            int rowIndex = filesTbl.convertRowIndexToModel( filesTbl.getSelectedRow() );
+            System.out.println( "rename filesTbl.getSelectedRow() =" + filesTbl.getSelectedRow() + "   rowIndex = " + rowIndex );
+            FilesTblModel filesTblModel = (FilesTblModel) filesTbl.getModel();
+            String selectedPath = (String) filesTblModel.getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH );
+            System.out.println( "start webserver at selectedPath =" + selectedPath + "   rowIndex = " + rowIndex );
+            
+            String runCmdString = "";
+//            System.out.println( "------- BEG DUMP FILE ASSOC LIST");
+//            for(Map.Entry<String,FileAssoc> entry : fileAssocList.getFileAssocList().entrySet()) {
+//                String key = entry.getKey();
+//                FileAssoc value = entry.getValue();
+//
+//                System.out.println( "matched and got fa.getAssocType =" + value.getAssocType() + "=" );
+//                System.out.println( "matched and got fa.getMatchPattern =" + value.getMatchPattern() + "=" );
+//                System.out.println( "matched and got fa.exec =" + value.getExec() + "=" );
+//                }
+//            System.out.println( "------- END DUMP FILE ASSOC LIST");
+            
+            com.towianski.utils.FileAssocWin fileAssocWin = null;
+            FileAssoc fa = fileAssocList.getFileAssoc(JfpConstants.ASSOC_TYPE_EXACT_FILE, selectedPath );
+            if ( fa != null )
+                {
+                System.out.println( "matched and got ASSOC_TYPE_1_FILE fa.exec =" + fa.getExec() + "=" );
+                fileAssocWin = new FileAssocWin( "Edit", selectedPath, fa );
+                fa = new FileAssoc( fileAssocWin.getAssocType(), fileAssocWin.getEditClass(), 
+                        fileAssocWin.getMatchType(), fileAssocWin.getMatchPattern(), fileAssocWin.getExec(), fileAssocWin.getStop() );
+                }
+            else
+                {
+                fa = fileAssocList.getFileAssoc( JfpConstants.ASSOC_TYPE_FILENAME, selectedPath );
+                if ( fa != null )
+                    {
+                    System.out.println( "matched and got ASSOC_TYPE_FILENAME fa.exec =" + fa.getExec() + "=" );
+                    fileAssocWin = new FileAssocWin( "Edit", selectedPath, fa );
+                    fa = new FileAssoc( fileAssocWin.getAssocType(), fileAssocWin.getEditClass(), 
+                            fileAssocWin.getMatchType(), fileAssocWin.getMatchPattern(), fileAssocWin.getExec(), fileAssocWin.getStop() );
+                    }
+                else
+                    {
+                    fa = fileAssocList.getFileAssoc(JfpConstants.ASSOC_TYPE_SUFFIX, selectedPath );
+                    if ( fa != null )
+                        {
+                        System.out.println( "matched and got ASSOC_TYPE_SUFFIX fa.exec =" + fa.getExec() + "=" );
+                        System.out.println( "matched and got ASSOC_TYPE_SUFFIX fa.stop =" + fa.getStop() + "=" );
+                        fileAssocWin = new FileAssocWin( "Edit", selectedPath, fa );
+                        fa = new FileAssoc( fileAssocWin.getAssocType(), fileAssocWin.getEditClass(), 
+                                fileAssocWin.getMatchType(), fileAssocWin.getMatchPattern(), fileAssocWin.getExec(), fileAssocWin.getStop() );
+                        }
+                    else
+                        {
+                        System.out.println( "No File Assoc Found" );
+                        fileAssocWin = new FileAssocWin( "New", selectedPath, null );
+                        fileAssocWin.setTitle( "New" );
+                        fa = new FileAssoc( fileAssocWin.getAssocType(), fileAssocWin.getEditClass(), 
+                                fileAssocWin.getMatchType(), fileAssocWin.getMatchPattern(), fileAssocWin.getExec(), fileAssocWin.getStop() );
+                        }
+                    }
+                }
+            if ( fileAssocWin != null && fileAssocWin.isOkFlag() )
+                {
+                fileAssocList.addFileAssoc( fa );
+                Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
+                }
+            fileAssocWin = null;
+        } catch (Exception ex) {
+            Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jfpExecEditActionPerformed
+
+    private void jfpStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jfpStopActionPerformed
+                jfpExecOrStop( "stop" );
+    }//GEN-LAST:event_jfpStopActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -4954,12 +5376,16 @@ public class JFileFinderWin extends javax.swing.JFrame {
             
             
         EventQueue.invokeLater(() -> {
-            JFileFinderWin jFileFinderWin = new JFileFinderWin();
-            jFileFinderWin.setVisible(true);
+//            jFileFinderWin.setVisible(true);
             if ( args.length > 0 )
                 {
-                jFileFinderWin.startingFolder.setText( args[0] );
-                jFileFinderWin.searchBtnActionPerformed( null );
+                JFileFinderWin jFileFinderWin = new JFileFinderWin( args[0] );
+//                jFileFinderWin.startingFolder.setText( args[0] );
+//                jFileFinderWin.searchBtnActionPerformed( null );
+                }
+            else
+                {
+                JFileFinderWin jFileFinderWin = new JFileFinderWin();
                 }
             
             /*
@@ -5067,7 +5493,6 @@ public class JFileFinderWin extends javax.swing.JFrame {
     private javax.swing.JMenuItem Copy;
     private javax.swing.JMenuItem Cut;
     private javax.swing.JMenuItem Delete;
-    private javax.swing.JMenuItem Edit;
     private javax.swing.JMenu New;
     private javax.swing.JMenuItem NewFile;
     private javax.swing.JMenuItem NewFile1;
@@ -5137,6 +5562,9 @@ public class JFileFinderWin extends javax.swing.JFrame {
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JSplitPane jSplitPane2;
     private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JMenuItem jfpExec;
+    private javax.swing.JMenuItem jfpExecEdit;
+    private javax.swing.JMenuItem jfpStop;
     private javax.swing.JButton leftHistory;
     //Level[] logLevelsArr = new Level [] { Level.ALL, Level.CONFIG, Level.FINE, Level.FINER, Level.FINEST, Level.INFO, Level.OFF, Level.SEVERE, Level.WARNING };
     String[] logLevelsArrStr = new String [] { Level.OFF.toString(), Level.SEVERE.toString(), Level.WARNING.toString(), Level.INFO.toString(), Level.CONFIG.toString(), Level.FINE.toString(), Level.FINER.toString(), Level.FINEST.toString(), Level.ALL.toString() };
@@ -5146,6 +5574,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
     private javax.swing.JTextField maxDepth;
     private javax.swing.JLabel message;
     private javax.swing.JTextField minDepth;
+    private javax.swing.JMenuItem myEdit;
     private javax.swing.JTextField myEditorCmd;
     private javax.swing.JLabel myEditorLbl;
     private javax.swing.JLabel newerVersionLbl;

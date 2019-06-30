@@ -22,7 +22,7 @@ public class FormatRenderer extends DefaultTableCellRenderer
      */
     public FormatRenderer(Format formatter)
         {
-        //System.out.println( "entered FormatRenderer() set formatter" );
+//        System.err.println( "entered FormatRenderer() set formatter" );
         this.formatter = formatter;
         }
 
@@ -32,7 +32,7 @@ public class FormatRenderer extends DefaultTableCellRenderer
 
         try
             {
-            //System.out.println( "entered FormatRenderer() setValue()" );
+//            System.err.println( "entered FormatRenderer() setValue()" );
             if ( value instanceof Date )
                 {
                 if ( value != null )

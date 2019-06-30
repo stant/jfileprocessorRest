@@ -1,0 +1,36 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.towianski.boot.server;
+
+/**
+ *
+ * @author stan
+ */
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+
+import java.util.Properties;
+
+@EnableAutoConfiguration
+public class ReplaceDefaultLocationsExample {
+
+    public static void main (String[] args) {
+
+        SpringApplication app =
+                  new SpringApplication(ReplaceDefaultLocationsExample.class);
+
+        Properties properties = new Properties();
+//        properties.setProperty("spring.resources.static-locations",
+//                               "classpath:/newLocation1/, classpath:/newLocation2/");
+        properties.setProperty("spring.resources.static-locations",
+//                               "classpath:/net2/data/websites/aaa/");
+                               "classpath:/net2/data/java/CraftersClearance/code/web/");
+//                               "classpath:/home/stan/Downloads/sample.war");
+        
+        app.setDefaultProperties(properties);
+        app.run(args);
+    }
+}
