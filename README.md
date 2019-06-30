@@ -6,7 +6,12 @@ Place to get the official versions (many sites are behind):
 
 made using Java 8.
 
-1.6.0-beta-xxx  are betas because I was not able to test anything on a Mac for this release. I do not have access to one at this time. Any testing info would be appreciated.
+WINDOWS OS: Java Swing programs have an issue with high DPI displays. I do not know of a good solution
+and the problem even varies between Java versions. You will have to play with your "compatibility" settings
+in windows to get a window size that is not too small. 
+Here is some help:  https://superuser.com/questions/988379/how-do-i-run-java-apps-upscaled-on-a-high-dpi-display
+
+MAC OS: any issues, let me know as I do not always have access to test on it.
 
 Report Issues at:  ![github main](https://github.com/stant/jfileprocessorRest/issues)
 
@@ -82,6 +87,10 @@ menu-scripts: special groovy scripts folder. Place scripts in here to make them 
 This is a short cut. It will run the script without a code window on the files you have selected.
 Most of the groovy scripts I include as examples write to the same file system-temp-folder/NewFile.txt so be sure to modify as needed.
 You can output to a window or a file as you want to.
+
+You can create Java Swing GUI windows to use in your groovy scripts. 
+Put them into JfpLib.jar which gets loaded at startup.
+These scripts have good working example of how to call JFP java methods as needed to get files selected, etc...
 
 Here is an example groovy code file:
 
