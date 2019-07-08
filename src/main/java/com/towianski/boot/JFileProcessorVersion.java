@@ -3,7 +3,7 @@ package com.towianski.boot;
 
 public class JFileProcessorVersion {
     public static String getVersion() {
-            return "1.8.5";
+            return "1.8.6";
     }
 
     public static String getName() {
@@ -11,6 +11,6 @@ public class JFileProcessorVersion {
     }
 
     public static String getFileName() {
-            return "JFileProcessor" + "-" + "1.8.5" + ".war";
+            return "JFileProcessor" + "-" + "1.8.6" + ".war";
     }
 }

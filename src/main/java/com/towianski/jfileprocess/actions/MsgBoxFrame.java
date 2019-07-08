@@ -48,7 +48,7 @@ public class MsgBoxFrame extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(400, 70));
-        setPreferredSize(new java.awt.Dimension(400, 70));
+        setPreferredSize(new java.awt.Dimension(640, 140));
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowOpened(java.awt.event.WindowEvent evt) {
                 formWindowOpened(evt);
@@ -57,16 +57,20 @@ public class MsgBoxFrame extends javax.swing.JFrame {
         getContentPane().setLayout(new java.awt.GridBagLayout());
 
         jScrollPane1.setMinimumSize(new java.awt.Dimension(350, 60));
-        jScrollPane1.setPreferredSize(new java.awt.Dimension(350, 60));
+        jScrollPane1.setPreferredSize(new java.awt.Dimension(600, 100));
 
         message.setEditable(false);
         message.setText("what the world");
         message.setMinimumSize(new java.awt.Dimension(250, 50));
-        message.setPreferredSize(new java.awt.Dimension(250, 50));
+        message.setPreferredSize(new java.awt.Dimension(575, 75));
         jScrollPane1.setViewportView(message);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(5, 5, 5, 5);
         getContentPane().add(jScrollPane1, gridBagConstraints);
 

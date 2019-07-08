@@ -325,7 +325,7 @@ public class FileAssocWin extends javax.swing.JDialog {
         getContentPane().add(jLabel2, gridBagConstraints);
 
         jTextPane1.setEditable(false);
-        jTextPane1.setText("get replaced in commands:\n%f - full file path     %F - filename\n$JAVA   $JAVAW   $CLASSPATH   $HOMETMP");
+        jTextPane1.setText("get replaced in commands:\n%f - full file path     %F - filename\n$JAVA   $JAVAW   $CLASSPATH   $JFP   $JFPHOMETMP");
         jTextPane1.setMinimumSize(new java.awt.Dimension(200, 75));
         jTextPane1.setPreferredSize(new java.awt.Dimension(200, 75));
         jScrollPane1.setViewportView(jTextPane1);

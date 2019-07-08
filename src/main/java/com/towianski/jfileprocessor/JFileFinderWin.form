@@ -175,12 +175,12 @@
             <EventHandler event="menuSelected" listener="javax.swing.event.MenuListener" parameters="javax.swing.event.MenuEvent" handler="scriptsMenuMenuSelected"/>
           </Events>
         </Menu>
-        <MenuItem class="javax.swing.JMenuItem" name="jfpExecEdit">
+        <MenuItem class="javax.swing.JMenuItem" name="editFileAssoc">
           <Properties>
             <Property name="text" type="java.lang.String" value="jfp File Assoc"/>
           </Properties>
           <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jfpExecEditActionPerformed"/>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="editFileAssocActionPerformed"/>
           </Events>
         </MenuItem>
       </SubComponents>

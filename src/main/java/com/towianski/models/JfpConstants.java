@@ -15,6 +15,9 @@ public class JfpConstants {
     public final static String ASSOC_TYPE_FILENAME = "N";
     public final static String ASSOC_TYPE_EXACT_FILE = "F";
     
+    public final static String ASSOC_CMD_TYPE_EXEC = "exec";
+    public final static String ASSOC_CMD_TYPE_STOP = "stop";
+
     public final static String MATCH_TYPE_GLOB = "G";
     public final static String MATCH_TYPE_REGEX = "R";
 }

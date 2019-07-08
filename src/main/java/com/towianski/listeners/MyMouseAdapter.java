@@ -7,6 +7,7 @@ package com.towianski.listeners;
 
 import com.towianski.models.FilesTblModel;
 import com.towianski.jfileprocessor.JFileFinderWin;
+import com.towianski.models.JfpConstants;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JPopupMenu;
@@ -73,7 +74,7 @@ public class MyMouseAdapter extends MouseAdapter
                     }
                 else if ( folderType == FilesTblModel.FOLDERTYPE_FILE )
                     {
-                    jFileFinderWin.desktopOpen( selectedPath );
+                    jFileFinderWin.desktopOpen( selectedPath, JfpConstants.ASSOC_CMD_TYPE_EXEC );
                     }
                }            
         }

@@ -60,21 +60,21 @@ public class FileAssocList {
             if ( fa.getMatchType().equalsIgnoreCase( JfpConstants.MATCH_TYPE_REGEX) )
                 {
                 matcher = FileSystems.getDefault().getPathMatcher("regex:" + fa.getMatchPattern());
-                System.out.println( "matching by regex" );
+                System.out.println( "matching by regex:" + fa.getMatchPattern() );
                 }
             else
                 {
                 matcher = FileSystems.getDefault().getPathMatcher("glob:" + fa.getMatchPattern());
-                System.out.println( "matching by glob" );
+                System.out.println( "matching by glob:" + fa.getMatchPattern() );
                 }
-            System.out.println( "matched and got fa.getAssocType =" + fa.getAssocType() + "=" );
-            System.out.println( "matched and got fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
-            System.out.println( "matched and got fa.exec =" + fa.getExec() + "=" );
-            System.out.println( "matched and got fa.stop =" + fa.getStop() + "=" );
             //System.out.println( "\ntest chainfilterofNames =" + fpath + "=" );
             if ( fpath.getFileName() != null && matcher.matches( fpath  ) )
                 {
                 System.out.println( "FOUND match" );
+                System.out.println( "matched and got fa.getAssocType =" + fa.getAssocType() + "=" );
+                System.out.println( "matched and got fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
+                System.out.println( "matched and got fa.exec =" + fa.getExec() + "=" );
+                System.out.println( "matched and got fa.stop =" + fa.getStop() + "=" );
                 return fa;
                 }
             }

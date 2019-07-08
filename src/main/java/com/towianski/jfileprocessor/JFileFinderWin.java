@@ -174,6 +174,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
+import windows.*;
 
 /**
  *
@@ -320,7 +321,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
             }
         }
         
-private static void addJarToClasspath(File file) {
+private static void addJarToClasspathJdk8(File file) {
     try {
         Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class});
         method.setAccessible(true);
@@ -330,24 +331,63 @@ private static void addJarToClasspath(File file) {
         ex.printStackTrace();
         }
 }
+        
+    private void addJarToClasspathJdk9(File file) {
+        try {
+            com.towianski.boot.CustomClassLoader customClassLoader = new com.towianski.boot.CustomClassLoader();
+        
+            URL[] urlAr = new URL[1];
+//            //file = new File(path);
+            if(file.exists()) {
+                    URL url = file.toURI().toURL();
+    //                classLoader.addURL(url);
+                System.out.println( "created url =" + url + "=" );
+
+                urlAr[0] = url;
+                    // urlarrayofextrajarsordirs
+//                Class.forName( "windows.RenameFiles", true, new URLClassLoader(urlAr) );
+//                System.out.println( "called Class.forName()" );
+                
+            Class<?> clz = customClassLoader.loadClass("windows.RenameFiles");
+//            RenameFiles renameFiles = (RenameFiles) clz.newInstance();
+            Object renameFiles = clz.newInstance();
+
+//        windows.RenameFiles renameFiles = new windows.RenameFiles();
+//        renameFiles.setVisible(true);
+//        System.out.println( "renameFiles.getFindText() =" + renameFiles.getFindText() + "=" );
+                
+                }            
+            }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            }
+    }
+
     
     public void start() 
         {
 //        System.out.println( "enter start()" );
 //        System.err.println( "enter start()" );
-        this.setTitle( JFileProcessorVersion.getName() + " " + JFileProcessorVersion.getVersion() + " - Stan Towianski  (c) 2015-2019" );
+        this.setTitle( JFileProcessorVersion.getName() + " " + JFileProcessorVersion.getVersion() + " - Stan Towianski (c) 2015-2019 - Java " + System.getProperty("java.version") );
         System.out.println( "java.version =" + System.getProperty("java.version") + "=" );
 
-        addJarToClasspath( new File( "JfpLib.jar" ) );
-        System.out.println( "======= java classpath(s) ======>" );
-        ClassLoader cl = ClassLoader.getSystemClassLoader();
+        // Adding JfpLib.jar here instead of in each groovy script just make groovy scripts simpler.
+        // they can just import windows.*  and use them.
+//        classLoader = new MyClassloader(new URL[0], this.getClass().getClassLoader());
+//        addJarToClasspathJdk8( new File( "JfpLib.jar" ) );
+        addJarToClasspathJdk9( new File( "JfpLib.jar" ) );
+//        System.out.println( "======= java classpath(s) ======>" );
+//        ClassLoader cl = ClassLoader.getSystemClassLoader();
 
+        /* for Java 8
         URL[] urls = ((URLClassLoader)cl).getURLs();
 
         for(URL url: urls){
         	System.out.println(url.getFile());
         }
-        System.out.println( "=================================" );
+        */
+        
+//        System.out.println( "=================================" );
         
         System.out.println( "JfpHomeTempDir Directory =" + JfpHomeTempDir + "=" );
         System.out.println( "Scripts Directory =" + scriptsFile + "=" );
@@ -683,13 +723,13 @@ private static void addJarToClasspath(File file) {
                 fileAssocList = new FileAssocList();
                 fileAssocList.addFileAssoc( new FileAssoc( JfpConstants.ASSOC_TYPE_SUFFIX, 
                         "", JfpConstants.MATCH_TYPE_GLOB, "**.war", 
-                        "$JAVA -Dspring.profiles.active=warserver -jar " + JfpHomeDir + JFileProcessorVersion.getFileName() + 
+                        "$JAVA -Dspring.profiles.active=warserver -jar " + JfpHomeDir + "$JFP" + 
                                 " --warfile=%f --path=/%F --port=8070 --warserver --logging.file=" + 
                                 JfpHomeTempDir + "%F.log",
                         "url:https://localhost:8070/jfp/sys/stop" ) );
                 fileAssocList.addFileAssoc( new FileAssoc( JfpConstants.ASSOC_TYPE_SUFFIX, 
                         "", JfpConstants.MATCH_TYPE_REGEX, ".*[.]war", 
-                        "$JAVA -Dspring.profiles.active=warserver -jar " + JfpHomeDir + JFileProcessorVersion.getFileName() + 
+                        "$JAVA -Dspring.profiles.active=warserver -jar " + JfpHomeDir + "$JFP" + 
                                 " --warfile=%f --path=/%F --port=8070 --warserver --logging.file=" + 
                                 JfpHomeTempDir + "%F.log",
                         "url:https://localhost:8070/jfp/sys/stop" ) );
@@ -1962,7 +2002,7 @@ private static void addJarToClasspath(File file) {
         System.gc();        
         }
 
-    public void desktopOpen( String filestr )
+    public void desktopOpen( String filestr, String fileAssocCmdType )
         {
         String rmtFile = filestr;
         File file = new File( filestr.replace( "\\", "/" ) );
@@ -1987,7 +2027,16 @@ private static void addJarToClasspath(File file) {
                 }
             if ( file.exists() )
                 {
-                desktop.open( file );
+                if ( findFileAssocOrAsk( file.toString(), "dontAsk" ) != null )
+                    {
+                    System.out.println( "do jfpExecOrStop =" + file + "=" );
+                    jfpExecOrStop( file.toString(), fileAssocCmdType );
+                    }
+                else
+                    {
+                    System.out.println( "do Desktop Open for filestr =" + file + "=" );
+                    desktop.open( file );
+                    }
                 }
             if ( connUserInfo.isConnectedFlag()  &&   //rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) &&
                  ! stdOutFile.getText().equals( filestr ) && ! stdErrFile.getText().equals( filestr ) )
@@ -2069,27 +2118,15 @@ private static void addJarToClasspath(File file) {
             {
             logger.log(Level.SEVERE, null, ex);
 //            JOptionPane.showMessageDialog( this, "Edit not supported in this desktop.\nWill try Open.", "Error", JOptionPane.ERROR_MESSAGE );
-            desktopOpen( filestr );
+            desktopOpen( filestr, JfpConstants.ASSOC_CMD_TYPE_EXEC );
             }
         }
         
-    public void jfpExecOrStop( String cmd )
-    {
+    private FileAssoc findFileAssocOrAsk( String selectedPath, String cmd ) {                                            
         try {
-            //System.out.println( "RenameActionPerformed evt.getSource() =" + evt.getSource() );
-            if ( filesTbl.getSelectedRow() < 0 )
-                {
-                JOptionPane.showMessageDialog( this, "Please select an item first.", "Error", JOptionPane.ERROR_MESSAGE );
-                return;
-                }
-            int rowIndex = filesTbl.convertRowIndexToModel( filesTbl.getSelectedRow() );
-            System.out.println( "rename filesTbl.getSelectedRow() =" + filesTbl.getSelectedRow() + "   rowIndex = " + rowIndex );
-            FilesTblModel filesTblModel = (FilesTblModel) filesTbl.getModel();
-            String selectedPath = (String) filesTblModel.getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH );
-            System.out.println( "start webserver at selectedPath =" + selectedPath + "   rowIndex = " + rowIndex );
+            System.out.println( "findFileAssocOrAsk() selectedPath =" + selectedPath + "=   cmd =" + cmd );
             
             String runCmdString = "";
-            PathMatcher matcher = null;
 //            System.out.println( "------- BEG DUMP FILE ASSOC LIST");
 //            for(Map.Entry<String,FileAssoc> entry : fileAssocList.getFileAssocList().entrySet()) {
 //                String key = entry.getKey();
@@ -2101,14 +2138,11 @@ private static void addJarToClasspath(File file) {
 //                }
 //            System.out.println( "------- END DUMP FILE ASSOC LIST");
             
+            com.towianski.utils.FileAssocWin fileAssocWin = null;
             FileAssoc fa = fileAssocList.getFileAssoc(JfpConstants.ASSOC_TYPE_EXACT_FILE, selectedPath );
             if ( fa != null )
                 {
                 System.out.println( "matched and got ASSOC_TYPE_1_FILE fa.exec =" + fa.getExec() + "=" );
-                if ( cmd.equalsIgnoreCase( "stop" ) )
-                    runCmdString = fa.getStop();
-                else
-                    runCmdString = fa.getExec();
                 }
             else
                 {
@@ -2116,10 +2150,6 @@ private static void addJarToClasspath(File file) {
                 if ( fa != null )
                     {
                     System.out.println( "matched and got ASSOC_TYPE_FILENAME fa.exec =" + fa.getExec() + "=" );
-                    if ( cmd.equalsIgnoreCase( "stop" ) )
-                        runCmdString = fa.getStop();
-                    else
-                        runCmdString = fa.getExec();
                     }
                 else
                     {
@@ -2127,37 +2157,75 @@ private static void addJarToClasspath(File file) {
                     if ( fa != null )
                         {
                         System.out.println( "matched and got ASSOC_TYPE_SUFFIX fa.exec =" + fa.getExec() + "=" );
-                        if ( cmd.equalsIgnoreCase( "stop" ) )
-                            runCmdString = fa.getStop();
-                        else
-                            runCmdString = fa.getExec();
+                        System.out.println( "matched and got ASSOC_TYPE_SUFFIX fa.stop =" + fa.getStop() + "=" );
                         }
                     else
                         {
-                        System.out.println( "No File Assoc Found" );
-                        com.towianski.utils.FileAssocWin fileAssocWin = new FileAssocWin( "New", selectedPath, null );
-                        fa = new FileAssoc( fileAssocWin.getAssocType(), fileAssocWin.getEditClass(), 
-                                fileAssocWin.getMatchType(), fileAssocWin.getMatchPattern(), fileAssocWin.getExec(), fileAssocWin.getStop() );
-                        System.out.println( "matched and got fa.getAssocType =" + fa.getAssocType() + "=" );
-                        System.out.println( "matched and got fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
-                        System.out.println( "matched and got fa.exec =" + fa.getExec() + "=" );
-                        if ( cmd.equalsIgnoreCase( "stop" ) )
-                            runCmdString = fa.getStop();
-                        else
-                            runCmdString = fa.getExec();
-                        if ( fileAssocWin.isOkFlag() )
+                        System.out.println( "No File Assoc Found, cmd/ask =" + cmd );
+                        if ( cmd.equalsIgnoreCase( "ask" ) )
                             {
-                            fileAssocList.addFileAssoc( fa );
-                            Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
+                            fileAssocWin = new FileAssocWin( "New", selectedPath, null );
+                            fileAssocWin.setTitle( "New" );
+                            fa = new FileAssoc( fileAssocWin.getAssocType(), fileAssocWin.getEditClass(), 
+                                    fileAssocWin.getMatchType(), fileAssocWin.getMatchPattern(), fileAssocWin.getExec(), fileAssocWin.getStop() );
+                            if ( fileAssocWin.isOkFlag() )
+                                {
+                                System.out.println( "matched and got fa.getAssocType =" + fa.getAssocType() + "=" );
+                                System.out.println( "matched and got fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
+                                System.out.println( "matched and got fa.exec =" + fa.getExec() + "=" );
+                                fileAssocList.addFileAssoc( fa );
+                                Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
+                                }
                             }
-                        else
-                            {
-                            fileAssocWin = null;
-                            return;
-                            }
-                        fileAssocWin = null;
                         }
                     }
+                }
+            return fa;
+        } catch (Exception ex) {
+            Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }                                           
+
+
+    public String getSelectedPath()
+    {
+        String selectedPath = null;
+        try {
+            //System.out.println( "RenameActionPerformed evt.getSource() =" + evt.getSource() );
+            if ( filesTbl.getSelectedRow() < 0 )
+                {
+                JOptionPane.showMessageDialog( this, "Please select an item first.", "Error", JOptionPane.ERROR_MESSAGE );
+                return null;
+                }
+            int rowIndex = filesTbl.convertRowIndexToModel( filesTbl.getSelectedRow() );
+            System.out.println( "rename filesTbl.getSelectedRow() =" + filesTbl.getSelectedRow() + "   rowIndex = " + rowIndex );
+            FilesTblModel filesTblModel = (FilesTblModel) filesTbl.getModel();
+            selectedPath = (String) filesTblModel.getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH );
+            System.out.println( "got selectedPath =" + selectedPath + "   rowIndex = " + rowIndex );
+        } catch (Exception ex) {
+            Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return selectedPath;
+    }
+            
+    public void jfpExecOrStop( String selectedPath, String cmd )
+    {
+        try {
+            String runCmdString = "";
+            
+            FileAssoc fa = findFileAssocOrAsk( selectedPath, "ask" );
+            if ( fa != null )
+                {
+                if ( cmd.equalsIgnoreCase( JfpConstants.ASSOC_CMD_TYPE_STOP ) )
+                    runCmdString = fa.getStop();
+                else
+                    runCmdString = fa.getExec();
+                }
+            else
+                {
+                System.out.println( "Error getting File Assoc!" );
+                return;
                 }
             
             ProcessInThread jp = new ProcessInThread();
@@ -2215,13 +2283,15 @@ private static void addJarToClasspath(File file) {
 
                 int rc = jp.execJava2( cmdList, true );
                 if ( cmd.equalsIgnoreCase( "stop" ) )
-                    rcStr = "stop returned code =" + rc + "=";
+                    rcStr = runCmdString + "<br>stop returned code =" + rc + "=";
                 else
-                    rcStr = "start returned code =" + rc + "=";
+                    rcStr = runCmdString + "<br>start returned code =" + rc + "=";
                 System.out.println( rcStr );
                 }
 
-            // Start a msgBox
+            // Start a msgBox - if doing exec and it has a stop cmd. if just start kwrite or something do not show msgBox
+            if ( cmd.equalsIgnoreCase( JfpConstants.ASSOC_CMD_TYPE_STOP ) ||
+                 ( fa.getStop() != null && ! fa.getStop().equals( "" ) ) )
             {
                 final String tmp = rcStr;
                 java.awt.EventQueue.invokeLater(new Runnable() {
@@ -2559,7 +2629,7 @@ private static void addJarToClasspath(File file) {
         openCodeWin = new javax.swing.JMenuItem();
         jSeparator3 = new javax.swing.JPopupMenu.Separator();
         scriptsMenu = new javax.swing.JMenu();
-        jfpExecEdit = new javax.swing.JMenuItem();
+        editFileAssoc = new javax.swing.JMenuItem();
         buttonGroup2 = new javax.swing.ButtonGroup();
         jPopupMenu2 = new javax.swing.JPopupMenu();
         Paste1 = new javax.swing.JMenuItem();
@@ -2854,13 +2924,13 @@ private static void addJarToClasspath(File file) {
             });
             jPopupMenu1.add(scriptsMenu);
 
-            jfpExecEdit.setText("jfp File Assoc");
-            jfpExecEdit.addActionListener(new java.awt.event.ActionListener() {
+            editFileAssoc.setText("jfp File Assoc");
+            editFileAssoc.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    jfpExecEditActionPerformed(evt);
+                    editFileAssocActionPerformed(evt);
                 }
             });
-            jPopupMenu1.add(jfpExecEdit);
+            jPopupMenu1.add(editFileAssoc);
 
             Paste1.setText("Paste   (Ctrl-P)");
             Paste1.addActionListener(new java.awt.event.ActionListener() {
@@ -4076,7 +4146,7 @@ private static void addJarToClasspath(File file) {
 //        File selectedPath = new File( (String) filesTbl.getModel().getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) );
         System.out.println( "selected row String =" + (String) filesTbl.getModel().getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) );
 //        System.out.println( "selected row file =" + selectedPath );
-        desktopOpen( (String) filesTbl.getModel().getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) );
+        desktopOpen( (String) filesTbl.getModel().getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ), JfpConstants.ASSOC_CMD_TYPE_EXEC );
     }//GEN-LAST:event_openFileActionPerformed
 
     private void myEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_myEditActionPerformed
@@ -4437,7 +4507,7 @@ private static void addJarToClasspath(File file) {
             }
         else if ( folderType == FilesTblModel.FOLDERTYPE_FILE )
             {
-            this.desktopOpen( selectedPath );
+            this.desktopOpen( selectedPath, JfpConstants.ASSOC_CMD_TYPE_EXEC );
             }        
     }                                      
 
@@ -4873,11 +4943,11 @@ private static void addJarToClasspath(File file) {
     private void logsBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logsBtnActionPerformed
         if ( stdOutFile.getText() != null && ! stdOutFile.getText().equals( "" ) )
             {
-            desktopOpen( stdOutFile.getText() );
+            desktopOpen( stdOutFile.getText(), JfpConstants.ASSOC_CMD_TYPE_EXEC );
             }
         if ( stdErrFile.getText() != null && ! stdErrFile.getText().equals( "" ) )
             {
-            desktopOpen( stdErrFile.getText() );
+            desktopOpen( stdErrFile.getText(), JfpConstants.ASSOC_CMD_TYPE_EXEC );
             }
 
     }//GEN-LAST:event_logsBtnActionPerformed
@@ -5221,88 +5291,43 @@ private static void addJarToClasspath(File file) {
     }//GEN-LAST:event_showPermsFlagActionPerformed
 
     private void jfpExecActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jfpExecActionPerformed
-        jfpExecOrStop( "exec" );
+        jfpExecOrStop( getSelectedPath(), JfpConstants.ASSOC_CMD_TYPE_EXEC );
     }//GEN-LAST:event_jfpExecActionPerformed
 
-    private void jfpExecEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jfpExecEditActionPerformed
+    private void editFileAssocActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editFileAssocActionPerformed
         try {
-            //System.out.println( "RenameActionPerformed evt.getSource() =" + evt.getSource() );
-            if ( filesTbl.getSelectedRow() < 0 )
-                {
-                JOptionPane.showMessageDialog( this, "Please select an item first.", "Error", JOptionPane.ERROR_MESSAGE );
-                return;
-                }
-            int rowIndex = filesTbl.convertRowIndexToModel( filesTbl.getSelectedRow() );
-            System.out.println( "rename filesTbl.getSelectedRow() =" + filesTbl.getSelectedRow() + "   rowIndex = " + rowIndex );
-            FilesTblModel filesTblModel = (FilesTblModel) filesTbl.getModel();
-            String selectedPath = (String) filesTblModel.getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH );
-            System.out.println( "start webserver at selectedPath =" + selectedPath + "   rowIndex = " + rowIndex );
-            
-            String runCmdString = "";
-//            System.out.println( "------- BEG DUMP FILE ASSOC LIST");
-//            for(Map.Entry<String,FileAssoc> entry : fileAssocList.getFileAssocList().entrySet()) {
-//                String key = entry.getKey();
-//                FileAssoc value = entry.getValue();
-//
-//                System.out.println( "matched and got fa.getAssocType =" + value.getAssocType() + "=" );
-//                System.out.println( "matched and got fa.getMatchPattern =" + value.getMatchPattern() + "=" );
-//                System.out.println( "matched and got fa.exec =" + value.getExec() + "=" );
-//                }
-//            System.out.println( "------- END DUMP FILE ASSOC LIST");
+            String selectedPath = getSelectedPath();
+            System.out.println( "staeditFileAssocActionPerformed() selectedPath =" + selectedPath + "=" );
             
             com.towianski.utils.FileAssocWin fileAssocWin = null;
-            FileAssoc fa = fileAssocList.getFileAssoc(JfpConstants.ASSOC_TYPE_EXACT_FILE, selectedPath );
+            FileAssoc fa = findFileAssocOrAsk( selectedPath, "dontAsk" );
             if ( fa != null )
                 {
-                System.out.println( "matched and got ASSOC_TYPE_1_FILE fa.exec =" + fa.getExec() + "=" );
                 fileAssocWin = new FileAssocWin( "Edit", selectedPath, fa );
                 fa = new FileAssoc( fileAssocWin.getAssocType(), fileAssocWin.getEditClass(), 
                         fileAssocWin.getMatchType(), fileAssocWin.getMatchPattern(), fileAssocWin.getExec(), fileAssocWin.getStop() );
                 }
             else
                 {
-                fa = fileAssocList.getFileAssoc( JfpConstants.ASSOC_TYPE_FILENAME, selectedPath );
-                if ( fa != null )
+                System.out.println( "No File Assoc Found" );
+                fileAssocWin = new FileAssocWin( "New", selectedPath, null );
+                fileAssocWin.setTitle( "New" );
+                fa = new FileAssoc( fileAssocWin.getAssocType(), fileAssocWin.getEditClass(), 
+                        fileAssocWin.getMatchType(), fileAssocWin.getMatchPattern(), fileAssocWin.getExec(), fileAssocWin.getStop() );
+                if ( fileAssocWin.isOkFlag() )
                     {
-                    System.out.println( "matched and got ASSOC_TYPE_FILENAME fa.exec =" + fa.getExec() + "=" );
-                    fileAssocWin = new FileAssocWin( "Edit", selectedPath, fa );
-                    fa = new FileAssoc( fileAssocWin.getAssocType(), fileAssocWin.getEditClass(), 
-                            fileAssocWin.getMatchType(), fileAssocWin.getMatchPattern(), fileAssocWin.getExec(), fileAssocWin.getStop() );
+                    fileAssocList.addFileAssoc( fa );
+                    Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
                     }
-                else
-                    {
-                    fa = fileAssocList.getFileAssoc(JfpConstants.ASSOC_TYPE_SUFFIX, selectedPath );
-                    if ( fa != null )
-                        {
-                        System.out.println( "matched and got ASSOC_TYPE_SUFFIX fa.exec =" + fa.getExec() + "=" );
-                        System.out.println( "matched and got ASSOC_TYPE_SUFFIX fa.stop =" + fa.getStop() + "=" );
-                        fileAssocWin = new FileAssocWin( "Edit", selectedPath, fa );
-                        fa = new FileAssoc( fileAssocWin.getAssocType(), fileAssocWin.getEditClass(), 
-                                fileAssocWin.getMatchType(), fileAssocWin.getMatchPattern(), fileAssocWin.getExec(), fileAssocWin.getStop() );
-                        }
-                    else
-                        {
-                        System.out.println( "No File Assoc Found" );
-                        fileAssocWin = new FileAssocWin( "New", selectedPath, null );
-                        fileAssocWin.setTitle( "New" );
-                        fa = new FileAssoc( fileAssocWin.getAssocType(), fileAssocWin.getEditClass(), 
-                                fileAssocWin.getMatchType(), fileAssocWin.getMatchPattern(), fileAssocWin.getExec(), fileAssocWin.getStop() );
-                        }
-                    }
-                }
-            if ( fileAssocWin != null && fileAssocWin.isOkFlag() )
-                {
-                fileAssocList.addFileAssoc( fa );
-                Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
                 }
             fileAssocWin = null;
         } catch (Exception ex) {
             Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }//GEN-LAST:event_jfpExecEditActionPerformed
+    }//GEN-LAST:event_editFileAssocActionPerformed
 
     private void jfpStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jfpStopActionPerformed
-                jfpExecOrStop( "stop" );
+                jfpExecOrStop( getSelectedPath(), JfpConstants.ASSOC_CMD_TYPE_STOP );
     }//GEN-LAST:event_jfpStopActionPerformed
 
     /**
@@ -5521,6 +5546,7 @@ private static void addJarToClasspath(File file) {
     private javax.swing.JSpinner dateLogicOp;
     private javax.swing.JButton deletePath;
     private javax.swing.JButton dumpThreadListToLog;
+    private javax.swing.JMenuItem editFileAssoc;
     private javax.swing.JCheckBox fileMgrMode;
     private javax.swing.JTextField filePattern;
     private javax.swing.JLabel fileWatchLbl;
@@ -5570,7 +5596,6 @@ private static void addJarToClasspath(File file) {
     private javax.swing.JSplitPane jSplitPane2;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JMenuItem jfpExec;
-    private javax.swing.JMenuItem jfpExecEdit;
     private javax.swing.JMenuItem jfpStop;
     private javax.swing.JButton leftHistory;
     //Level[] logLevelsArr = new Level [] { Level.ALL, Level.CONFIG, Level.FINE, Level.FINER, Level.FINEST, Level.INFO, Level.OFF, Level.SEVERE, Level.WARNING };

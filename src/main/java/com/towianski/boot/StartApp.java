@@ -6,7 +6,6 @@ import com.towianski.jfileprocessor.JFileFinderWin;
 import com.towianski.utils.MyLogger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.PreDestroy;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -123,10 +122,10 @@ public class StartApp //implements CommandLineRunner
         // finished so close the context
         }  
 
-    @PreDestroy
-    public void destroy() {
-        System.out.println( "Inside destroy method - " );
-        }
+//    @PreDestroy
+//    public void destroy() {
+//        System.out.println( "Inside destroy method - " );
+//        }
 }
 
 

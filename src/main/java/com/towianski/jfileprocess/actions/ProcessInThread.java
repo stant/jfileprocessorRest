@@ -5,6 +5,7 @@
  */
 package com.towianski.jfileprocess.actions;
 
+import com.towianski.boot.JFileProcessorVersion;
 import com.towianski.utils.DesktopUtils;
 import java.io.File;
 import java.io.IOException;
@@ -62,10 +63,11 @@ public class ProcessInThread {
         ArrayList<String> cmdList = new ArrayList<String>();
         for ( String tmp : cmdListArg )
             {
+            tmp = tmp.replace( "$JFP", JFileProcessorVersion.getFileName() );
             tmp = tmp.replace( "$JAVA", javaBin );
             tmp = tmp.replace( "$JAVAW", javaW );
             tmp = tmp.replace( "$CLASSPATH", classpath );
-            tmp = tmp.replace( "$HOMETMP", DesktopUtils.getJfpHomeTmpDir( false ) );
+            tmp = tmp.replace( "$JFPHOMETMP", DesktopUtils.getJfpHomeTmpDir( false ) );
             cmdList.add( tmp );
             System.out.println( "cmdList tmp = " + tmp + "=" );
             }

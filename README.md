@@ -4,7 +4,7 @@ Place to get the official versions (many sites are behind):
 ![github main](https://github.com/stant/jfileprocessorRest)
 ![github main](https://github.com/stant/jfileprocessorRest/releases)
 
-made using Java 8.
+made using Java 8, but now compatible with Java 9+
 
 WINDOWS OS: Java Swing programs have an issue with high DPI displays. I do not know of a good solution
 and the problem even varies between Java versions. You will have to play with your "compatibility" settings
@@ -88,7 +88,7 @@ This is a short cut. It will run the script without a code window on the files y
 Most of the groovy scripts I include as examples write to the same file system-temp-folder/NewFile.txt so be sure to modify as needed.
 You can output to a window or a file as you want to.
 
-You can create Java Swing GUI windows to use in your groovy scripts. 
+You can create Java Swing GUI windows/frames/forms to use in your groovy scripts. 
 Put them into JfpLib.jar which gets loaded at startup.
 These scripts have good working example of how to call JFP java methods as needed to get files selected, etc...
 
