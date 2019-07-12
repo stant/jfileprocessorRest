@@ -6,9 +6,21 @@
 package com.towianski.utils;
 
 import com.towianski.models.FileAssoc;
+import com.towianski.models.FileAssocList;
 import com.towianski.models.JfpConstants;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.KeyStroke;
 
 /**
  *
@@ -18,6 +30,11 @@ public class FileAssocWin extends javax.swing.JDialog {
 
     static FileAssocWin fileAssocWin = null;
     static boolean okFlag = false;
+    static boolean deleteFlag = false;
+    static int winAction = 0;
+    FileAssocList fileAssocList = new FileAssocList();
+    ArrayList<FileAssoc> matchingFileAssocList = new ArrayList<FileAssoc>();
+    int faIdx = 0;
 
     static String filename = "";
     static Path filepath = null;
@@ -26,35 +43,110 @@ public class FileAssocWin extends javax.swing.JDialog {
     /**
      * Creates new form RenameFiles
      */
-    public FileAssocWin( String title, String filename, FileAssoc fa ) {
+//    public FileAssocWin( String title, String filename, FileAssoc fa ) {
+//        initComponents();
+//        this.setTitle(title);
+//        this.filename = filename;
+//        this.filepath = Paths.get(filename);
+//        this.fa = fa;
+//        if ( fa != null )
+//            {
+//            setAssocType( fa.getAssocType() );
+//            setMatchType( fa.getMatchType());
+//            setMatchPattern( fa.getMatchPattern());
+//            setExec( fa.getExec() );
+//            setStop( fa.getStop() );
+//            }
+//        else
+//            {
+//            int at = filename.lastIndexOf( '.' );
+//            if ( regexMatchType.isSelected() )
+//                setMatchPattern( ".*" + filename.substring( at ) );
+//            else 
+//                setMatchPattern( "**" + filename.substring( at ) );
+//            }
+//        this.setLocationRelativeTo( null );
+//        this.setVisible(true);
+//    }
+
+    public FileAssocWin( String filename, FileAssocList fileAssocList, int winAction ) {
         initComponents();
-        this.setTitle(title);
         this.filename = filename;
         this.filepath = Paths.get(filename);
-        this.fa = fa;
-        if ( fa != null )
+        this.fileAssocList = fileAssocList;
+        this.winAction = winAction;
+        
+        matchingFileAssocList = fileAssocList.getFileAssocList( filename );
+        showFileAssoc( 0 );
+        
+        System.out.println( "winAction =" + winAction );
+        if ( winAction == JfpConstants.ASSOC_WINDOW_ACTION_SELECT )
             {
+//            System.out.println( "doing select" );
+            okBtn.setText( "Select" );
+            deleteBtn.setVisible( false );
+            this.setTitle( "Choose one to Use" );
+            }
+        this.setLocationRelativeTo( null );
+        this.addEscapeListener( this );
+        this.setVisible(true);
+    }
+
+    
+    public void showFileAssoc( int idx ) {
+        faIdx = idx;
+        if ( faIdx < 0 )  
+            faIdx = 0;
+        else if ( faIdx >= matchingFileAssocList.size() )
+            {
+            if ( winAction == JfpConstants.ASSOC_WINDOW_ACTION_SELECT )
+                {
+                faIdx = matchingFileAssocList.size() - 1;
+                }
+            else
+                {
+                faIdx = matchingFileAssocList.size();
+                }
+            }
+        System.out.println( "\nSHOW faIdx =" + faIdx );
+        if ( matchingFileAssocList != null && faIdx < matchingFileAssocList.size() )
+            {
+            this.setTitle( "Edit" );
+            fa = matchingFileAssocList.get( faIdx );
+            System.out.println( "\nEDIT faIdx =" + faIdx + "\nmatched and got fa.getAssocType =" + fa.getAssocType() + "=" );
+            System.out.println( "matched and got fa.getMatchType =" + fa.getMatchType() + "=" );
+            System.out.println( "matched and got fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
+            System.out.println( "matched and got fa.exec =" + fa.getExec() + "=" );
             setAssocType( fa.getAssocType() );
             setMatchType( fa.getMatchType());
             setMatchPattern( fa.getMatchPattern());
-            setEditClass( fa.getEditClass());
             setExec( fa.getExec() );
             setStop( fa.getStop() );
             }
         else
             {
+            this.setTitle( "New" );
+            faIdx = matchingFileAssocList.size();
             int at = filename.lastIndexOf( '.' );
             if ( regexMatchType.isSelected() )
-                setMatchPattern( ".*" + filename.substring( at ) );
+                setMatchPattern( ".*[.]" + filename.substring( at + 1 ) );
             else 
                 setMatchPattern( "**" + filename.substring( at ) );
+            setExec( "" );
+            setStop( "" );
             }
-        this.setLocationRelativeTo( null );
-        this.setVisible(true);
-    }
+        if ( winAction == JfpConstants.ASSOC_WINDOW_ACTION_SELECT )
+            {
+            this.setTitle( "Choose one to Use" );
+            }
+        }
 
     public static boolean isOkFlag() {
         return okFlag;
+    }
+
+    public static boolean isDeleteFlag() {
+        return deleteFlag;
     }
 
     public String getMatchType()
@@ -123,16 +215,23 @@ public class FileAssocWin extends javax.swing.JDialog {
                 oneFileRB.setSelected( true );
     }
 
-    public String getEditClass()
-    {
-        return editClass.getText();
-    }
 
-    public void setEditClass( String ss )
-    {
-        editClass.setText( ss );
-    }
+    public void addEscapeListener(final JDialog win) {
+        ActionListener escListener = new ActionListener() {
 
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //System.out.println( "previewImportWin formWindow dispose()" );
+                okFlag = false;
+                win.dispatchEvent( new WindowEvent( win, WindowEvent.WINDOW_CLOSING )); 
+                win.dispose();
+            }
+        };
+
+        win.getRootPane().registerKeyboardAction(escListener,
+                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+                JComponent.WHEN_IN_FOCUSED_WINDOW);
+    }    
     
     /**
      * This method is called from within the constructor to initialize the form.
@@ -156,12 +255,14 @@ public class FileAssocWin extends javax.swing.JDialog {
         suffixRB = new javax.swing.JRadioButton();
         filenameRB = new javax.swing.JRadioButton();
         oneFileRB = new javax.swing.JRadioButton();
-        editClass = new javax.swing.JTextField();
-        jLabel2 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTextPane1 = new javax.swing.JTextPane();
         stop = new javax.swing.JTextField();
         jLabel3 = new javax.swing.JLabel();
+        deleteBtn = new javax.swing.JButton();
+        leftFa = new javax.swing.JButton();
+        rightFa = new javax.swing.JButton();
+        jButton1 = new javax.swing.JButton();
 
         setMinimumSize(new java.awt.Dimension(900, 300));
         setModal(true);
@@ -177,6 +278,11 @@ public class FileAssocWin extends javax.swing.JDialog {
         buttonGroup1.add(globMatchType);
         globMatchType.setSelected(true);
         globMatchType.setText("glob");
+        globMatchType.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                globMatchTypeActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 2;
@@ -186,6 +292,11 @@ public class FileAssocWin extends javax.swing.JDialog {
 
         buttonGroup1.add(regexMatchType);
         regexMatchType.setText("regex");
+        regexMatchType.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                regexMatchTypeActionPerformed(evt);
+            }
+        });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 2;
@@ -203,7 +314,7 @@ public class FileAssocWin extends javax.swing.JDialog {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 2;
-        gridBagConstraints.gridwidth = 3;
+        gridBagConstraints.gridwidth = 5;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.ipadx = 223;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
@@ -221,7 +332,7 @@ public class FileAssocWin extends javax.swing.JDialog {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 3;
-        gridBagConstraints.gridwidth = 3;
+        gridBagConstraints.gridwidth = 5;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.ipadx = 223;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
@@ -229,7 +340,9 @@ public class FileAssocWin extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(10, 7, 0, 10);
         getContentPane().add(exec, gridBagConstraints);
 
-        okBtn.setText("Ok");
+        okBtn.setText("Save");
+        okBtn.setMinimumSize(new java.awt.Dimension(81, 25));
+        okBtn.setPreferredSize(new java.awt.Dimension(81, 25));
         okBtn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 okBtnActionPerformed(evt);
@@ -238,12 +351,11 @@ public class FileAssocWin extends javax.swing.JDialog {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 6;
-        gridBagConstraints.ipadx = 28;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
         gridBagConstraints.insets = new java.awt.Insets(10, 10, 7, 10);
         getContentPane().add(okBtn, gridBagConstraints);
 
-        cancelBtn.setText("Cancel");
+        cancelBtn.setText("Exit");
         cancelBtn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelBtnActionPerformed(evt);
@@ -275,7 +387,7 @@ public class FileAssocWin extends javax.swing.JDialog {
             }
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.insets = new java.awt.Insets(10, 10, 0, 0);
         getContentPane().add(suffixRB, gridBagConstraints);
@@ -301,28 +413,10 @@ public class FileAssocWin extends javax.swing.JDialog {
             }
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
-        gridBagConstraints.insets = new java.awt.Insets(10, 0, 0, 0);
+        gridBagConstraints.insets = new java.awt.Insets(10, 8, 0, 0);
         getContentPane().add(oneFileRB, gridBagConstraints);
-
-        editClass.setEditable(false);
-        editClass.setMinimumSize(new java.awt.Dimension(300, 25));
-        editClass.setPreferredSize(new java.awt.Dimension(300, 25));
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 4;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-        gridBagConstraints.insets = new java.awt.Insets(10, 7, 0, 10);
-        getContentPane().add(editClass, gridBagConstraints);
-
-        jLabel2.setText("Editor Class");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 3;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-        gridBagConstraints.insets = new java.awt.Insets(10, 15, 0, 5);
-        getContentPane().add(jLabel2, gridBagConstraints);
 
         jTextPane1.setEditable(false);
         jTextPane1.setText("get replaced in commands:\n%f - full file path     %F - filename\n$JAVA   $JAVAW   $CLASSPATH   $JFP   $JFPHOMETMP");
@@ -333,7 +427,7 @@ public class FileAssocWin extends javax.swing.JDialog {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 3;
         gridBagConstraints.gridy = 6;
-        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.gridwidth = 4;
         gridBagConstraints.gridheight = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.insets = new java.awt.Insets(10, 10, 7, 10);
@@ -349,7 +443,7 @@ public class FileAssocWin extends javax.swing.JDialog {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 4;
-        gridBagConstraints.gridwidth = 3;
+        gridBagConstraints.gridwidth = 5;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
         gridBagConstraints.weightx = 1.0;
@@ -365,13 +459,86 @@ public class FileAssocWin extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(10, 22, 0, 0);
         getContentPane().add(jLabel3, gridBagConstraints);
 
+        deleteBtn.setText("Delete");
+        deleteBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteBtnActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 7;
+        gridBagConstraints.insets = new java.awt.Insets(10, 10, 7, 10);
+        getContentPane().add(deleteBtn, gridBagConstraints);
+
+        leftFa.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/Actions-go-previous-icon-16.png"))); // NOI18N
+        leftFa.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                leftFaActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 3;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.insets = new java.awt.Insets(10, 10, 0, 0);
+        getContentPane().add(leftFa, gridBagConstraints);
+
+        rightFa.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/Actions-go-next-icon-16.png"))); // NOI18N
+        rightFa.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rightFaActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 4;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.insets = new java.awt.Insets(10, 0, 0, 10);
+        getContentPane().add(rightFa, gridBagConstraints);
+
+        jButton1.setText("Browse Execute");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 6;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.insets = new java.awt.Insets(10, 20, 0, 10);
+        getContentPane().add(jButton1, gridBagConstraints);
+
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void okBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okBtnActionPerformed
         okFlag = true;
+        deleteFlag = false;
         System.out.println( "file assoc win OK");
-        this.setVisible( false );
+        fa = new FileAssoc( getAssocType(), getMatchType(), getMatchPattern(), getExec(), getStop() );
+        if ( isOkFlag() && winAction == JfpConstants.ASSOC_WINDOW_ACTION_EDIT )
+            {
+            System.out.println( "matched and got fa.getAssocType =" + fa.getAssocType() + "=" );
+            System.out.println( "matched and got fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
+            System.out.println( "matched and got fa.exec =" + fa.getExec() + "=" );
+            fileAssocList.addFileAssoc( fa );
+            if ( faIdx < matchingFileAssocList.size() )
+                {
+                matchingFileAssocList.set( faIdx, fa );  //update
+                System.out.println( "file assoc UPDATE");
+                }
+            else
+                {
+                matchingFileAssocList.add( fa );  //add
+                System.out.println( "file assoc ADD");
+                this.setVisible( false );
+                }
+            Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
+            showFileAssoc( faIdx );
+            }
+        else
+            {
+            this.setVisible( false );
+            }
     }//GEN-LAST:event_okBtnActionPerformed
 
     private void matchPatternActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_matchPatternActionPerformed
@@ -380,6 +547,7 @@ public class FileAssocWin extends javax.swing.JDialog {
 
     private void cancelBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelBtnActionPerformed
         okFlag = false;
+        deleteFlag = false;
         System.out.println( "file assoc win CANCEL");
         this.setVisible( false );
     }//GEN-LAST:event_cancelBtnActionPerformed
@@ -391,7 +559,7 @@ public class FileAssocWin extends javax.swing.JDialog {
     private void suffixRBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_suffixRBActionPerformed
         int at = filename.lastIndexOf( '.' );
         if ( regexMatchType.isSelected() )
-            setMatchPattern( ".*" + filename.substring( at ) );
+            setMatchPattern( ".*[.]" + filename.substring( at + 1 ) );
         else 
             setMatchPattern( "**" + filename.substring( at ) );
     }//GEN-LAST:event_suffixRBActionPerformed
@@ -401,7 +569,7 @@ public class FileAssocWin extends javax.swing.JDialog {
             // this is a pain! if \ I SHould make it \\   not for now
             setMatchPattern( ".*" + System.getProperty( "file.separator" ) + filepath.getFileName() );
         else 
-            setMatchPattern( "**" + filepath.getFileName() );
+            setMatchPattern( "**" + System.getProperty( "file.separator" ) + filepath.getFileName() );
     }//GEN-LAST:event_filenameRBActionPerformed
 
     private void oneFileRBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_oneFileRBActionPerformed
@@ -415,6 +583,71 @@ public class FileAssocWin extends javax.swing.JDialog {
     private void stopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_stopActionPerformed
+
+    private void regexMatchTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_regexMatchTypeActionPerformed
+        if ( suffixRB.isSelected() )
+            suffixRBActionPerformed( null );
+        else if ( filenameRB.isSelected() )
+            filenameRBActionPerformed( null );
+        else if ( oneFileRB.isSelected() )
+            oneFileRBActionPerformed( null );
+    }//GEN-LAST:event_regexMatchTypeActionPerformed
+
+    private void globMatchTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_globMatchTypeActionPerformed
+        if ( suffixRB.isSelected() )
+            suffixRBActionPerformed( null );
+        else if ( filenameRB.isSelected() )
+            filenameRBActionPerformed( null );
+        else if ( oneFileRB.isSelected() )
+            oneFileRBActionPerformed( null );
+    }//GEN-LAST:event_globMatchTypeActionPerformed
+
+    private void deleteBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBtnActionPerformed
+        int reply = JOptionPane.showConfirmDialog( null, "Are you sure to Delete ? ", "File Association", JOptionPane.YES_NO_OPTION);
+        System.out.println( "reply =" + reply + "=" );
+        if ( reply == JOptionPane.YES_OPTION )
+            {
+            okFlag = false;
+            deleteFlag = true;
+            System.out.println( "file assoc win Delete");
+            fa = new FileAssoc( getAssocType(), getMatchType(), getMatchPattern(), getExec(), getStop() );
+            if ( faIdx < matchingFileAssocList.size() )
+                {
+                fileAssocList.deleteFileAssoc( fa );
+                matchingFileAssocList.remove( faIdx );  // delete
+                Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
+                showFileAssoc( faIdx );
+                }
+            }
+    }//GEN-LAST:event_deleteBtnActionPerformed
+
+    private void rightFaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rightFaActionPerformed
+        faIdx ++;
+        showFileAssoc(faIdx);
+    }//GEN-LAST:event_rightFaActionPerformed
+
+    private void leftFaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_leftFaActionPerformed
+        faIdx --;
+        showFileAssoc(faIdx);
+    }//GEN-LAST:event_leftFaActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileHidingEnabled( true );
+        chooser.setDialogTitle( "Find an executable file" );
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        //
+        // enable the "All files" option.
+        //
+        chooser.setAcceptAllFileFilterUsed(true);
+    
+    if ( chooser.showDialog( this, "Select" ) == JFileChooser.APPROVE_OPTION )
+        {
+        File selectedFile = chooser.getSelectedFile();
+        setExec( selectedFile.getPath() + " %f" );
+        }
+
+    }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -458,19 +691,21 @@ public class FileAssocWin extends javax.swing.JDialog {
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.ButtonGroup buttonGroup2;
     private javax.swing.JButton cancelBtn;
-    private javax.swing.JTextField editClass;
+    private javax.swing.JButton deleteBtn;
     private javax.swing.JTextField exec;
     private javax.swing.JRadioButton filenameRB;
     private javax.swing.JRadioButton globMatchType;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextPane jTextPane1;
+    private javax.swing.JButton leftFa;
     private javax.swing.JTextField matchPattern;
     private javax.swing.JButton okBtn;
     private javax.swing.JRadioButton oneFileRB;
     private javax.swing.JRadioButton regexMatchType;
+    private javax.swing.JButton rightFa;
     private javax.swing.JTextField stop;
     private javax.swing.JRadioButton suffixRB;
     // End of variables declaration//GEN-END:variables

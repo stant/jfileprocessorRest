@@ -4,7 +4,7 @@ Place to get the official versions (many sites are behind):
 ![github main](https://github.com/stant/jfileprocessorRest)
 ![github main](https://github.com/stant/jfileprocessorRest/releases)
 
-made using Java 8, but now compatible with Java 9+
+made using Java 8, but now compatible with Java 9+    (tested 8-12)
 
 WINDOWS OS: Java Swing programs have an issue with high DPI displays. I do not know of a good solution
 and the problem even varies between Java versions. You will have to play with your "compatibility" settings
@@ -79,6 +79,10 @@ For each file you have selected, it will open a new window or a terminal
 for the parent path of each.
 If nothing is selected it uses the "Folder:" you are in.
 
+* JFP not can use its own File Associations. You can add, edit, and delete them.
+It lets you have 3 different types at this point. One for each type.
+I create default assocs for "*.war" files. If you execute a war file it will run it in a tomcat container.
+Just double-click on one!
 * Install-Folder/   groovy   or   menu-scripts
 
 groovy: folder for groovy scripts. 
@@ -88,8 +92,9 @@ This is a short cut. It will run the script without a code window on the files y
 Most of the groovy scripts I include as examples write to the same file system-temp-folder/NewFile.txt so be sure to modify as needed.
 You can output to a window or a file as you want to.
 
-You can create Java Swing GUI windows/frames/forms to use in your groovy scripts. 
+You can create Java Swing GUI windows/JFrames/forms to use in your groovy scripts. 
 Put them into JfpLib.jar which gets loaded at startup.
+import these classes in the groovy scripts to pop up a form to get info from user to run commands...
 These scripts have good working example of how to call JFP java methods as needed to get files selected, etc...
 
 Here is an example groovy code file:

@@ -9,6 +9,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -20,7 +21,9 @@ public class FileAssocList {
     
     String version = "1.0";
     TreeMap<String,FileAssoc> fileAssocList = new TreeMap<String,FileAssoc>();
+    ArrayList<FileAssoc> matchingFileAssocList = new ArrayList<FileAssoc>();
 
+    
     public TreeMap<String, FileAssoc> getFileAssocList() {
         return fileAssocList;
     }
@@ -41,6 +44,41 @@ public class FileAssocList {
     public FileAssoc getFileAssoc( String key )
     {
         return fileAssocList.get(key);
+    }
+
+    @JsonProperty
+    public ArrayList<FileAssoc> getFileAssocList( String selectedPath )
+    {
+        matchingFileAssocList = new ArrayList<FileAssoc>();
+        Path fpath = Paths.get( selectedPath );
+        PathMatcher matcher = null;
+
+        System.out.println( "\nsearch to match path =" + selectedPath + "=" );
+        for( Map.Entry<String,FileAssoc> entry : fileAssocList.entrySet() ) {
+            String key = entry.getKey();
+            FileAssoc fa = entry.getValue();
+
+            if ( fa.getMatchType().equalsIgnoreCase( JfpConstants.MATCH_TYPE_REGEX) )
+                {
+                matcher = FileSystems.getDefault().getPathMatcher("regex:" + fa.getMatchPattern());
+                System.out.println( "matching by regex:" + fa.getMatchPattern() );
+                }
+            else
+                {
+                matcher = FileSystems.getDefault().getPathMatcher("glob:" + fa.getMatchPattern());
+                System.out.println( "matching by glob:" + fa.getMatchPattern() );
+                }
+            if ( fpath.getFileName() != null && matcher.matches( fpath  ) )
+                {
+                System.out.println( "FOUND match to add to List" );
+                System.out.println( "matched and got fa.getAssocType =" + fa.getAssocType() + "=" );
+                System.out.println( "matched and got fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
+                System.out.println( "matched and got fa.exec =" + fa.getExec() + "=" );
+                System.out.println( "matched and got fa.stop =" + fa.getStop() + "=" );
+                matchingFileAssocList.add( fa );
+                }
+            }
+        return matchingFileAssocList;
     }
 
     @JsonProperty
@@ -85,5 +123,12 @@ public class FileAssocList {
     public void addFileAssoc( FileAssoc fileAssoc )
     {
         fileAssocList.put( fileAssoc.getAssocType() + ":" + fileAssoc.getMatchPattern(), fileAssoc );
+    }
+    
+    @JsonIgnore
+    public void deleteFileAssoc( FileAssoc fileAssoc )
+    {
+        System.out.println( "DELETE =" + fileAssoc.getAssocType() + ":" + fileAssoc.getMatchPattern() + "=" );
+        fileAssocList.remove( fileAssoc.getAssocType() + ":" + fileAssoc.getMatchPattern() );
     }
 }

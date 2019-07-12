@@ -112,7 +112,6 @@ import java.net.URLClassLoader;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -174,7 +173,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
-import windows.*;
 
 /**
  *
@@ -363,7 +361,25 @@ private static void addJarToClasspathJdk8(File file) {
             }
     }
 
-    
+    private void addJarToClasspathJdk9B(File file) {
+        try {
+// Constructing a URL form the path to JAR
+//URL u = new URL("file:/C:/Users/SomeUser/Projects/MyTool/plugins/myNodes/myOwn-nodes-1.6.jar");
+                URL u = file.toURI().toURL();
+                System.out.println( "created 9B url =" + u + "=" );
+
+// Creating an instance of URLClassloader using the above URL and parent classloader 
+ClassLoader loader = URLClassLoader.newInstance(new URL[]{u}, windows.RenameFiles.class.getClassLoader());
+
+// Returns the class object
+Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
+                
+            }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            }
+    }
+
     public void start() 
         {
 //        System.out.println( "enter start()" );
@@ -722,13 +738,7 @@ private static void addJarToClasspathJdk8(File file) {
                 System.out.println( "readInFileAssocFromFile() Error reading json file" );
                 fileAssocList = new FileAssocList();
                 fileAssocList.addFileAssoc( new FileAssoc( JfpConstants.ASSOC_TYPE_SUFFIX, 
-                        "", JfpConstants.MATCH_TYPE_GLOB, "**.war", 
-                        "$JAVA -Dspring.profiles.active=warserver -jar " + JfpHomeDir + "$JFP" + 
-                                " --warfile=%f --path=/%F --port=8070 --warserver --logging.file=" + 
-                                JfpHomeTempDir + "%F.log",
-                        "url:https://localhost:8070/jfp/sys/stop" ) );
-                fileAssocList.addFileAssoc( new FileAssoc( JfpConstants.ASSOC_TYPE_SUFFIX, 
-                        "", JfpConstants.MATCH_TYPE_REGEX, ".*[.]war", 
+                        JfpConstants.MATCH_TYPE_GLOB, "**.war", 
                         "$JAVA -Dspring.profiles.active=warserver -jar " + JfpHomeDir + "$JFP" + 
                                 " --warfile=%f --path=/%F --port=8070 --warserver --logging.file=" + 
                                 JfpHomeTempDir + "%F.log",
@@ -2015,7 +2025,7 @@ private static void addJarToClasspathJdk8(File file) {
 //        System.out.println( "filestr              =" + filestr + "=" );
 //        System.out.println( "stdOutFile.getText() =" + stdOutFile.getText() + "=" );
 
-        System.out.println( "do Desktop Open for filestr =" + filestr + "=" );
+        System.out.println( "ck to do jfpExecOrStop if exists or Desktop Open for filestr =" + filestr + "=" );
         Desktop desktop = Desktop.getDesktop();
         try {
             if ( connUserInfo.isConnectedFlag()  &&   //rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) &&
@@ -2052,6 +2062,7 @@ private static void addJarToClasspathJdk8(File file) {
             } 
         catch (Exception ex) 
             {
+            ex.printStackTrace();
             logger.log(Level.SEVERE, null, ex);
             JOptionPane.showMessageDialog( this, "Open not supported in this desktop", "Error", JOptionPane.ERROR_MESSAGE );
             }
@@ -2122,7 +2133,8 @@ private static void addJarToClasspathJdk8(File file) {
             }
         }
         
-    private FileAssoc findFileAssocOrAsk( String selectedPath, String cmd ) {                                            
+/*    
+    private FileAssoc findFileAssocOrAskOLD( String selectedPath, String cmd ) {                                            
         try {
             System.out.println( "findFileAssocOrAsk() selectedPath =" + selectedPath + "=   cmd =" + cmd );
             
@@ -2138,7 +2150,7 @@ private static void addJarToClasspathJdk8(File file) {
 //                }
 //            System.out.println( "------- END DUMP FILE ASSOC LIST");
             
-            com.towianski.utils.FileAssocWin fileAssocWin = null;
+            //com.towianski.utils.FileAssocWin fileAssocWin = null;
             FileAssoc fa = fileAssocList.getFileAssoc(JfpConstants.ASSOC_TYPE_EXACT_FILE, selectedPath );
             if ( fa != null )
                 {
@@ -2164,23 +2176,68 @@ private static void addJarToClasspathJdk8(File file) {
                         System.out.println( "No File Assoc Found, cmd/ask =" + cmd );
                         if ( cmd.equalsIgnoreCase( "ask" ) )
                             {
-                            fileAssocWin = new FileAssocWin( "New", selectedPath, null );
-                            fileAssocWin.setTitle( "New" );
-                            fa = new FileAssoc( fileAssocWin.getAssocType(), fileAssocWin.getEditClass(), 
-                                    fileAssocWin.getMatchType(), fileAssocWin.getMatchPattern(), fileAssocWin.getExec(), fileAssocWin.getStop() );
-                            if ( fileAssocWin.isOkFlag() )
-                                {
-                                System.out.println( "matched and got fa.getAssocType =" + fa.getAssocType() + "=" );
-                                System.out.println( "matched and got fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
-                                System.out.println( "matched and got fa.exec =" + fa.getExec() + "=" );
-                                fileAssocList.addFileAssoc( fa );
-                                Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
-                                }
+                            FileAssocWin fileAssocWin = new FileAssocWin( selectedPath, fileAssocList );
+//                            fileAssocWin = new FileAssocWin( "New", selectedPath, null );
+//                            fa = new FileAssoc( fileAssocWin.getAssocType(), 
+//                                    fileAssocWin.getMatchType(), fileAssocWin.getMatchPattern(), fileAssocWin.getExec(), fileAssocWin.getStop() );
+//                            if ( fileAssocWin.isOkFlag() )
+//                                {
+//                                System.out.println( "matched and got fa.getAssocType =" + fa.getAssocType() + "=" );
+//                                System.out.println( "matched and got fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
+//                                System.out.println( "matched and got fa.exec =" + fa.getExec() + "=" );
+//                                fileAssocList.addFileAssoc( fa );
+//                                Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
+//                                }
                             }
                         }
                     }
                 }
             return fa;
+        } catch (Exception ex) {
+            Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }                                           
+*/
+    
+    private FileAssoc findFileAssocOrAsk( String selectedPath, String cmd ) {                                            
+        try {
+            System.out.println( "findFileAssocOrAsk() selectedPath =" + selectedPath + "=   cmd =" + cmd );
+            
+            ArrayList<FileAssoc> matchingFileAssocList = fileAssocList.getFileAssocList( selectedPath );
+            System.out.println( "findFileAssocOrAsk() matchingFileAssocList.size() =" + matchingFileAssocList.size() );
+            if ( matchingFileAssocList.size() == 1 )
+                {
+                System.out.println( "matched and got fa.exec =" + matchingFileAssocList.get(0).getExec() + "=" );
+                return matchingFileAssocList.get(0);
+                }
+            else if ( cmd.equalsIgnoreCase( "dontAsk" ) )
+                {
+                if ( matchingFileAssocList.size() > 1 )
+                    {
+                    return matchingFileAssocList.get(0);
+                    }
+                return null;
+                }
+            else  //if ( matchingFileAssocList.size() > 1 )
+                {
+                if ( matchingFileAssocList.size() > 1 ) System.out.println( "matched multiple so select" );
+                if ( matchingFileAssocList.size() <= 1 ) System.out.println( "matched 0 so EDIT" );
+                FileAssocWin fileAssocWin = new FileAssocWin( selectedPath, fileAssocList, 
+                        matchingFileAssocList.size() > 1 ? JfpConstants.ASSOC_WINDOW_ACTION_SELECT : JfpConstants.ASSOC_WINDOW_ACTION_EDIT );
+                if ( fileAssocWin.isOkFlag() )
+                    {
+    //                System.out.println( "jfpWin got OK " );
+                    FileAssoc fa = new FileAssoc( fileAssocWin.getAssocType(),
+                            fileAssocWin.getMatchType(), fileAssocWin.getMatchPattern(), fileAssocWin.getExec(), fileAssocWin.getStop() );
+    //                System.out.println( "matched and got fa.getAssocType =" + fa.getAssocType() + "=" );
+    //                System.out.println( "matched and got fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
+    //                System.out.println( "matched and got fa.exec =" + fa.getExec() + "=" );
+    //                System.out.println( "matched and got fa.stop =" + fa.getStop() + "=" );
+                    return fa;
+                    }
+                }
+            return null;
         } catch (Exception ex) {
             Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -2199,7 +2256,7 @@ private static void addJarToClasspathJdk8(File file) {
                 return null;
                 }
             int rowIndex = filesTbl.convertRowIndexToModel( filesTbl.getSelectedRow() );
-            System.out.println( "rename filesTbl.getSelectedRow() =" + filesTbl.getSelectedRow() + "   rowIndex = " + rowIndex );
+            System.out.println( "filesTbl.getSelectedRow() =" + filesTbl.getSelectedRow() + "   rowIndex = " + rowIndex );
             FilesTblModel filesTblModel = (FilesTblModel) filesTbl.getModel();
             selectedPath = (String) filesTblModel.getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH );
             System.out.println( "got selectedPath =" + selectedPath + "   rowIndex = " + rowIndex );
@@ -2209,7 +2266,7 @@ private static void addJarToClasspathJdk8(File file) {
         return selectedPath;
     }
             
-    public void jfpExecOrStop( String selectedPath, String cmd )
+    public void jfpExecOrStop( String selectedPath, String cmdType )
     {
         try {
             String runCmdString = "";
@@ -2217,7 +2274,7 @@ private static void addJarToClasspathJdk8(File file) {
             FileAssoc fa = findFileAssocOrAsk( selectedPath, "ask" );
             if ( fa != null )
                 {
-                if ( cmd.equalsIgnoreCase( JfpConstants.ASSOC_CMD_TYPE_STOP ) )
+                if ( cmdType.equalsIgnoreCase( JfpConstants.ASSOC_CMD_TYPE_STOP ) )
                     runCmdString = fa.getStop();
                 else
                     runCmdString = fa.getExec();
@@ -2282,7 +2339,7 @@ private static void addJarToClasspathJdk8(File file) {
                 cmdList = new ArrayList<String>(Arrays.asList( cmdAr )); 
 
                 int rc = jp.execJava2( cmdList, true );
-                if ( cmd.equalsIgnoreCase( "stop" ) )
+                if ( cmdType.equalsIgnoreCase( JfpConstants.ASSOC_CMD_TYPE_STOP ) )
                     rcStr = runCmdString + "<br>stop returned code =" + rc + "=";
                 else
                     rcStr = runCmdString + "<br>start returned code =" + rc + "=";
@@ -2290,7 +2347,7 @@ private static void addJarToClasspathJdk8(File file) {
                 }
 
             // Start a msgBox - if doing exec and it has a stop cmd. if just start kwrite or something do not show msgBox
-            if ( cmd.equalsIgnoreCase( JfpConstants.ASSOC_CMD_TYPE_STOP ) ||
+            if ( cmdType.equalsIgnoreCase( JfpConstants.ASSOC_CMD_TYPE_STOP ) ||
                  ( fa.getStop() != null && ! fa.getStop().equals( "" ) ) )
             {
                 final String tmp = rcStr;
@@ -4105,7 +4162,6 @@ private static void addJarToClasspathJdk8(File file) {
         //String[] tt = { selectedFile.getPath() };
         startingFolder.setText( selectedFile.getPath() );
         }
-
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void savePathsToFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_savePathsToFileActionPerformed
@@ -5297,31 +5353,11 @@ private static void addJarToClasspathJdk8(File file) {
     private void editFileAssocActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editFileAssocActionPerformed
         try {
             String selectedPath = getSelectedPath();
-            System.out.println( "staeditFileAssocActionPerformed() selectedPath =" + selectedPath + "=" );
+            System.out.println( "editFileAssocActionPerformed() selectedPath =" + selectedPath + "=" );
             
-            com.towianski.utils.FileAssocWin fileAssocWin = null;
-            FileAssoc fa = findFileAssocOrAsk( selectedPath, "dontAsk" );
-            if ( fa != null )
-                {
-                fileAssocWin = new FileAssocWin( "Edit", selectedPath, fa );
-                fa = new FileAssoc( fileAssocWin.getAssocType(), fileAssocWin.getEditClass(), 
-                        fileAssocWin.getMatchType(), fileAssocWin.getMatchPattern(), fileAssocWin.getExec(), fileAssocWin.getStop() );
-                }
-            else
-                {
-                System.out.println( "No File Assoc Found" );
-                fileAssocWin = new FileAssocWin( "New", selectedPath, null );
-                fileAssocWin.setTitle( "New" );
-                fa = new FileAssoc( fileAssocWin.getAssocType(), fileAssocWin.getEditClass(), 
-                        fileAssocWin.getMatchType(), fileAssocWin.getMatchPattern(), fileAssocWin.getExec(), fileAssocWin.getStop() );
-                if ( fileAssocWin.isOkFlag() )
-                    {
-                    fileAssocList.addFileAssoc( fa );
-                    Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
-                    }
-                }
-            fileAssocWin = null;
+            FileAssocWin fileAssocWin = new FileAssocWin( selectedPath, fileAssocList, JfpConstants.ASSOC_WINDOW_ACTION_EDIT );
         } catch (Exception ex) {
+            ex.printStackTrace();
             Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_editFileAssocActionPerformed

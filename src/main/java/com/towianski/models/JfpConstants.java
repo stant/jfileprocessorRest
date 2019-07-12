@@ -14,6 +14,10 @@ public class JfpConstants {
     public final static String ASSOC_TYPE_SUFFIX = "S";
     public final static String ASSOC_TYPE_FILENAME = "N";
     public final static String ASSOC_TYPE_EXACT_FILE = "F";
+    public final static String ASSOC_TYPE_ALL = "A";
+    
+    public final static int ASSOC_WINDOW_ACTION_EDIT = 1;
+    public final static int ASSOC_WINDOW_ACTION_SELECT = 2;
     
     public final static String ASSOC_CMD_TYPE_EXEC = "exec";
     public final static String ASSOC_CMD_TYPE_STOP = "stop";

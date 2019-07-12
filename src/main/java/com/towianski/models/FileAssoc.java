@@ -12,7 +12,6 @@ package com.towianski.models;
 public class FileAssoc {
 
     String assocType = JfpConstants.ASSOC_TYPE_SUFFIX;
-    String editClass = "";
     String matchType = JfpConstants.MATCH_TYPE_GLOB;
     String matchPattern = "**";
     String exec = "";
@@ -22,9 +21,8 @@ public class FileAssoc {
     {
     }
     
-    public FileAssoc( String assocType, String editClass, String matchType, String matchPattern, String exec, String stop ) {
+    public FileAssoc( String assocType, String matchType, String matchPattern, String exec, String stop ) {
         this.assocType = assocType;
-        this.editClass = editClass;
         this.matchType = matchType;
         this.matchPattern = matchPattern;
         this.exec = exec;
@@ -38,15 +36,6 @@ public class FileAssoc {
     public void setAssocType(String assocType) {
         this.assocType = assocType;
     }
-
-    public String getEditClass() {
-        return editClass;
-    }
-
-    public void setEditClass(String editClass) {
-        this.editClass = editClass;
-    }
-    
     
     public String getMatchType() {
         return matchType;
