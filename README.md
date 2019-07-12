@@ -79,7 +79,7 @@ For each file you have selected, it will open a new window or a terminal
 for the parent path of each.
 If nothing is selected it uses the "Folder:" you are in.
 
-* JFP not can use its own File Associations. You can add, edit, and delete them.
+* JFP now can use its own File Associations. You can add, edit, and delete them.
 It lets you have 3 different types at this point. One for each type.
 I create default assocs for "*.war" files. If you execute a war file it will run it in a tomcat container.
 Just double-click on one!
