@@ -103,6 +103,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.RandomAccessFile;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.URI;
@@ -110,6 +111,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.UnknownHostException;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -184,6 +187,7 @@ import org.springframework.web.client.RestTemplate;
 public class JFileFinderWin extends javax.swing.JFrame {
 
     private final static MyLogger logger = MyLogger.getLogger( JFileFinderWin.class.getName() );
+    private static File bookmarksFileLock = null;
 
     Thread jfinderThread = null;
     JFileFinderSwingWorker jFileFinderSwingWorker = null;
@@ -452,6 +456,8 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         System.out.println( "at start jSplitPane1.getLastDividerLocation() =" + jSplitPane1.getLastDividerLocation() );
         programMemory = readInProgramMemoryFromFile();
 
+        bookmarksFileLock = new File( DesktopUtils.getBookmarks().toString() + "-LOCK" );
+
         readInBookmarks();
         fileAssocList = readInFileAssocList();
 
@@ -474,6 +480,9 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         System.out.println( "read OS scriptsOsFile/menu-scripts from  =" + scriptsOsFile + "=" );
 
         (new File( JfpHomeTempDir )).mkdirs();
+
+        WatchConfigFilesSw watchConfigFilesSw = new WatchConfigFilesSw( this );
+        watchConfigFilesSw.actionPerformed( null, null );
 
         setLookAndFeel();
         this.setVisible(true);
@@ -687,46 +696,78 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
     }
     
     public void readInBookmarks() {
-        DefaultListModel listModel = (DefaultListModel) savedPathReplacablePanel.getSavedPathsList().getModel();
-        listModel.clear();
-        listModel.addElement( "New Window" );
-        listModel.addElement( "Trash" );
-        savedPathReplacablePanel.getSavedPathsHm().put( "New Window", "New Window" );
-        savedPathReplacablePanel.getSavedPathsHm().put( "Trash", DesktopUtils.getTrashFolder().toString() );
-        File selectedFile = new File( DesktopUtils.getBookmarks().toString() );
-        System.out.println( "Bookmarks File =" + selectedFile + "=" );
-            
-        try
-            {
-            if( ! selectedFile.exists() )
+        synchronized( bookmarksFileLock ) {
+            FileLock lock = null;
+            FileChannel channel = null;
+
+            ((DefaultListModel) savedPathReplacablePanel.getSavedPathsList().getModel()).clear();
+            DefaultListModel listModel = new DefaultListModel();
+            listModel.addElement( "New Window" );
+            listModel.addElement( "Trash" );
+            savedPathReplacablePanel.getSavedPathsHm().put( "New Window", "New Window" );
+            savedPathReplacablePanel.getSavedPathsHm().put( "Trash", DesktopUtils.getTrashFolder().toString() );
+            File selectedFile = new File( DesktopUtils.getBookmarks().toString() );
+            System.out.println( "readInBookmarks() Bookmarks File =" + selectedFile + "=" );
+
+            try
                 {
-                selectedFile.createNewFile();
+                channel = new RandomAccessFile( bookmarksFileLock, "rw" ).getChannel();
+
+                // Use the file channel to create a lock on the file.
+                // This method blocks until it can retrieve the lock.
+                lock = channel.lock();
+
+                if( ! selectedFile.exists() )
+                    {
+                    selectedFile.createNewFile();
+                    }
+
+                FileReader fr = new FileReader( selectedFile.getAbsoluteFile() );
+                BufferedReader br = new BufferedReader(fr);
+
+                int numItems = listModel.getSize();
+                System.out.println( "thisListModel.getSize() num of items =" + numItems + "=" );
+
+                String line = "";
+                while ( ( line = br.readLine() ) != null )
+                    {
+                    System.out.println( "read line =" + line + "=" );
+                    int at = line.indexOf( "," );
+                    listModel.addElement( line.substring( 0, at ) );
+                    savedPathReplacablePanel.getSavedPathsHm().put( line.substring( 0, at ), line.substring( at + 1 ) );
+                    }
+                //close BufferedWriter
+                br.close();
+                //close FileWriter 
+                fr.close();
+
+                savedPathReplacablePanel.getSavedPathsList().setModel(listModel);
+                savedPathReplacablePanel.validate();
                 }
-
-            FileReader fr = new FileReader( selectedFile.getAbsoluteFile() );
-            BufferedReader br = new BufferedReader(fr);
-
-//            DefaultComboBoxModel thisListModel = (DefaultComboBoxModel) savedPathsList.getModel();
-            int numItems = listModel.getSize();
-            System.out.println( "thisListModel.getSize() num of items =" + numItems + "=" );
-            
-            String line = "";
-            while ( ( line = br.readLine() ) != null )
+            catch( Exception ex )
                 {
-                System.out.println( "read line =" + line + "=" );
-                int at = line.indexOf( "," );
-                listModel.addElement( line.substring( 0, at ) );
-                savedPathReplacablePanel.getSavedPathsHm().put( line.substring( 0, at ), line.substring( at + 1 ) );
+                ex.printStackTrace();
                 }
-            //close BufferedWriter
-            br.close();
-            //close FileWriter 
-            fr.close();
-            }
-        catch( Exception ex )
-            {
+            finally
+                {
+                try {
+                    // Release the lock - if it is not null!
+                    if( lock != null ) {
+                        lock.release();
+                    }
 
-            }
+                    // Close the file
+                    channel.close();
+
+                    Files.deleteIfExists( bookmarksFileLock.toPath() );
+                    }
+                catch (IOException e) 
+                    {
+                    System.out.println( "readInBookmarks() Error closing LOCK file!" );
+                    e.printStackTrace();
+                    }
+                }
+            } // sync
     }
 
     public FileAssocList readInFileAssocList() {
@@ -763,45 +804,73 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
     }
 
     public void saveBookmarks() {
-        File selectedFile = new File( DesktopUtils.getBookmarks().toString() );
-        System.out.println( "Bookmarks File =" + selectedFile + "=" );
-        
-        try
-            {
-            if ( ! selectedFile.exists() )
-                {
-                selectedFile.createNewFile();
-                }
+        synchronized( bookmarksFileLock ) {
+            FileLock lock = null;
+            FileChannel channel = null;
+            File selectedFile = new File( DesktopUtils.getBookmarks().toString() );
+            System.out.println( "Bookmarks File =" + selectedFile + "=" );
 
-            FileWriter fw = new FileWriter( selectedFile.getAbsoluteFile() );
-            BufferedWriter bw = new BufferedWriter(fw);
-
-            //DefaultListModel thisListModel = (DefaultListModel) savedPathsList.getModel();
-            DefaultListModel listModel = (DefaultListModel) savedPathReplacablePanel.getSavedPathsList().getModel();
-            int numItems = listModel.getSize();
-            System.out.println( "thisListModel.getSize() num of items =" + numItems + "=" );
-            System.out.println( "savedPathReplacablePanel.getSavedPathsHm().size() =" + savedPathReplacablePanel.getSavedPathsHm().size() + "=" );
-            
-            //loop for jtable rows
-            for( int i = 0; i < numItems; i++ )
+            try
                 {
-                if ( ! listModel.getElementAt( i ).toString().equals( "New Window" ) && 
-                     ! listModel.getElementAt( i ).toString().equals( "Trash" ) )
+                channel = new RandomAccessFile( bookmarksFileLock, "rw" ).getChannel();
+
+                // Use the file channel to create a lock on the file.
+                // This method blocks until it can retrieve the lock.
+                lock = channel.lock();
+
+                if ( ! selectedFile.exists() )
                     {
-                    System.out.println( "bookmark saving =" + listModel.getElementAt( i ).toString() + "=" );
-                    bw.write( listModel.getElementAt( i ).toString() + "," + savedPathReplacablePanel.getSavedPathsHm().get( listModel.getElementAt( i ).toString() ) );
-                    bw.write( "\n" );
+                    selectedFile.createNewFile();
+                    }
+
+                FileWriter fw = new FileWriter( selectedFile.getAbsoluteFile() );
+                BufferedWriter bw = new BufferedWriter(fw);
+
+                DefaultListModel listModel = (DefaultListModel) savedPathReplacablePanel.getSavedPathsList().getModel();
+                int numItems = listModel.getSize();
+                System.out.println( "thisListModel.getSize() num of items =" + numItems + "=" );
+                System.out.println( "savedPathReplacablePanel.getSavedPathsHm().size() =" + savedPathReplacablePanel.getSavedPathsHm().size() + "=" );
+
+                //loop for jtable rows
+                for( int i = 0; i < numItems; i++ )
+                    {
+                    if ( ! listModel.getElementAt( i ).toString().equals( "New Window" ) && 
+                         ! listModel.getElementAt( i ).toString().equals( "Trash" ) )
+                        {
+                        System.out.println( "bookmark saving =" + listModel.getElementAt( i ).toString() + "=" );
+                        bw.write( listModel.getElementAt( i ).toString() + "," + savedPathReplacablePanel.getSavedPathsHm().get( listModel.getElementAt( i ).toString() ) );
+                        bw.write( "\n" );
+                        }
+                    }
+                //close BufferedWriter
+                bw.close();
+                //close FileWriter 
+                fw.close();
+                }
+            catch( Exception ex )
+                {
+                ex.printStackTrace();
+                }
+            finally
+                {
+                try {
+                    // Release the lock - if it is not null!
+                    if( lock != null ) {
+                        lock.release();
+                    }
+
+                    // Close the file
+                    channel.close();
+                    
+                    Files.deleteIfExists( bookmarksFileLock.toPath() );
+                    }
+                catch (IOException e) 
+                    {
+                    System.out.println( "readInsaveBookmarksBookmarks() Error closing LOCK file!" );
+                    e.printStackTrace();
                     }
                 }
-            //close BufferedWriter
-            bw.close();
-            //close FileWriter 
-            fw.close();
-            }
-        catch( Exception ex )
-            {
-            ex.printStackTrace();
-            }
+            } // sync
         }
     
     public void removeListPanel( String listname ) {
@@ -1280,6 +1349,9 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                         {
                         String sourcePath = tcl.getOldValue().toString().trim();
                         FileUtils.fileMove( connUserInfo, sourcePath, targetPathStr );
+                        fileAssocList.moveFileAssoc( sourcePath, targetPathStr );
+                        Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
+                                    
 //                        if ( Files.exists( sourcePath ) )
 //                            {
 //                            System.out.println( "try to move dir source =" + sourcePath + "=   target =" + targetPath + "=" );
@@ -4542,7 +4614,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         filesTblModel.setCellEditable( rowIndex, FilesTblModel.FILESTBLMODEL_PATH, true );
         filesTbl.changeSelection( filesTbl.getSelectedRow(), FilesTblModel.FILESTBLMODEL_PATH, false, false );        
         
-        JTextComponent textComp = (JTextComponent) filesTbl.getEditorCo‌​mponent();
+        JTextComponent textComp = (JTextComponent) filesTbl.getEditorCo‌mponent();
         int len = selectedPath.length();
         textComp.select( selectedPath.lastIndexOf( System.getProperty( "file.separator") ) + 1, len );
     }//GEN-LAST:event_RenameActionPerformed

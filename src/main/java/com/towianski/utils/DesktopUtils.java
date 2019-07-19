@@ -31,12 +31,12 @@ public class DesktopUtils
    
    public static File getBookmarks()
    {
-      return getJfpConfigHome( "Bookmarks.txt", "file" );
+      return getJfpConfigHome( "Bookmarks.txt", "file", true );
    }
     
    public static File getTrashFolder()
    {
-      return getJfpConfigHome( "TrashFolder", "folder" );
+      return getJfpConfigHome( "TrashFolder", "folder", true );
    }
 
    public static String getJfpHomeTmpDir( boolean addEndingSlash )
@@ -95,7 +95,7 @@ public class DesktopUtils
         return System.getProperty( "java.awt.headless", "false" ).equalsIgnoreCase( "TRUE" ) ? true : false ;
         }
    
-   public static File getJfpConfigHome( String specificFolder, String fType )
+   public static File getJfpConfigHome( String specificFolder, String fType, boolean doNotifyIfCreate )
    {
       System.out.println( "os.name =" + System.getProperty( "os.name" ) + "=" );
       File jfpHome = null;
@@ -172,7 +172,8 @@ public class DesktopUtils
     if ( ! jfpHome.exists() )
         {
         boolean ok = jfpHome.mkdir();
-        if ( ! isHeadlessProperty() )  JOptionPane.showMessageDialog( null, "Could not find a JFileProcessor folder so I created one here: \n\n" + jfpHome
+        if ( ! isHeadlessProperty() && doNotifyIfCreate )  
+            JOptionPane.showMessageDialog( null, "Could not find a JFileProcessor folder so I created one here: \n\n" + jfpHome
                                         + missingHomeErrMsg
                                         );
         if ( ! ok )
@@ -184,7 +185,7 @@ public class DesktopUtils
       
       // all systems - jfpHome now includes properties file path
       try {
-        if ( ! jfpHome.exists() )
+        if ( ! jfpHome.exists() && doNotifyIfCreate )
             {
             boolean ok = false;
             ok = fType.equals( "folder" ) ? jfpHome.mkdirs() : jfpHome.createNewFile();

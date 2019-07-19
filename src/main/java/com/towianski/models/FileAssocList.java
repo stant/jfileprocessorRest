@@ -60,13 +60,13 @@ public class FileAssocList {
 
             if ( fa.getMatchType().equalsIgnoreCase( JfpConstants.MATCH_TYPE_REGEX) )
                 {
-                matcher = FileSystems.getDefault().getPathMatcher("regex:" + fa.getMatchPattern());
-                System.out.println( "matching by regex:" + fa.getMatchPattern() );
+                matcher = FileSystems.getDefault().getPathMatcher("regex:" + fa.getMatchPattern().replace( "\\", "\\\\") );
+                System.out.println( "matching by regex =" + fa.getMatchPattern().replace( "\\", "\\\\") + "=" );
                 }
             else
                 {
-                matcher = FileSystems.getDefault().getPathMatcher("glob:" + fa.getMatchPattern());
-                System.out.println( "matching by glob:" + fa.getMatchPattern() );
+                matcher = FileSystems.getDefault().getPathMatcher("glob:" + fa.getMatchPattern().replace( "\\", "\\\\") );
+                System.out.println( "matching by glob =" + fa.getMatchPattern().replace( "\\", "\\\\") + "=" );
                 }
             if ( fpath.getFileName() != null && matcher.matches( fpath  ) )
                 {
@@ -97,13 +97,13 @@ public class FileAssocList {
             
             if ( fa.getMatchType().equalsIgnoreCase( JfpConstants.MATCH_TYPE_REGEX) )
                 {
-                matcher = FileSystems.getDefault().getPathMatcher("regex:" + fa.getMatchPattern());
-                System.out.println( "matching by regex:" + fa.getMatchPattern() );
+                matcher = FileSystems.getDefault().getPathMatcher("regex:" + fa.getMatchPattern().replace( "\\", "\\\\") );
+                System.out.println( "matching by regex =" + fa.getMatchPattern().replace( "\\", "\\\\") + "=" );
                 }
             else
                 {
-                matcher = FileSystems.getDefault().getPathMatcher("glob:" + fa.getMatchPattern());
-                System.out.println( "matching by glob:" + fa.getMatchPattern() );
+                matcher = FileSystems.getDefault().getPathMatcher("glob:" + fa.getMatchPattern().replace( "\\", "\\\\") );
+                System.out.println( "matching by glob =" + fa.getMatchPattern().replace( "\\", "\\\\") + "=" );
                 }
             //System.out.println( "\ntest chainfilterofNames =" + fpath + "=" );
             if ( fpath.getFileName() != null && matcher.matches( fpath  ) )
@@ -130,5 +130,22 @@ public class FileAssocList {
     {
         System.out.println( "DELETE =" + fileAssoc.getAssocType() + ":" + fileAssoc.getMatchPattern() + "=" );
         fileAssocList.remove( fileAssoc.getAssocType() + ":" + fileAssoc.getMatchPattern() );
+    }
+    
+    @JsonIgnore
+    public void moveFileAssoc( String sourcePath, String targetPath )
+    {
+        System.out.println( "moveFileAssoc() source =" + sourcePath + "=  target =" + targetPath + "=" );
+        FileAssoc fileAssoc = getFileAssoc( JfpConstants.ASSOC_TYPE_EXACT_FILE, sourcePath );
+
+        if ( fileAssoc != null )
+            {
+            System.out.println( "DELETE =" + fileAssoc.getAssocType() + ":" + fileAssoc.getMatchPattern() + "=" );
+            fileAssocList.remove( fileAssoc.getAssocType() + ":" + fileAssoc.getMatchPattern() );
+
+            fileAssoc.setMatchPattern( targetPath );
+            System.out.println( "REPLACE TO =" + fileAssoc.getAssocType() + ":" + targetPath + "=" );
+            fileAssocList.put( fileAssoc.getAssocType() + ":" + fileAssoc.getMatchPattern(), fileAssoc );
+            }
     }
 }

@@ -23,7 +23,7 @@ apply plugin: 'war'
 //apply plugin: com.dorongold.gradle.tasktree.TaskTreePlugin
 
 group 'com.towianski'
-version '1.8.7'
+version '1.8.8'
 
 mainClassName = 'com.towianski.boot.StartApp'
 
@@ -150,9 +150,7 @@ task generateRunScriptPosix {
 	doFirst {
             def runFile = file("../../programs/jfp/run.sh")
             runFile.parentFile.mkdirs()
-            runFile.text = 
-"""
-#!/bin/bash
+            runFile.text = """#!/bin/bash
 
 # if you have problem with jfp window and fonts being too small
 
@@ -163,7 +161,7 @@ task generateRunScriptPosix {
 # Another option that works for me lately. I think this can unfortunately only be whole numbers
 # java -Dsun.java2d.uiScale=2 -jar ${rootProject.name}-${version}.jar
 
-java -jar ${rootProject.name}-${version}.war
+java -jar ${rootProject.name}-${version}.war \$1
 # java -cp "*" org.springframework.boot.loader.JarLauncher
 """
         }
@@ -175,9 +173,7 @@ task generateRunScript2Posix {
 	doFirst {
             def runFile = file("../../programs/jfp/runx2.sh")
             runFile.parentFile.mkdirs()
-            runFile.text = 
-"""
-#!/bin/bash
+            runFile.text = """#!/bin/bash
 
 # if you have problem with jfp window and fonts being too small
 # This should start jfp size * 2. I think this can unfortunately only be whole numbers
@@ -185,7 +181,7 @@ task generateRunScript2Posix {
 #export JAVA_HOME=/net2/programs/jdk-11;
 #export PATH=\$JAVA_HOME/bin:\$PATH;
 
-java -Dsun.java2d.uiScale=2 -jar ${rootProject.name}-${version}.war
+java -Dsun.java2d.uiScale=2 -jar ${rootProject.name}-${version}.war \$1
 # java  -Dsun.java2d.uiScale=2 -cp "*" org.springframework.boot.loader.JarLauncher
 """
         }
@@ -204,7 +200,7 @@ rem it will work normal in Java 10
 rem set JAVA_HOME=F:\\programs\\Java\\jdk10
 rem set PATH=%JAVA_HOME%\\bin;%PATH%
 
-start \"\" javaw -jar ${rootProject.name}-${version}.war
+start \"\" javaw -jar ${rootProject.name}-${version}.war %1
 
 rem start \"\" javaw -cp \"*\" org.springframework.boot.loader.JarLauncher
 """
@@ -224,7 +220,7 @@ rem it will work normal in Java 10
 rem set JAVA_HOME=F:\\programs\\Java\\jdk10
 rem set PATH=%JAVA_HOME%\\bin;%PATH%
 
-start \"\" javaw -Dsun.java2d.uiScale=2 -jar ${rootProject.name}-${version}.war
+start \"\" javaw -Dsun.java2d.uiScale=2 -jar ${rootProject.name}-${version}.war %1
         
 rem start \"\" javaw -Dsun.java2d.uiScale=2 -cp \"*\" org.springframework.boot.loader.JarLauncher
 """

@@ -128,10 +128,22 @@ public class FileAssocWin extends javax.swing.JDialog {
             this.setTitle( "New" );
             faIdx = matchingFileAssocList.size();
             int at = filename.lastIndexOf( '.' );
-            if ( regexMatchType.isSelected() )
-                setMatchPattern( ".*[.]" + filename.substring( at + 1 ) );
-            else 
-                setMatchPattern( "**" + filename.substring( at ) );
+            if ( at >= 0 )
+                {
+                if ( regexMatchType.isSelected() )
+                    setMatchPattern( ".*[.]" + filename.substring( at + 1 ) );
+                else 
+                    setMatchPattern( "**" + filename.substring( at ) );
+                }
+            else
+                {
+                filenameRB.setSelected( true );
+                if ( regexMatchType.isSelected() )
+                    // this is a pain! if \ I SHould make it \\   not for now
+                    setMatchPattern( ".*" + System.getProperty( "file.separator" ) + filepath.getFileName() );
+                else 
+                    setMatchPattern( "**" + System.getProperty( "file.separator" ) + filepath.getFileName() );
+                }
             setExec( "" );
             setStop( "" );
             }
@@ -558,10 +570,22 @@ public class FileAssocWin extends javax.swing.JDialog {
 
     private void suffixRBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_suffixRBActionPerformed
         int at = filename.lastIndexOf( '.' );
-        if ( regexMatchType.isSelected() )
-            setMatchPattern( ".*[.]" + filename.substring( at + 1 ) );
-        else 
-            setMatchPattern( "**" + filename.substring( at ) );
+        if ( at >= 0 )
+            {
+            if ( regexMatchType.isSelected() )
+                setMatchPattern( ".*[.]" + filename.substring( at + 1 ) );
+            else 
+                setMatchPattern( "**" + filename.substring( at ) );
+            }
+        else
+            {
+            filenameRB.setSelected( true );
+            if ( regexMatchType.isSelected() )
+                // this is a pain! if \ I SHould make it \\   not for now
+                setMatchPattern( ".*" + System.getProperty( "file.separator" ) + filepath.getFileName() );
+            else 
+                setMatchPattern( "**" + System.getProperty( "file.separator" ) + filepath.getFileName() );
+            }        
     }//GEN-LAST:event_suffixRBActionPerformed
 
     private void filenameRBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_filenameRBActionPerformed

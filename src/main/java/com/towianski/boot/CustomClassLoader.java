@@ -21,6 +21,7 @@ public class CustomClassLoader extends ClassLoader {
     }
  
     private byte[] loadClassFromFile(String fileName)  {
+        System.out.println( "fileName.replace('.', File.separatorChar) + \".class\" =" + fileName.replace('.', File.separatorChar) + ".class" + "=" );
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream(
                 fileName.replace('.', File.separatorChar) + ".class");
         byte[] buffer;
