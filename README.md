@@ -71,6 +71,14 @@ Shift-Escape: close main window
 
 ![main](https://user-images.githubusercontent.com/1928413/61573244-25d7e900-aa60-11e9-9fec-1d39faa306cb.png)
 
+* icons you will see:
+
+red circle with a line means that folder is inaccessible.
+figure 8 on left indicates a linked file (linux and Mac)
+diagonal red line means the link is invalid
+The 15 in the total count is including the folder itself we are in.
+
+
 ![jfileprocess-1 4 9-search](https://user-images.githubusercontent.com/1928413/29250304-7ed32dea-800e-11e7-80dc-baefc0c47cb3.png)
 
 * "Open Folder Containing Files" or "Open Terminal here" 
@@ -88,7 +96,7 @@ It lets you have 3 different types at this point. One for each type.
 Just double-click on one!
 
 * Using an Exact filename for matching, you can create folders and in the folders create fake file names that you associate to a "job". Now when you double-click on the "file", it executes whatever you tell it to.
-Here I created execs to start programs like Chrome, Firefox, Netbeans, etc...
+Above I created execs to start programs like Chrome, Firefox, Netbeans, etc...
 
 Here is an example to call konsole to run a shell script:
 
