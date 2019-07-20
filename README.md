@@ -69,7 +69,15 @@ Escape: closes windows
 
 Shift-Escape: close main window
 
-![jfileprocess-1 4 9](https://user-images.githubusercontent.com/1928413/29250295-63377776-800e-11e7-93d8-53a006ddeb2d.png)
+![main](https://user-images.githubusercontent.com/1928413/61573244-25d7e900-aa60-11e9-9fec-1d39faa306cb.png)
+
+* icons you will see:
+
+red circle with a line means that folder is inaccessible.
+figure 8 on left indicates a linked file (linux and Mac)
+diagonal red line means the link is invalid
+The 15 in the total count is including the folder itself we are in.
+
 
 ![jfileprocess-1 4 9-search](https://user-images.githubusercontent.com/1928413/29250304-7ed32dea-800e-11e7-80dc-baefc0c47cb3.png)
 
@@ -79,10 +87,28 @@ For each file you have selected, it will open a new window or a terminal
 for the parent path of each.
 If nothing is selected it uses the "Folder:" you are in.
 
+![use-as-a-desktop-or-job-executor](https://user-images.githubusercontent.com/1928413/61573277-8d8e3400-aa60-11e9-8012-9db7b5928743.png)
+
 * JFP now can use its own File Associations. You can add, edit, and delete them.
 It lets you have 3 different types at this point. One for each type.
-I create default assocs for "*.war" files. If you execute a war file it will run it in a tomcat container.
+
+* I create default assocs for "*.war" files. If you execute a war file it will run it in a tomcat container.
 Just double-click on one!
+
+* Using an Exact filename for matching, you can create folders and in the folders create fake file names that you associate to a "job". Now when you double-click on the "file", it executes whatever you tell it to.
+Above I created execs to start programs like Chrome, Firefox, Netbeans, etc...
+
+Here is an example to call konsole to run a shell script:
+
+    "F:/net2/programs/Desktop/jfpr-github-count" : {
+      "assocType" : "F",
+      "matchType" : "G",
+      "matchPattern" : "/net2/programs/Desktop/jfpr-github-count",
+      "exec" : "/usr/bin/konsole --noclose -e /net2/github/JacksonExample/jfpr.bat",
+      "stop" : ""
+    },
+
+
 * Install-Folder/   groovy   or   menu-scripts
 
 groovy: folder for groovy scripts. 
