@@ -98,7 +98,7 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
     }
 
     public void setWatchFolder(String watchFolder) {
-        this.setWatchFolder( watchFolder );
+        this.watchFolder.setText( watchFolder );
     }
 
     public void setSavedPathsList(JList<String> savedPathsList) {

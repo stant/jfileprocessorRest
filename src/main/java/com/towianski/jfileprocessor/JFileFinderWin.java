@@ -41,6 +41,8 @@ import com.towianski.jfileprocess.actions.ProcessInThread;
 import com.towianski.jfileprocess.actions.NewFolderAction;
 import com.towianski.jfileprocess.actions.ScriptOnSelectedFilesAction;
 import com.towianski.jfileprocess.actions.TomcatAppThread;
+import com.towianski.jfileprocess.actions.WatchStartingFolder2;
+import static com.towianski.jfileprocessor.WatchDirSw.count;
 import com.towianski.listeners.MyFocusAdapter;
 import com.towianski.listeners.MyRowSorterListener;
 import com.towianski.listeners.ScriptMenuItemListener;
@@ -185,13 +187,14 @@ import org.springframework.web.client.RestTemplate;
 @SpringBootApplication
 @Profile("client")
 public class JFileFinderWin extends javax.swing.JFrame {
-
+    
     private final static MyLogger logger = MyLogger.getLogger( JFileFinderWin.class.getName() );
     private static File bookmarksFileLock = null;
 
     Thread jfinderThread = null;
     JFileFinderSwingWorker jFileFinderSwingWorker = null;
     WatchDirSw watchDirSw = null;
+    WatchStartingFolder2 watchStartingFolder2 = null;
     RestServerSw restServerSw = null;        
     ResultsData resultsData = null;
     JFileFinder jfilefinder = null;
@@ -694,7 +697,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
     public void setAfterFillSwingWorker(SwingWorker afterFillSwingWorker) {
         this.afterFillSwingWorker = afterFillSwingWorker;
     }
-    
+
     public void readInBookmarks() {
         synchronized( bookmarksFileLock ) {
             FileLock lock = null;
@@ -1380,7 +1383,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             }
         };
 
-    public synchronized void stopDirWatcher()
+    public synchronized void stopDirWatcherPREV()
         {
         if ( watchDirSw != null )
             {
@@ -1388,7 +1391,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             }
         }
 
-    public synchronized void startDirWatcher()
+    public synchronized void startDirWatcherPREV()
         {
         if ( ! stopFileWatchTb.isSelected()  // if On/Auto
             && ( ! maxDepth.getText().trim().equals( "" ) )
@@ -1402,6 +1405,41 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             }
         }
 
+    public synchronized void startDirWatcher()
+        {
+        System.out.println( "entered startDirWatcher()" );
+        //Thread watchStartingFolderThread = null;
+        
+        if ( ! stopFileWatchTb.isSelected()  // if On/Auto
+            && ( ! maxDepth.getText().trim().equals( "" ) )
+            && ( maxDepth.getText().trim().equals( maxDepth.getText().trim() ) )   )  // don't watch on a searched list
+            {
+            if ( watchStartingFolder2 == null )
+                {
+                System.out.println( "startDirWatcher() start Main Thread" );
+                watchStartingFolder2 = new WatchStartingFolder2( this ); //, Paths.get( jFileFinderWin.getStartingFolder() ) );
+                Thread watchStartingFolderThread = ProcessInThread.newThread( "watchStartingFolder2", count++, true, watchStartingFolder2 );
+                watchStartingFolderThread.start();
+                }
+            //watchStartingFolder.run( jFileFinderWin.pathsToNotWatch(),  );
+            watchStartingFolder2.restart();
+            }
+        System.out.println( "exit startDirWatcher()" );
+        }
+    
+    public synchronized void stopDirWatcher()
+        {
+        System.out.println( "entered stopDirWatcher()" );
+        if ( watchStartingFolder2 != null )
+            {
+            watchStartingFolder2.pause();
+            //watchStartingFolder = null;
+            }
+        System.out.println( "exit stopDirWatcher()" );
+        }
+
+
+        
 //    public boolean getSearchLock()
 //        {
 //        if ( searchLock.tryLock() )
@@ -1851,9 +1889,11 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         {
         System.out.println( "\n---  entered JFileFinderWin.dumpThreads()  ---" );
         Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
+        int c = 0;
         for ( Thread td : threadSet )
             {
-            System.out.println( "td name =" + td.getName() + "  id =" + td.getId() );
+            System.out.println( c + ") td name =" + td.getName() + "  id =" + td.getId() );
+            c++;
             }
         System.out.println();
         System.gc();

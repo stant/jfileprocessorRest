@@ -90,7 +90,7 @@ public class TextEditPanel extends javax.swing.JFrame {
     
     public void readFile( File selectedFile )
         {
-        System.out.println( "File to read =" + selectedFile + "=" );
+        System.out.println( "TextEditPanel File to read =" + selectedFile + "=" );
         currentDirectory = selectedFile.getParent();
         currentFile = selectedFile.getAbsolutePath();
         

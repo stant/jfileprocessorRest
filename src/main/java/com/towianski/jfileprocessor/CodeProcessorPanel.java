@@ -24,18 +24,21 @@ import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.KeyStroke;
+import com.towianski.jfileprocess.actions.Player;
 
 /**
  *
  * @author stan
  */
-public class CodeProcessorPanel extends javax.swing.JFrame {
-
+public class CodeProcessorPanel extends javax.swing.JFrame 
+            implements Player
+    {
     LinkedHashMap<String,String> savedPathsHm = new LinkedHashMap<String,String>();
     JFileFinderWin jFileFinderWin = null;
     DefaultComboBoxModel listOfFilesPanelModel = null;
     String currentDirectory = "";
     String currentFile = "";
+    Player player = null;
         
 /// extra vars
 
@@ -147,8 +150,12 @@ public class CodeProcessorPanel extends javax.swing.JFrame {
         }
 
     public void stopSearch() {
+        System.out.println( "hit stop button, CodeProcessorPanel.stopSearch()   jRunGroovy =" + jRunGroovy );
         cancelFlag = true;
-        jRunGroovy.cancelSearch();
+        player.stop();
+        System.out.println( "CodeProcessorPanel.stopSearch()   after player.stop()" );
+        if ( jRunGroovy != null )
+            jRunGroovy.cancelSearch();
     }
 
     public boolean getStopSearch() {
@@ -160,6 +167,35 @@ public class CodeProcessorPanel extends javax.swing.JFrame {
         jRunGroovy.cancelFill();
     }
 
+    public Player getPlayer() {
+        return player;
+    }
+
+    public void setPlayer(Player player) {
+        System.out.println( "CodeProcessorPanel.setPlayer()" );
+        this.player = player;
+    }
+
+    public void restart()
+        {
+        System.out.println("CodeProcessorPanel.stop()");
+        }
+    
+    public void stop()
+        {
+        System.out.println("CodeProcessorPanel.stop()");
+        }
+
+    public void pause()
+        {
+        System.out.println("CodeProcessorPanel.pause()");
+        }
+    
+    public void go()
+        {
+        System.out.println("CodeProcessorPanel.go()");
+        }
+    
     public void setDoCmdBtn( String text, Color setColor )
         {
         doCmdBtn.setText( text );
@@ -221,7 +257,7 @@ public class CodeProcessorPanel extends javax.swing.JFrame {
 
     public void readFile( File selectedFile )
         {
-        System.out.println( "File to read =" + selectedFile + "=" );
+        System.out.println( "CodeProcessorPanel File to read =" + selectedFile + "=" );
         currentDirectory = selectedFile.getParent();
         currentFile = selectedFile.getAbsolutePath();
         
@@ -447,6 +483,7 @@ public class CodeProcessorPanel extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void doCmdBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_doCmdBtnActionPerformed
+        System.out.println( "entered CodeProcessorPanel.doCmdBtnActionPerformed()" );
         if ( doCmdBtn.getText().equalsIgnoreCase(PROCESS_STATUS_DO_CANCEL ) )
             {
             System.out.println( "hit stop button, got rootPaneCheckingEnabled =" + rootPaneCheckingEnabled + "=" );
@@ -467,9 +504,11 @@ public class CodeProcessorPanel extends javax.swing.JFrame {
                     defaultComboBoxModel = (DefaultComboBoxModel) jFileFinderWin.getListPanelModel( (String) listOfLists.getSelectedItem() );
                     }
                 cancelFlag = false;
+                System.out.println( "entered CodeProcessorPanel.doCmdBtnActionPerformed() before call new JRunGroovy()" );
                 jRunGroovy = new JRunGroovy( jFileFinderWin, this, startingPath, currentDirectory, currentFile, defaultComboBoxModel );
                 GroovySwingWorker groovySwingWorker = new GroovySwingWorker( jFileFinderWin, this, jRunGroovy, currentDirectory, currentFile, defaultComboBoxModel );
                 groovySwingWorker.execute();   //doInBackground();
+                System.out.println( "CodeProcessorPanel.doCmdBtnActionPerformed() after groovySwingWorker.execute()" );
                 } 
             catch (Exception ex) 
                 {

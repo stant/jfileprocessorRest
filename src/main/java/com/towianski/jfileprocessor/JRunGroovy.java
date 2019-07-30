@@ -9,7 +9,6 @@ import com.towianski.jfileprocessor.services.CallGroovy;
 import com.towianski.models.ResultsData;
 import groovy.lang.Binding;
 import java.io.File;
-
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,6 +45,7 @@ public class JRunGroovy //  implements Runnable
 
     public void cancelSearch()
         {
+        System.out.println( "entered JRunGroovy.cancelSearch()" );
         cancelFlag = true;
 //        copier.cancelSearch();
         }
@@ -73,7 +73,7 @@ public class JRunGroovy //  implements Runnable
     
     static void usage() 
         {
-        System.out.println("jFileCopy <path>" + " -name \"<glob_pattern>\"");
+        System.out.println("JRunGroovy <path>" + " -name \"<glob_pattern>\"");
         System.exit(-1);
         }
 

@@ -107,7 +107,7 @@ public class ScriptSwingWorker extends CodeProcessorPanel {
 
     public void setProcessStatus( String text )
         {
-        System.out.println( "coming thru scriptspringwork setProcStatus()" );
+        System.out.println( "ScriptSwingWorker() coming thru scriptspringwork setProcStatus()" );
         processStatus.setText(text);
         switch( text )
             {
@@ -151,7 +151,7 @@ public class ScriptSwingWorker extends CodeProcessorPanel {
         {                                         
         if ( doCmdBtn.getText().equalsIgnoreCase( PROCESS_STATUS_CANCEL_COPY ) )
             {
-            System.out.println( "hit stop button, got rootPaneCheckingEnabled =" + rootPaneCheckingEnabled + "=" );
+            System.out.println( "ScriptSwingWorker hit stop button, got rootPaneCheckingEnabled =" + rootPaneCheckingEnabled + "=" );
             setProcessStatus( PROCESS_STATUS_COPY_CANCELED );
             this.stopSearch();
             //JOptionPane.showConfirmDialog( null, "at call stop search" );
@@ -160,6 +160,7 @@ public class ScriptSwingWorker extends CodeProcessorPanel {
             {
             try {
                 DefaultComboBoxModel defaultComboBoxModel = jFileFinderWin.getSelectedItemsAsComboBoxModel();
+                System.out.println( "entered ScriptSwingWorker.run() before call new JRunGroovy()" );
                 jRunGroovy = new JRunGroovy( jFileFinderWin, this, startingPath, currentDirectory, currentFile, defaultComboBoxModel );
                 GroovySwingWorker groovySwingWorker = new GroovySwingWorker( jFileFinderWin, this, jRunGroovy, currentDirectory, currentFile, defaultComboBoxModel );
                 groovySwingWorker.execute();   //doInBackground();
@@ -206,8 +207,8 @@ public class ScriptSwingWorker extends CodeProcessorPanel {
         setMinimumSize(new java.awt.Dimension(150, 40));
         getContentPane().setLayout(new java.awt.GridBagLayout());
 
-        jPanel1.setMinimumSize(new java.awt.Dimension(200, 50));
-        jPanel1.setPreferredSize(new java.awt.Dimension(200, 50));
+        jPanel1.setMinimumSize(new java.awt.Dimension(200, 100));
+        jPanel1.setPreferredSize(new java.awt.Dimension(200, 100));
         jPanel1.setLayout(new java.awt.GridBagLayout());
 
         doCmdBtn.setText("Run");

@@ -215,7 +215,7 @@ public class WatchDir implements Runnable
             catch( ClosedWatchServiceException cwe )
                 {
                 System.out.println("watchDir.processEvents() ClosedWatchServiceException but CONTINUE" );
-                //return;
+                break;
                 }
             catch ( InterruptedException ix ) 
                 {
@@ -380,7 +380,7 @@ public class WatchDir implements Runnable
         synchronized ( lockObj ) {
             lockObj.notify();
             }
-        System.out.println( "exiting watchDir processEvents()" );
+        System.out.println( "exiting watchDir run()" );
         }
 
     public static void main(String[] args) throws IOException {

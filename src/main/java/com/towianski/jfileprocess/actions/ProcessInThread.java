@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -310,6 +312,27 @@ public class ProcessInThread {
         thread.setName( procName + "-" + thread.getName() + "-" + count );
         thread.setDaemon( daemonFlag );
         return thread;
+        }
+
+    public static void stopThread( Thread thd ) 
+        {
+        if ( thd != null )
+            {
+            thd.interrupt();
+            System.out.println( "stopThread(" + thd.getName() + ") - before join()" );
+            if ( thd.isAlive() )
+                {
+                try
+                    {
+                    thd.join();
+                    } 
+                catch (InterruptedException ex)
+                    {
+                    Logger.getLogger(ProcessInThread.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            System.out.println( "stopThread(" + thd.getName() + ") - after join()" );
+            }
         }
 
 //    private static class IOThreadHandler extends Thread 

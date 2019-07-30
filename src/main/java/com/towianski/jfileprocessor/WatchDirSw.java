@@ -56,7 +56,8 @@ public class WatchDirSw {
                 try
                     {
                     watchDirPostThread.join();
-                    } catch (InterruptedException ex)
+                    } 
+                catch (InterruptedException ex)
                     {
                     Logger.getLogger(WatchDirSw.class.getName()).log(Level.SEVERE, null, ex);
                     }
