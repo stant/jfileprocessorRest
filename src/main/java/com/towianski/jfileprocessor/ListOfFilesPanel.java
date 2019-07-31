@@ -46,8 +46,6 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
         String currentFile = "";
         int selectedPathPiece = 0;
         
-        WatchDirSw watchDirSw = null;
-        
     /**
      * Creates new form SavedPathsPanel
      */
@@ -161,28 +159,6 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
         this.setTitle( "List (" + name + ") - " + currentFile );
         setCount();
     }
-
-    public synchronized void stopDirWatcher()
-        {
-        if ( watchDirSw != null )
-            {
-            watchDirSw.cancelWatch();
-            }
-        }
-
-    public synchronized void startDirWatcher()
-        {
-//        if ( ! stopFileWatchTb.isSelected()  // if On/Auto
-//            && ( ! maxDepth.getText().trim().equals( "" ) )
-//            && ( maxDepth.getText().trim().equals( maxDepth.getText().trim() ) )   )  // don't watch on a searched list
-//            {
-            if ( watchDirSw == null )
-                {
-                watchDirSw = new WatchDirSw( null, new ArrayList<String>() , Paths.get( watchFolder.getText().trim() ) );
-                }
-            watchDirSw.actionPerformed( new ArrayList<String>() , Paths.get( watchFolder.getText().trim() ) );
-//            }
-        }
 
     public int getSelectedPathPiece()
         {

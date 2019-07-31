@@ -1,7 +1,7 @@
 package com.towianski.jfileprocess.actions;
 
 import com.towianski.jfileprocessor.JFileFinderWin;
-import com.towianski.jfileprocessor.WatchDirSw;
+import com.towianski.jfileprocessor.WatchFileEventsSw;
 import com.towianski.models.FileTimeEvent;
 import java.nio.file.Paths;
 import java.util.concurrent.BlockingQueue;
@@ -16,17 +16,12 @@ import javax.swing.SwingUtilities;
  */
 public class WatchStartingFolder implements Runnable
     {
-    WatchDirToCallerEventQueue watchDirToCallerEventQueue = null;
+    WatchFileEventsSw watchFileEventsSw = null;
     JFileFinderWin jFileFinderWin = null;
-    //BlockingQueue<FileTimeEvent> fileEventQueue = null;
     Object lockObj = new Object();
     BlockingQueue<Integer> allowToRunQueue = new LinkedBlockingQueue<>(100);
     boolean runFlag = true;
     
-    /**
-     * Creates a WatchService and registers the given directory
-     */
-//    public WatchStartingFolder( JFileFinderWin jFileFinderWin, BlockingQueue<FileTimeEvent> fileEventQueue, Object lockObj )
     public WatchStartingFolder( JFileFinderWin jFileFinderWin ) //, Object lockObj )
         {
         this.jFileFinderWin = jFileFinderWin;
@@ -57,10 +52,6 @@ public class WatchStartingFolder implements Runnable
     
     public void restart()
         {
-//        synchronized( lockObj )
-//            {
-//            lockObj.notify();
-//            }
         try {
             allowToRunQueue.put( 1 );
             }
@@ -71,15 +62,15 @@ public class WatchStartingFolder implements Runnable
     
     public void stop()
         {
-        runFlag = false;
-        watchDirToCallerEventQueue.stop();
+        System.out.println("WatchStartingFolder.stop()");
+        watchFileEventsSw.stop();
         // it shuts it down and makes it return a null event which .take() below will catch and stop on
         }
 
     public void pause()
         {
         System.out.println("WatchStartingFolder.pause()");
-        watchDirToCallerEventQueue.stop();
+        watchFileEventsSw.pause();
         // it shuts it down and makes it return a null event which .take() below will catch and stop on
         }
     
@@ -87,6 +78,12 @@ public class WatchStartingFolder implements Runnable
         {
         System.out.println("WatchStartingFolder() wait until notified");
         System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+        // Create a Queue to receive your file create events
+        BlockingQueue<FileTimeEvent> fileEventQueue = new LinkedBlockingQueue<>(1000);
+
+        // args: needed, arrayList of paths to watch, millisecond gap if file does not change in that time consider it done, your queue
+        watchFileEventsSw = new WatchFileEventsSw( "watchStartFolder", Paths.get( jFileFinderWin.getStartingFolder() ), "CDM", 750, fileEventQueue );
+        watchFileEventsSw.startWatchService();
         restart();
         
         while ( runFlag )
@@ -95,22 +92,7 @@ public class WatchStartingFolder implements Runnable
                 System.out.println("WatchStartingFolder waiting to get runallow token" );
                 allowToRunQueue.take();   // blocks until get a token denoting allowed to run.
                 
-    //            synchronized ( lockObj ) {
-    //                lockObj.wait();
-    //                }
-                // Create a Queue to receive your file create events
-                BlockingQueue<FileTimeEvent> fileEventQueue = new LinkedBlockingQueue<>(1000);
-
-                // args: needed, arrayList of paths to watch, millisecond gap if file does not change in that time consider it done, your queue
-                //watchDirToCallerEventQueue = new WatchDirToCallerEventQueue( codeProcessorPanel.jFileFinderWin.getWatchFileEventsSw() , watchDirPath, 3000, fileEventQueue );   // to pass a single dir if you want
-                watchDirToCallerEventQueue = new WatchDirToCallerEventQueue( "watchStartingFolder", null /*jFileFinderWin.getWatchFileEventsSw()*/ , Paths.get( jFileFinderWin.getStartingFolder() ), 750, fileEventQueue );
-                watchDirToCallerEventQueue.setQueueDeletesFlag(true);
-
-                // pass in your watcher that I can call the .stop() method on when you hit the "cancel" button
-                //codeProcessorPanel.setStartStop( watchDirToCallerEventQueue );
-
-                Thread qThread = ProcessInThread.newThread( "watchDirToCallerEventQueue-qThread", 0, true, watchDirToCallerEventQueue );
-                qThread.start();
+                watchFileEventsSw.restart( Paths.get( jFileFinderWin.getStartingFolder() ), "CDM" );
 
                 System.out.println( "\nstarting folder final Q => " );
                 boolean triggerSearchFlag = false;
@@ -133,22 +115,7 @@ public class WatchStartingFolder implements Runnable
                     }
                 finally
                     {
-                    if ( qThread != null )
-                        {
-                        System.out.println( "watchFiles - before qThread.join()" );
-                        if ( qThread.isAlive() )
-                            {
-                            try
-                                {
-                                qThread.join();
-                                } 
-                            catch (InterruptedException ex)
-                                {
-                                Logger.getLogger(WatchDirSw.class.getName()).log(Level.SEVERE, null, ex);
-                                }
-                            }
-                        System.out.println( "watchFiles - after qThread.join()" );
-                        }
+                    watchFileEventsSw.pause();
                     }
                 // HERE IS WHERE YOU DO WHAT YOU WANT WITH THE FILES CREATED !
                 try {

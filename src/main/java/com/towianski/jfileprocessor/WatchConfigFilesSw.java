@@ -7,7 +7,6 @@ package com.towianski.jfileprocessor;
 
 import com.towianski.jfileprocess.actions.ProcessInThread;
 import com.towianski.jfileprocess.actions.WatchConfigFiles;
-import com.towianski.jfileprocess.actions.WatchDir;
 import com.towianski.models.Constants;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -56,7 +55,7 @@ public class WatchConfigFilesSw {
 //                System.out.println( "watchConfigFilesSw (" + watchFolder + ") after start watch thread, now exit actionPerformed" );
                 } 
             catch (Exception ex) {
-                Logger.getLogger(WatchDir.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(WatchConfigFilesSw.class.getName()).log(Level.SEVERE, null, ex);
             } 
         }
         

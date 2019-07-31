@@ -41,8 +41,7 @@ import com.towianski.jfileprocess.actions.ProcessInThread;
 import com.towianski.jfileprocess.actions.NewFolderAction;
 import com.towianski.jfileprocess.actions.ScriptOnSelectedFilesAction;
 import com.towianski.jfileprocess.actions.TomcatAppThread;
-import com.towianski.jfileprocess.actions.WatchStartingFolder2;
-import static com.towianski.jfileprocessor.WatchDirSw.count;
+import com.towianski.jfileprocess.actions.WatchStartingFolder;
 import com.towianski.listeners.MyFocusAdapter;
 import com.towianski.listeners.MyRowSorterListener;
 import com.towianski.listeners.ScriptMenuItemListener;
@@ -193,8 +192,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
     Thread jfinderThread = null;
     JFileFinderSwingWorker jFileFinderSwingWorker = null;
-    WatchDirSw watchDirSw = null;
-    WatchStartingFolder2 watchStartingFolder2 = null;
+    WatchStartingFolder watchStartingFolder = null;
     RestServerSw restServerSw = null;        
     ResultsData resultsData = null;
     JFileFinder jfilefinder = null;
@@ -232,6 +230,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
     PrintStream console = System.out;            
     
     JFileFinderWin jFileFinderWin = this;
+    int count = 0;
         
     /**
      * Creates new form JFileFinder
@@ -1383,46 +1382,45 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             }
         };
 
-    public synchronized void stopDirWatcherPREV()
-        {
-        if ( watchDirSw != null )
-            {
-            watchDirSw.cancelWatch();
-            }
-        }
+//    public synchronized void stopDirWatcherPREV()
+//        {
+//        if ( watchDirSw != null )
+//            {
+//            watchDirSw.cancelWatch();
+//            }
+//        }
 
-    public synchronized void startDirWatcherPREV()
-        {
-        if ( ! stopFileWatchTb.isSelected()  // if On/Auto
-            && ( ! maxDepth.getText().trim().equals( "" ) )
-            && ( maxDepth.getText().trim().equals( maxDepth.getText().trim() ) )   )  // don't watch on a searched list
-            {
-            if ( watchDirSw == null )
-                {
-                watchDirSw = new WatchDirSw( this, jFileFinderWin.pathsToNotWatch(), Paths.get( jFileFinderWin.getStartingFolder() ) );
-                }
-            watchDirSw.actionPerformed( jFileFinderWin.pathsToNotWatch(), Paths.get( jFileFinderWin.getStartingFolder() ) );
-            }
-        }
+//    public synchronized void startDirWatcherPREV()
+//        {
+//        if ( ! stopFileWatchTb.isSelected()  // if On/Auto
+//            && ( ! maxDepth.getText().trim().equals( "" ) )
+//            && ( maxDepth.getText().trim().equals( maxDepth.getText().trim() ) )   )  // don't watch on a searched list
+//            {
+//            if ( watchDirSw == null )
+//                {
+//                watchDirSw = new WatchDirSw( this, jFileFinderWin.pathsToNotWatch(), Paths.get( jFileFinderWin.getStartingFolder() ) );
+//                }
+//            watchDirSw.actionPerformed( jFileFinderWin.pathsToNotWatch(), Paths.get( jFileFinderWin.getStartingFolder() ) );
+//            }
+//        }
 
     public synchronized void startDirWatcher()
         {
         System.out.println( "entered startDirWatcher()" );
-        //Thread watchStartingFolderThread = null;
         
         if ( ! stopFileWatchTb.isSelected()  // if On/Auto
             && ( ! maxDepth.getText().trim().equals( "" ) )
             && ( maxDepth.getText().trim().equals( maxDepth.getText().trim() ) )   )  // don't watch on a searched list
             {
-            if ( watchStartingFolder2 == null )
+            if ( watchStartingFolder == null )
                 {
                 System.out.println( "startDirWatcher() start Main Thread" );
-                watchStartingFolder2 = new WatchStartingFolder2( this ); //, Paths.get( jFileFinderWin.getStartingFolder() ) );
-                Thread watchStartingFolderThread = ProcessInThread.newThread( "watchStartingFolder2", count++, true, watchStartingFolder2 );
+                watchStartingFolder = new WatchStartingFolder( this );
+                Thread watchStartingFolderThread = ProcessInThread.newThread("watchStartingFolder", count++, true, watchStartingFolder );
                 watchStartingFolderThread.start();
                 }
             //watchStartingFolder.run( jFileFinderWin.pathsToNotWatch(),  );
-            watchStartingFolder2.restart();
+            watchStartingFolder.restart();
             }
         System.out.println( "exit startDirWatcher()" );
         }
@@ -1430,10 +1428,9 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
     public synchronized void stopDirWatcher()
         {
         System.out.println( "entered stopDirWatcher()" );
-        if ( watchStartingFolder2 != null )
+        if ( watchStartingFolder != null )
             {
-            watchStartingFolder2.pause();
-            //watchStartingFolder = null;
+            watchStartingFolder.pause();
             }
         System.out.println( "exit stopDirWatcher()" );
         }
@@ -5092,7 +5089,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
          
         for ( File file : files ) 
             {
-            System.out.println(file.getName());
+            //System.out.println(file.getName());
             if ( file.toString().endsWith( ".groovy" ) )
                 {
                 JMenuItem menuItem = null;

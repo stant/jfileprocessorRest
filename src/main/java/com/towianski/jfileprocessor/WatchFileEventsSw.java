@@ -5,18 +5,17 @@
  */
 package com.towianski.jfileprocessor;
 
+import com.towianski.jfileprocess.actions.Player;
 import com.towianski.jfileprocess.actions.ProcessInThread;
 import com.towianski.jfileprocess.actions.WatchDirEventToTimeQueue;
-import com.towianski.jfileprocess.actions.WatchDirEventToCallerTimeQueue;
-import com.towianski.jfileprocess.actions.WatchDirToCallerEventQueue;
+import com.towianski.jfileprocess.actions.WatchDirEventsToCallerEventsQueue;
 import com.towianski.models.FileTimeEvent;
-import com.towianski.models.WatchKeyToPathAndQueue;
 import java.io.IOException;
 import java.nio.file.FileSystems;
-import java.nio.file.WatchKey;
+import java.nio.file.Path;
 import java.nio.file.WatchService;
+import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,61 +26,132 @@ import org.springframework.stereotype.Component;
  * @author stan
  */
 @Component
-public class WatchFileEventsSw {
+public class WatchFileEventsSw implements Player {
     JFileFinderWin jFileFinderWin = null;
     private WatchService watchService = null;
     BlockingQueue<FileTimeEvent> fileEventTimeQueue = new LinkedBlockingQueue<>();
-    private ConcurrentHashMap watchKeyToPathAndQueueMap = new ConcurrentHashMap<WatchKey, WatchKeyToPathAndQueue>();
+    BlockingQueue<FileTimeEvent> fileEventOutputQueue = null;
     Thread firstWatchThread = null;
-    Thread splitterWatchThread = null;
+    Thread eventQueueThread = null;
     WatchDirEventToTimeQueue watchDirEventToTimeQueue = null;
-    WatchDirEventToCallerTimeQueue watchDirEventToCallerTimeQueue = null;
-    WatchDirToCallerEventQueue watchDirToQueue = null;
+    WatchDirEventsToCallerEventsQueue watchDirEventsToCallerEventsQueue = null;
     static long count = 0;
+    String qName = "WatchFileEventsSw";
+    ArrayList<Path> pathList = null;
+    String eventTypes = null;
+    private int millisGap = 1500;
+
     
     public WatchFileEventsSw()
         {
         }
 
+    public WatchFileEventsSw( String qName, ArrayList<Path> pathList, String eventTypes, int millisGap, BlockingQueue<FileTimeEvent> fileEventOutputQueue )
+    {
+        this.qName = qName;
+        this.pathList = pathList;
+        this.eventTypes = eventTypes;
+        this.millisGap = millisGap;
+        this.fileEventOutputQueue = fileEventOutputQueue;        
+    }
+
+    public WatchFileEventsSw( String qName, Path watchDir, String eventTypes, int millisGap, BlockingQueue<FileTimeEvent> fileEventOutputQueue )
+    {
+        this.qName = qName;
+        pathList = new ArrayList<Path>();
+        pathList.add( watchDir );
+        this.pathList = pathList;
+        this.eventTypes = eventTypes;
+        this.millisGap = millisGap;
+        this.fileEventOutputQueue = fileEventOutputQueue;        
+    }
+
     public WatchService getWatchService() {
         return watchService;
     }
 
-    public ConcurrentHashMap getWatchKeyToPathAndQueueMap() {
-        return watchKeyToPathAndQueueMap;
-    }
-
-    public synchronized void cancelWatch() 
+//    public synchronized void cancelWatch() 
+//        {
+//        System.out.println( "enter WatchFileEventsSw.cancelWatch()" );
+//        ProcessInThread.stopThread( eventQueueThread );
+//        ProcessInThread.stopThread( firstWatchThread );
+//        System.out.println( "exit WatchFileEventsSw.cancelWatch()" );
+//        }
+    
+    public void stop()
         {
-        System.out.println( "enter WatchFileEventsSw.cancelWatch()" );
-        if ( firstWatchThread != null )
-            {
-            watchDirEventToTimeQueue.cancelWatch();
-            }
-        if ( splitterWatchThread != null )
-            {
-            watchDirEventToCallerTimeQueue.cancelWatch();
-            }
-        System.out.println( "exit WatchFileEventsSw.cancelWatch()" );
+        System.out.println("WatchFileEventsSw.stop()");
+        ProcessInThread.stopThread( eventQueueThread );
+        ProcessInThread.stopThread( firstWatchThread );
+        try {
+            watchService.close();
+        } catch (IOException ex) {
+            Logger.getLogger(WatchFileEventsSw.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        System.out.println( "exit WatchFileEventsSw.stop()" );
         }
 
-    public void actionPerformed() {
+    public void pause()
+        {
+        System.out.println("WatchFileEventsSw.pause()");
+        //watchDirEventsToCallerEventsQueue.stop();
+        ProcessInThread.stopThread( eventQueueThread );
+        // it shuts it down and makes it return a null event which .take() below will catch and stop on
+        }
+    
+    public void restart( ArrayList<Path> pathList, String eventTypes )
+        {
+        this.pathList = pathList;
+        this.eventTypes = eventTypes;
+        startEventQueueService();
+        }
+
+    public void restart( Path watchDir, String eventTypes )
+        {
+        pathList = new ArrayList<Path>();
+        pathList.add( watchDir );
+        this.pathList = pathList;
+        this.eventTypes = eventTypes;
+        startEventQueueService();
+        }
+
+    public void restart()
+        {
+        startEventQueueService();
+        }
+
+    public void go()
+        {
+        startEventQueueService();
+        }
+
+    public void startEventQueueService()
+        {
+        watchDirEventsToCallerEventsQueue = new WatchDirEventsToCallerEventsQueue( qName, watchService, 
+                pathList, eventTypes, millisGap, fileEventTimeQueue, fileEventOutputQueue );
+
+        eventQueueThread = ProcessInThread.newThread( "watchDirEventsToCallerEventsQueue-" + qName, count++, true, watchDirEventsToCallerEventsQueue );
+        eventQueueThread.start();
+        }
+
+    public void run() {
+        startWatchService();
+        startEventQueueService();
+        }
+        
+    public void startWatchService() {
         try {
-            System.out.println( "WatchFileEventsSw() Constructor() !" );
+            System.out.println( "WatchFileEventsSw() startWatchService() !" );
             watchService = FileSystems.getDefault().newWatchService();
             
-            watchDirEventToTimeQueue = new WatchDirEventToTimeQueue( watchService, fileEventTimeQueue, watchKeyToPathAndQueueMap );
-            firstWatchThread = ProcessInThread.newThread( "watchDirEventToTimeQueue", count++, true, watchDirEventToTimeQueue );
+            watchDirEventToTimeQueue = new WatchDirEventToTimeQueue( watchService, fileEventTimeQueue );
+            firstWatchThread = ProcessInThread.newThread( "watchDirEventToTimeQueue-" + qName, count++, true, watchDirEventToTimeQueue );
             firstWatchThread.start();
-            
-            watchDirEventToCallerTimeQueue = new WatchDirEventToCallerTimeQueue( fileEventTimeQueue, watchKeyToPathAndQueueMap );
-            splitterWatchThread = ProcessInThread.newThread( "watchDirEventToCallerTimeQueue", count++, true, watchDirEventToCallerTimeQueue );
-            splitterWatchThread.start();
             }
         catch (IOException ex) {
             Logger.getLogger(WatchFileEventsSw.class.getName()).log(Level.SEVERE, null, ex);
             }
-    }
+        }
 
     /**
      * @param args the command line arguments

@@ -61,12 +61,12 @@ public class FileAssocList {
             if ( fa.getMatchType().equalsIgnoreCase( JfpConstants.MATCH_TYPE_REGEX) )
                 {
                 matcher = FileSystems.getDefault().getPathMatcher("regex:" + fa.getMatchPattern().replace( "\\", "\\\\") );
-                System.out.println( "matching by regex =" + fa.getMatchPattern().replace( "\\", "\\\\") + "=" );
+                //System.out.println( "matching by regex =" + fa.getMatchPattern().replace( "\\", "\\\\") + "=" );
                 }
             else
                 {
                 matcher = FileSystems.getDefault().getPathMatcher("glob:" + fa.getMatchPattern().replace( "\\", "\\\\") );
-                System.out.println( "matching by glob =" + fa.getMatchPattern().replace( "\\", "\\\\") + "=" );
+                //System.out.println( "matching by glob =" + fa.getMatchPattern().replace( "\\", "\\\\") + "=" );
                 }
             if ( fpath.getFileName() != null && matcher.matches( fpath  ) )
                 {
@@ -98,12 +98,12 @@ public class FileAssocList {
             if ( fa.getMatchType().equalsIgnoreCase( JfpConstants.MATCH_TYPE_REGEX) )
                 {
                 matcher = FileSystems.getDefault().getPathMatcher("regex:" + fa.getMatchPattern().replace( "\\", "\\\\") );
-                System.out.println( "matching by regex =" + fa.getMatchPattern().replace( "\\", "\\\\") + "=" );
+                //System.out.println( "matching by regex =" + fa.getMatchPattern().replace( "\\", "\\\\") + "=" );
                 }
             else
                 {
                 matcher = FileSystems.getDefault().getPathMatcher("glob:" + fa.getMatchPattern().replace( "\\", "\\\\") );
-                System.out.println( "matching by glob =" + fa.getMatchPattern().replace( "\\", "\\\\") + "=" );
+                //System.out.println( "matching by glob =" + fa.getMatchPattern().replace( "\\", "\\\\") + "=" );
                 }
             //System.out.println( "\ntest chainfilterofNames =" + fpath + "=" );
             if ( fpath.getFileName() != null && matcher.matches( fpath  ) )

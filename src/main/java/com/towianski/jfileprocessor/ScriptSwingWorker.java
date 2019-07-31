@@ -207,8 +207,8 @@ public class ScriptSwingWorker extends CodeProcessorPanel {
         setMinimumSize(new java.awt.Dimension(150, 40));
         getContentPane().setLayout(new java.awt.GridBagLayout());
 
-        jPanel1.setMinimumSize(new java.awt.Dimension(200, 100));
-        jPanel1.setPreferredSize(new java.awt.Dimension(200, 100));
+        jPanel1.setMinimumSize(new java.awt.Dimension(300, 50));
+        jPanel1.setPreferredSize(new java.awt.Dimension(300, 50));
         jPanel1.setLayout(new java.awt.GridBagLayout());
 
         doCmdBtn.setText("Run");

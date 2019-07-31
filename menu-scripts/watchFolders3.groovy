@@ -20,14 +20,12 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import com.towianski.jfileprocessor.WatchFileEventsSw2;
+import com.towianski.jfileprocessor.WatchFileEventsSw;
 import com.towianski.jfileprocess.actions.ProcessInThread;
 import java.io.IOException;
 import com.towianski.jfileprocess.actions.Player;
 
 import windows.*;
-//import org.codehaus.groovy.tools.RootLoader;
-//import java.net.URL;
 
 // written by: Stan Towianski - March 2019
 
@@ -44,27 +42,9 @@ class WatchFolders3Impl {
 
     public void run()
     {
-    // def jardir = new File( "/net2/programs/jfp/JfpLib.jar")
-    // def urlList = [];
-    // def jars  = jardir.listFiles().findAll { it.name.endsWith(".jar") }
-    // println "groovy 2"
-    // jars.each {
-    // 	URL url = it.toURI().toURL()
-    // 	println "Loading lib: $url ..."
-    // 	urlList.add(url)
-    // }
-
-    // This works if you want to do it just from groovy instead of Jfp java.
-//     def myjar = new File( "/net2/programs/jfp/JfpLib.jar")
-//     URL url = myjar.toURI().toURL()
-//     println "Loading lib: $url ..."
-//     def urlList = [];
-//     urlList.add(url)
-// 
-//     def urls = (URL[]) urlList.toArray()
-//     def loader = new RootLoader( urls, this.class.classLoader)
-
     System.out.println( "got codeProcessorPanel.jFileFinderWin.getStartingFolder() =" + codeProcessorPanel.jFileFinderWin.getStartingFolder() + "=" );
+
+    codeProcessorPanel.jFileFinderWin.startDirWatcher();  // I think I can leave this on.
 
     String winList = codeProcessorPanel.getSelectedList();
     System.out.println( "selected item =" + winList + "=" );
@@ -73,17 +53,25 @@ class WatchFolders3Impl {
     System.out.println( "defaultComboBoxModel.getSize() num of items =" + numItems + "=" );
     ArrayList<Path> pathList = new ArrayList<Path>();
 
-    for( int i = 0; i < numItems; i++ )
-        {
-        String watchDirStr = defaultComboBoxModel.getElementAt( i ).toString() + System.getProperty( "file.separator");
-        pathList.add( Paths.get( watchDirStr ) );
-        }
     if ( numItems < 1 )
         {
         if ( ! codeProcessorPanel.jFileFinderWin.getStartingFolder().equals( "" ) )
             {
             pathList.add( Paths.get( codeProcessorPanel.jFileFinderWin.getStartingFolder() ) );
+            System.out.println( "no files selected so Use starting Folder to watch =" + codeProcessorPanel.jFileFinderWin.getStartingFolder() + "=" );
             }            
+        }
+    else
+        {
+        for( int i = 0; i < numItems; i++ )
+            {
+            String watchDirStr = defaultComboBoxModel.getElementAt( i ).toString() + System.getProperty( "file.separator");
+            Path path = Paths.get( watchDirStr );
+            if ( Files.isDirectory( path ) )
+                pathList.add( path );
+            else
+            pathList.add( path.getParent() );
+            }
         }
 
     // we are going to write output to this file !
@@ -94,12 +82,13 @@ class WatchFolders3Impl {
     // Create a Queue to receive your file create events
     BlockingQueue<FileTimeEvent> fileEventQueue = new LinkedBlockingQueue<>(1000);
 
-    // args: needed, arrayList of paths to watch, millisecond gap if file does not change in that time consider it done, your queue to receive events
-    WatchFileEventsSw2 watchFileEventsSw2 = new WatchFileEventsSw2( "watchFolders3", pathList, 1000, fileEventQueue );
-    watchFileEventsSw2.startWatchService();
+    // args: a name, arrayList of paths to watch, string with C/D/M create, delete. modify. events you want to watch
+    // millisecond gap if file does not change in that time consider it done, your queue to receive events
+    WatchFileEventsSw watchFileEventsSw = new WatchFileEventsSw( "watchFolders3", pathList, "CM", 1000, fileEventQueue );
+    watchFileEventsSw.startWatchService();
   
     // pass in your watcher that I can call the .stop() method on when you hit the "cancel" button
-    codeProcessorPanel.setPlayer( watchFileEventsSw2 );
+    codeProcessorPanel.setPlayer( watchFileEventsSw );
     
     restart();
     
@@ -118,7 +107,7 @@ class WatchFolders3Impl {
             System.out.println("watchFolders3 waiting to get runallow token" );
             allowToRunQueue.take();   // blocks until get a token denoting allowed to run.
 
-            watchFileEventsSw2.restart();
+            watchFileEventsSw.restart();
 
             while( true )
                 {
@@ -157,7 +146,7 @@ class WatchFolders3Impl {
             e2.printStackTrace();
             }
         } // while
-    watchFileEventsSw2.stop();
+    watchFileEventsSw.stop();
     System.out.println( "<== final Q" );
     outFile << "<== final Q" + System.getProperty("line.separator");
     
