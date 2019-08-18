@@ -18,39 +18,41 @@ public class WatchStartingFolder implements Runnable
     private static final MyLogger logger = MyLogger.getLogger( WatchStartingFolder.class.getName() );
     WatchFileEventsSw watchFileEventsSw = null;
     JFileFinderWin jFileFinderWin = null;
-    Object lockObj = new Object();
     BlockingQueue<Integer> allowToRunQueue = new LinkedBlockingQueue<>(100);
     boolean runFlag = true;
     
-    public WatchStartingFolder( JFileFinderWin jFileFinderWin ) //, Object lockObj )
+    public WatchStartingFolder( JFileFinderWin jFileFinderWin )
         {
         this.jFileFinderWin = jFileFinderWin;
-//        this.fileEventQueue = fileEventQueue;
-//        this.lockObj = lockObj;
         }
     
-    public void setTriggerSearchFlag(boolean triggerSearchFlag)
+    public void triggerSearchBtn(boolean triggerSearchFlag)
         {
-        logger.info( "WatchStartingFolder.setTriggerSearchFlag() set triggerSearchFlag = " + triggerSearchFlag );
+        logger.info( "WatchStartingFolder.triggerSearchBtn() set triggerSearchFlag = " + triggerSearchFlag );
         if ( triggerSearchFlag )
             {
-//            jFileFinderWin.callSearchBtnActionPerformed( null );
-
-            SwingUtilities.invokeLater(new Runnable() 
-            {
-                public void run() {
-                    logger.info( "WatchStartingFolder   invokeLater() searchButton" );
-                    logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
-                    //                watchDirSw.setIsDone(true);
-                    jFileFinderWin.callSearchBtnActionPerformed( null );
+            try {
+                SwingUtilities.invokeLater(new Runnable()
+                {
+                    public void run() {
+                        logger.info( "WatchStartingFolder   invokeLater() searchButton" );
+                        logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+                        //                watchDirSw.setIsDone(true);
+                        jFileFinderWin.callSearchBtnActionPerformed( null );
+                    }
+                });
+                
+                logger.info( "WatchStartingFolder.triggerSearchBtn() - after call jFileFinderWin.callSearchBtnActionPerformed( null )" );
                 }
-            });
-
-            logger.info( "WatchStartingFolder.setTriggerSearchFlag() - after call jFileFinderWin.callSearchBtnActionPerformed( null )" );
+            catch (Exception ex) 
+                {
+                logger.info( "WatchStartingFolder.triggerSearchBtn() - Exception !" );
+                ex.printStackTrace();
+                }
             }
         }
     
-    public void restart()
+    public void putAllowToRunQueue()
         {
         try {
             allowToRunQueue.put( 1 );
@@ -83,8 +85,8 @@ public class WatchStartingFolder implements Runnable
 
         // args: needed, arrayList of paths to watch, millisecond gap if file does not change in that time consider it done, your queue
         watchFileEventsSw = new WatchFileEventsSw( "watchStartFolder", Paths.get( jFileFinderWin.getStartingFolder() ), "CDM", 750, fileEventQueue );
-        watchFileEventsSw.startWatchService();
-        restart();
+        watchFileEventsSw.startEventTimeQueue();
+        putAllowToRunQueue();
         
         while ( runFlag )
             {
@@ -100,8 +102,8 @@ public class WatchStartingFolder implements Runnable
                     //while (true) 
                         //{
                         FileTimeEvent fte = fileEventQueue.take();
-                        logger.info( "> " + fte.getFilename() + "   event =" + fte.getEvent() + System.getProperty("line.separator") );
-                        if ( fte.getEvent() != null )
+                        logger.info( "> " + fte.getFilename() + "   event =" + fte.getEventKind() + System.getProperty("line.separator") );
+                        if ( fte.getEventKind() != null )
                             {
                             triggerSearchFlag = true;
                             }
@@ -120,7 +122,10 @@ public class WatchStartingFolder implements Runnable
                 // HERE IS WHERE YOU DO WHAT YOU WANT WITH THE FILES CREATED !
                 try {
                     if ( triggerSearchFlag )
-                        setTriggerSearchFlag( true );
+                        {
+                        logger.finest( "==WatchStartingFolder() triggerSearchBtn()" );
+                        triggerSearchBtn( true );
+                        }
                     }
                 catch (Exception e) {
                     e.printStackTrace();

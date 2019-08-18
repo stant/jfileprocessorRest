@@ -5,7 +5,6 @@
  */
 package com.towianski.jfileprocessor;
 
-import com.towianski.jfileprocess.actions.UpFolderAction;
 import com.towianski.models.Constants;
 import com.towianski.utils.MyLogger;
 import java.awt.event.ActionEvent;
@@ -17,7 +16,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,7 +37,7 @@ import javax.swing.ListSelectionModel;
  */
 public class ListOfFilesPanel extends javax.swing.JFrame {
 
-    private static final MyLogger logger = MyLogger.getLogger( UpFolderAction.class.getName() );
+    private static final MyLogger logger = MyLogger.getLogger( ListOfFilesPanel.class.getName() );
     LinkedHashMap<String,String> savedPathsHm = new LinkedHashMap<String,String>();
     JFileFinderWin jFileFinderWin = null;
     String name = "";

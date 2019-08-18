@@ -94,7 +94,10 @@ public class JFileFinder //  implements Runnable
     public void cancelSearch()
         {
         cancelFlag = true;
-        finderFileVisitor.cancelSearch();
+        if ( finderFileVisitor != null )
+            {
+            finderFileVisitor.cancelSearch();
+            }
         }
 
     public void cancelFill()

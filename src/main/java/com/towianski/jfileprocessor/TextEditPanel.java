@@ -5,7 +5,6 @@
  */
 package com.towianski.jfileprocessor;
 
-import com.towianski.jfileprocess.actions.UpFolderAction;
 import com.towianski.jfileprocessor.services.CallGroovy;
 import com.towianski.utils.MyLogger;
 import groovy.lang.Binding;
@@ -33,7 +32,7 @@ import javax.swing.KeyStroke;
  */
 public class TextEditPanel extends javax.swing.JFrame {
 
-    private static final MyLogger logger = MyLogger.getLogger( UpFolderAction.class.getName() );
+    private static final MyLogger logger = MyLogger.getLogger( TextEditPanel.class.getName() );
     LinkedHashMap<String,String> savedPathsHm = new LinkedHashMap<String,String>();
     JFileFinderWin jFileFinderWin = null;
     DefaultComboBoxModel listOfFilesPanelModel = null;

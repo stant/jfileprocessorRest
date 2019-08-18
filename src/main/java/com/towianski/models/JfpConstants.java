@@ -10,6 +10,9 @@ package com.towianski.models;
  * @author stan
  */
 public class JfpConstants {
+    
+    public final static Boolean searchBtnLock = false;
+    
     // I thought about having these sorted by assoc so just in case I used F, N, S to be in alpha order
     public final static String ASSOC_TYPE_SUFFIX = "S";
     public final static String ASSOC_TYPE_FILENAME = "N";

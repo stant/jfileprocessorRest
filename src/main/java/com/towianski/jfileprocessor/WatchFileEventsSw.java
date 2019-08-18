@@ -18,6 +18,9 @@ import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.springframework.stereotype.Component;
 
 /**
@@ -40,7 +43,9 @@ public class WatchFileEventsSw implements Player {
     ArrayList<Path> pathList = null;
     String eventTypes = null;
     private int millisGap = 1500;
-
+//    Object readyLock = new Object();
+//    boolean isReady = false;
+    Semaphore waitSemaphore = new Semaphore(0);
     
     public WatchFileEventsSw()
         {
@@ -52,18 +57,19 @@ public class WatchFileEventsSw implements Player {
         this.pathList = pathList;
         this.eventTypes = eventTypes;
         this.millisGap = millisGap;
-        this.fileEventOutputQueue = fileEventOutputQueue;        
+        this.fileEventOutputQueue = fileEventOutputQueue;  
+        startWatchService();
     }
 
     public WatchFileEventsSw( String qName, Path watchDir, String eventTypes, int millisGap, BlockingQueue<FileTimeEvent> fileEventOutputQueue )
     {
         this.qName = qName;
-        pathList = new ArrayList<Path>();
-        pathList.add( watchDir );
-        this.pathList = pathList;
+        this.pathList = new ArrayList<Path>();
+        this.pathList.add( watchDir );
         this.eventTypes = eventTypes;
         this.millisGap = millisGap;
         this.fileEventOutputQueue = fileEventOutputQueue;        
+        startWatchService();
     }
 
     public WatchService getWatchService() {
@@ -108,9 +114,8 @@ public class WatchFileEventsSw implements Player {
 
     public void restart( Path watchDir, String eventTypes )
         {
-        pathList = new ArrayList<Path>();
-        pathList.add( watchDir );
-        this.pathList = pathList;
+        this.pathList = new ArrayList<>();
+        this.pathList.add( watchDir );
         this.eventTypes = eventTypes;
         startEventQueueService();
         }
@@ -128,28 +133,39 @@ public class WatchFileEventsSw implements Player {
     public void startEventQueueService()
         {
         watchDirEventsToCallerEventsQueue = new WatchDirEventsToCallerEventsQueue( qName, watchService, 
-                pathList, eventTypes, millisGap, fileEventTimeQueue, fileEventOutputQueue );
+                pathList, eventTypes, millisGap, fileEventTimeQueue, fileEventOutputQueue, waitSemaphore ); //isReady, readyLock );
 
         eventQueueThread = ProcessInThread.newThread( "watchDirEventsToCallerEventsQueue-" + qName, count++, true, watchDirEventsToCallerEventsQueue );
         eventQueueThread.start();
         }
 
     public void run() {
-        startWatchService();
         startEventQueueService();
+        startEventTimeQueue();
         }
-        
+
     public void startWatchService() {
         try {
-            logger.info( "WatchFileEventsSw() startWatchService() !" );
             watchService = FileSystems.getDefault().newWatchService();
-            
-            watchDirEventToTimeQueue = new WatchDirEventToTimeQueue( watchService, fileEventTimeQueue );
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            Logger.getLogger(WatchFileEventsSw.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void startEventTimeQueue() {
+        try {
+            logger.info( "WatchFileEventsSw() startWatchService()" );
+            watchDirEventToTimeQueue = new WatchDirEventToTimeQueue( watchService, fileEventTimeQueue, waitSemaphore ); //, isReady, readyLock );
+            logger.info( "WatchFileEventsSw() startWatchService() at 2" );
             firstWatchThread = ProcessInThread.newThread( "watchDirEventToTimeQueue-" + qName, count++, true, watchDirEventToTimeQueue );
+            logger.info( "WatchFileEventsSw() startWatchService() at 3" );
             firstWatchThread.start();
+            logger.info( "WatchFileEventsSw() startWatchService() at 4" );
             }
-        catch (IOException ex) {
-            logger.severeExc( ex );
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.getLogger(WatchFileEventsSw.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
 

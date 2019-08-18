@@ -880,6 +880,9 @@
                                   <Connection code="new javax.swing.DefaultComboBoxModel(logLevelsArrStr)" type="code"/>
                                 </Property>
                               </Properties>
+                              <Events>
+                                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="logLevelActionPerformed"/>
+                              </Events>
                               <AuxValues>
                                 <AuxValue name="JavaCodeGenerator_DeclarationPre" type="java.lang.String" value="//Level[] logLevelsArr = new Level [] { Level.ALL, Level.CONFIG, Level.FINE, Level.FINER, Level.FINEST, Level.INFO, Level.OFF, Level.SEVERE, Level.WARNING };&#xa;String[] logLevelsArrStr = new String [] { Level.OFF.toString(), Level.SEVERE.toString(), Level.WARNING.toString(), Level.INFO.toString(), Level.CONFIG.toString(), Level.FINE.toString(), Level.FINER.toString(), Level.FINEST.toString(), Level.ALL.toString() };&#xa;LinkedHashMap&lt;String,Level&gt; logLevelsLhm = new LinkedHashMap&lt;String,Level&gt;();&#xa;"/>
                                 <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="logLevelsLhm.put( Level.OFF.toString(), Level.OFF );&#xd;&#xa;logLevelsLhm.put( Level.INFO.toString(), Level.INFO );&#xd;&#xa;logLevelsLhm.put( Level.WARNING.toString(), Level.WARNING );&#xd;&#xa;logLevelsLhm.put( Level.FINE.toString(), Level.FINE );&#xd;&#xa;logLevelsLhm.put( Level.FINER.toString(), Level.FINER );&#xd;&#xa;logLevelsLhm.put( Level.FINEST.toString(), Level.FINEST );&#xd;&#xa;logLevelsLhm.put( Level.SEVERE.toString(), Level.SEVERE );&#xd;&#xa;logLevelsLhm.put( Level.ALL.toString(), Level.ALL );&#xd;&#xa;logLevel.setSelectedItem( Level.OFF.toString() );"/>

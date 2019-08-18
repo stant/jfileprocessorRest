@@ -5,7 +5,6 @@
  */
 package com.towianski.jfileprocessor.services;
 
-import com.towianski.jfileprocess.actions.UpFolderAction;
 import com.towianski.utils.MyLogger;
 import groovy.lang.Binding;
 import groovy.util.GroovyScriptEngine;
@@ -15,7 +14,7 @@ import groovy.util.GroovyScriptEngine;
  * @author stan
  */
 public class CallGroovy {
-    private static final MyLogger logger = MyLogger.getLogger( UpFolderAction.class.getName() );
+    private static final MyLogger logger = MyLogger.getLogger( CallGroovy.class.getName() );
 
     GroovyScriptEngine gse = null;
     String[] pathRoots = {};

@@ -7,7 +7,6 @@ package com.towianski.jfileprocessor;
 
 import com.towianski.boot.JFileProcessorVersion;
 import com.towianski.jfileprocess.actions.ProcessInThread;
-import com.towianski.jfileprocess.actions.UpFolderAction;
 import com.towianski.utils.DesktopUtils;
 import com.towianski.utils.MyLogger;
 import java.io.IOException;
@@ -15,8 +14,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import javax.swing.JFrame;
 import javax.swing.JList;
@@ -28,7 +25,7 @@ import javax.swing.JOptionPane;
  */
 public class SavedPathsPanel extends javax.swing.JPanel {
 
-    private static final MyLogger logger = MyLogger.getLogger( UpFolderAction.class.getName() );
+    private static final MyLogger logger = MyLogger.getLogger( SavedPathsPanel.class.getName() );
     HashMap<String,String> savedPathsHm = new HashMap<String,String>();
     JFileFinderWin jFileFinderWin = null;
 

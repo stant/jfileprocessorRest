@@ -78,22 +78,23 @@ public class Copier extends SimpleFileVisitor<Path>
 
     public void setPaths( Path fromPath, String startingPath, String toPath ) {
         this.fromPath = fromPath;
-        logger.info( "called set fromPath =" + this.fromPath + "=" );
+        logger.finest( "called set fromPath =" + this.fromPath + "=" );
+        logger.info("entered copier.setpaths() Log Level = " + logger.getLevel()); 
         
         this.startingPath = Paths.get( startingPath );
         this.toPath = Paths.get( toPath );
-        logger.info( "Copier new File( toPath ).toURI() =" + new File( toPath ).toURI() + "=" );
+        logger.finest( "Copier new File( toPath ).toURI() =" + new File( toPath ).toURI() + "=" );
         toPathFileSeparator = this.toPath.getFileSystem().getSeparator();
 
-        logger.info( "this.startingPath =" + this.startingPath + "   this.fromPath =" + this.fromPath + "=" );
-        logger.info( "this.toPath =" + this.toPath + "=" );
+        logger.finest( "this.startingPath =" + this.startingPath + "   this.fromPath =" + this.fromPath + "=" );
+        logger.finest( "this.toPath =" + this.toPath + "=" );
         Path fromPathOrig = this.fromPath;
         Path fromParent = fromPath.getParent();
         String ans = "";
 
         Path targetPath = this.toPath.resolve( this.startingPath.relativize( fromPath ) );
-        logger.info( "relativize =" + this.startingPath.relativize( fromPath ) + "=" );
-        logger.info( "toPath =" + toPath + "   resolve targetPath =" + targetPath + "=" );
+        logger.finest( "relativize =" + this.startingPath.relativize( fromPath ) + "=" );
+        logger.finest( "toPath =" + toPath + "   resolve targetPath =" + targetPath + "=" );
 
         try {
             while ( fromPath.toFile().isDirectory() &&
@@ -121,8 +122,8 @@ public class Copier extends SimpleFileVisitor<Path>
                     }
                 this.toPath = Paths.get( fromParent + toPathFileSeparator + ans );
                 this.startingPath = fromPath;
-                logger.info( "new this.startingPath =" + this.startingPath + "   this.fromPath =" + this.fromPath + "=" );
-                logger.info( "new this.toPath =" + this.toPath + "=" );
+                logger.finest( "new this.startingPath =" + this.startingPath + "   this.fromPath =" + this.fromPath + "=" );
+                logger.finest( "new this.toPath =" + this.toPath + "=" );
                 }
             
             if ( this.toPath.toRealPath().startsWith( this.fromPath.toRealPath() ) )
@@ -148,34 +149,34 @@ public class Copier extends SimpleFileVisitor<Path>
         {
         try {
             Path targetPath = this.toPath.resolve( this.startingPath.relativize( dir ) );
-    //        logger.info( );
-    //        logger.info( "preVisitDir relativize =" + this.startingPath.relativize( dir ) + "=" );
-    //        logger.info( "preVisitDir toPath =" + toPath + "   resolve targetPath =" + targetPath + "=" );
+    //        logger.finest( );
+    //        logger.finest( "preVisitDir relativize =" + this.startingPath.relativize( dir ) + "=" );
+    //        logger.finest( "preVisitDir toPath =" + toPath + "   resolve targetPath =" + targetPath + "=" );
 
             numTested++;
             numFolderTests ++;
             numFolderMatches++;
             if ( cancelFlag )
                 {
-                logger.info( "Search cancelled by user." );
+                logger.finest( "Search cancelled by user." );
                 return FileVisitResult.TERMINATE;
                 }
 
             Path toPathFile = toPath.resolve( startingPath.relativize( dir ) );
 
-    //        logger.info( "dir =" + dir + "= .getFileSystem() =" + dir.getFileSystem() + "=   toPathFile =" + toPathFile + "= .getFileSystem() =" + toPathFile.getFileSystem() + "=" );
-            logger.info( "dir =" + dir + "= .getFileStore() =" + Files.getFileStore( dir ) + "=   toPathFile.getParent() =" + toPathFile.getParent() + "= .getFileStore() =" + Files.getFileStore( toPathFile.getParent() ) + "=" );
+    //        logger.finest( "dir =" + dir + "= .getFileSystem() =" + dir.getFileSystem() + "=   toPathFile =" + toPathFile + "= .getFileSystem() =" + toPathFile.getFileSystem() + "=" );
+            logger.finest( "dir =" + dir + "= .getFileStore() =" + Files.getFileStore( dir ) + "=   toPathFile.getParent() =" + toPathFile.getParent() + "= .getFileStore() =" + Files.getFileStore( toPathFile.getParent() ) + "=" );
             if ( isDoingCutFlag &&
                 ( Files.getFileStore( dir ).equals( Files.getFileStore( toPathFile.getParent() ) ) ) )
                 {  // doing Move
-                logger.info( "do MOVE dir =" + dir + "=   to =" + toPathFile + "=" );
-                //logger.info( "copyOptions contains? StandardCopyOption.REPLACE_EXISTING =" + copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) + "=" );
+                logger.finest( "do MOVE dir =" + dir + "=   to =" + toPathFile + "=" );
+                //logger.finest( "copyOptions contains? StandardCopyOption.REPLACE_EXISTING =" + copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) + "=" );
                 if ( copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) )
                     Files.move( dir, toPathFile, StandardCopyOption.REPLACE_EXISTING );
                 else
                     Files.move( dir, toPathFile );
                 //Files.delete( dir );
-                //logger.info( "would delete folder =" + dir );
+                //logger.finest( "would delete folder =" + dir );
                 //numFoldersDeleted++;
                 return FileVisitResult.SKIP_SUBTREE;
                 }
@@ -183,7 +184,7 @@ public class Copier extends SimpleFileVisitor<Path>
                 {
                 if ( ! Files.exists( targetPath ) )
                     {
-                    //logger.info( "preVisitDir would do Files.createDirectory( " + targetPath + ")" );
+                    //logger.finest( "preVisitDir would do Files.createDirectory( " + targetPath + ")" );
                     Files.createDirectory( targetPath );
                     }
                 }
@@ -268,45 +269,45 @@ public class Copier extends SimpleFileVisitor<Path>
                 }
             toPathFile = Paths.get( toPathFile.getParent() + toPathFileSeparator + ans );
             this.startingPath = fromPath;
-            logger.info( "beforeFile =" + beforeFile + "=" );
-            logger.info( "new file =" + toPathFile + "=" );
+            logger.finest( "beforeFile =" + beforeFile + "=" );
+            logger.finest( "new file =" + toPathFile + "=" );
             }
 
 //            CopyOption[] copyOpts = new CopyOption[3];
 //            //copyOpts[0] = StandardCopyOption.REPLACE_EXISTING;
 //            copyOpts[1] = StandardCopyOption.COPY_ATTRIBUTES;
 //            //copyOpts[2] = LinkOption.NOFOLLOW_LINKS;
-//            logger.info( "copyOptions size =" + copyOptions.size() + "=" );
-//            logger.info( "copyOptions contains? StandardCopyOption.REPLACE_EXISTING =" + copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) + "=" );
-//            logger.info( "copyOptions.toArray( new CopyOption[ copyOptions.size() ] ) =" + copyOptions.toArray( new CopyOption[ copyOptions.size() ] ) + "=" );
+//            logger.finest( "copyOptions size =" + copyOptions.size() + "=" );
+//            logger.finest( "copyOptions contains? StandardCopyOption.REPLACE_EXISTING =" + copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) + "=" );
+//            logger.finest( "copyOptions.toArray( new CopyOption[ copyOptions.size() ] ) =" + copyOptions.toArray( new CopyOption[ copyOptions.size() ] ) + "=" );
 
-//            logger.info( "file =" + file + "= .getFileSystem() =" + file.getFileSystem() + "=   toPathFile =" + toPathFile + "= .getFileSystem() =" + toPathFile.getFileSystem() + "=" );
-            logger.info( "file =" + file + "= .getFileStore() =" + Files.getFileStore( file ) + "=   toPathFile.getParent() =" + toPathFile.getParent() + "= .getFileStore() =" + Files.getFileStore( toPathFile.getParent() ) + "=" );
+//            logger.finest( "file =" + file + "= .getFileSystem() =" + file.getFileSystem() + "=   toPathFile =" + toPathFile + "= .getFileSystem() =" + toPathFile.getFileSystem() + "=" );
+            logger.finest( "file =" + file + "= .getFileStore() =" + Files.getFileStore( file ) + "=   toPathFile.getParent() =" + toPathFile.getParent() + "= .getFileStore() =" + Files.getFileStore( toPathFile.getParent() ) + "=" );
             if ( isDoingCutFlag &&
                 ( Files.getFileStore( file ).equals( Files.getFileStore( toPathFile.getParent() ) ) ) )
                 {  // doing Move
-                logger.info( "do MOVE file =" + file + "=   to =" + toPathFile + "=" );
-                logger.info( "copyOptions contains? StandardCopyOption.REPLACE_EXISTING =" + copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) + "=" );
+                logger.finest( "do MOVE file =" + file + "=   to =" + toPathFile + "=" );
+                logger.finest( "copyOptions contains? StandardCopyOption.REPLACE_EXISTING =" + copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) + "=" );
                 if ( copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) )
                     Files.move( file, toPathFile, StandardCopyOption.REPLACE_EXISTING );
                 else
                     Files.move( file, toPathFile );
                 //Files.delete( dir );
-                //logger.info( "would delete folder =" + dir );
+                //logger.finest( "would delete folder =" + dir );
                 //numFoldersDeleted++;
                 }
             else   // doing Copy
                 {
                 if ( copyOptions == null || copyOptions.size() < 1 )
                     {
-    //                logger.info( "copy with default options. file =" + file + "=   to =" + toPath.resolve(startingPath.relativize( file ) ) + "=" );
-                    //logger.info( "copy with default options. file =" + toPathFile + "=" );
+    //                logger.finest( "copy with default options. file =" + file + "=   to =" + toPath.resolve(startingPath.relativize( file ) ) + "=" );
+                    //logger.finest( "copy with default options. file =" + toPathFile + "=" );
                     Files.copy( file, toPathFile );
                     }
                 else
                     {
-    //                logger.info( "copy with sent options. file =" + file + "=   to =" + toPath.resolve(startingPath.relativize( file ) ) + "=" );
-                    //logger.info( "copy with sent options. file =" + toPathFile + "=" );
+    //                logger.finest( "copy with sent options. file =" + file + "=   to =" + toPath.resolve(startingPath.relativize( file ) ) + "=" );
+                    //logger.finest( "copy with sent options. file =" + toPathFile + "=" );
                     Files.copy( file, toPathFile, copyOptions.toArray( new CopyOption[ copyOptions.size() ] ) );
                     }
                 }
@@ -348,11 +349,11 @@ public class Copier extends SimpleFileVisitor<Path>
               ! ( Files.getFileStore( file ).equals( Files.getFileStore( toPathFile.getParent() ) ) ) )
             {
             Files.delete( file );
-            //logger.info( "would delete file =" + file );
+            //logger.finest( "would delete file =" + file );
             }
         
         numFileMatches++;
-        logger.info( "visitFile() numFileMatches = " + numFileMatches );
+        logger.finest( "visitFile() numFileMatches = " + numFileMatches );
         return FileVisitResult.CONTINUE;
         }
 
@@ -365,7 +366,7 @@ public class Copier extends SimpleFileVisitor<Path>
             if ( isDoingCutFlag )
                 {
                 Files.delete( dir );
-                logger.info( "would delete folder =" + dir );
+                logger.finest( "would delete folder =" + dir );
                 //numFoldersDeleted++;
                 }
             return FileVisitResult.CONTINUE;
@@ -373,8 +374,8 @@ public class Copier extends SimpleFileVisitor<Path>
         //throw ex;
 //        catch (RuntimeException ex3) 
 //            {
-//            logger.severeExc( ex );
-//        logger.info( "CAUGHT RUNTIME ERROR  " + "my error msg" + ex3 + ": " + dir );
+//            Logger.getLogger(Deleter.class.getName()).log(Level.SEVERE, null, ex3 );
+//        logger.finest( "CAUGHT RUNTIME ERROR  " + "my error msg" + ex3 + ": " + dir );
 //            throw new IOException( "my runtime msg" + ex3.getClass().getSimpleName() + ": " + dir );
 //            }
         catch ( java.nio.file.AccessDeniedException exAccessDenied ) 
@@ -390,7 +391,7 @@ public class Copier extends SimpleFileVisitor<Path>
             logger.severeExc( ex2 );
             errorList.add( dir + " -> " + "ERROR " + ex2 );
             ex2.printStackTrace();
-            //logger.info( "ERROR  " + "my error msg" + ex2 + ": " + dir );
+            //logger.finest( "ERROR  " + "my error msg" + ex2 + ": " + dir );
             throw new IOException( ex2 + ": " + dir );
             }
         //return FileVisitResult.TERMINATE;
@@ -399,12 +400,12 @@ public class Copier extends SimpleFileVisitor<Path>
         @Override
         public FileVisitResult visitFileFailed( Path file, IOException exc ) 
             {
-            logger.info( "Copier.visitFileFailed() for file =" + file.toString() );
+            logger.finest( "Copier.visitFileFailed() for file =" + file.toString() );
             errorList.add( file + " -> " + "ERROR " + exc );
             return FileVisitResult.SKIP_SUBTREE;
 //            if ( new File( file.toString() ).isDirectory() )
 //                {
-//                logger.info( "skipping inaccessible folder: " + file.toString() );
+//                logger.finest( "skipping inaccessible folder: " + file.toString() );
 //                if ( exc instanceof java.nio.file.AccessDeniedException )
 //                    {
 //                    BasicFileAttributes attrs;
@@ -415,7 +416,7 @@ public class Copier extends SimpleFileVisitor<Path>
 //            }
 //                    catch (Exception ex) 
 //                        {
-//                        logger.info( "Error calling processFolder in visitFileFailed()" );
+//                        logger.finest( "Error calling processFolder in visitFileFailed()" );
 //                        ex.printStackTrace();
 //                        }
 //                    }
@@ -433,22 +434,22 @@ public class Copier extends SimpleFileVisitor<Path>
     // matches to standard out.
     void done() 
         {
-        logger.info( "Tested:  " + numTested );
-        logger.info( "Copied numFileMatches: " + numFileMatches );
-        logger.info( "Copied numFolderMatches: " + numFolderMatches );
-        logger.info( "Copied numFileTests: " + numFileTests );
-        logger.info( "Copied numFolderTests: " + numFolderTests );
+        logger.finest( "Tested:  " + numTested );
+        logger.finest( "Copied numFileMatches: " + numFileMatches );
+        logger.finest( "Copied numFolderMatches: " + numFolderMatches );
+        logger.finest( "Copied numFileTests: " + numFileTests );
+        logger.finest( "Copied numFolderTests: " + numFolderTests );
 
         if ( numFileMatches != numFileTests  ||
              numFolderMatches != numFolderTests )
             {
             processStatus = CopyFrame.PROCESS_STATUS_COPY_INCOMPLETED;
-            logger.info( "processStatus =" + processStatus + "=  should be incomplete" );
+            logger.finest( "processStatus =" + processStatus + "=  should be incomplete" );
             }
 
 //            for ( Path mpath : matchedPathsList )
 //                {
-//                logger.info( mpath );
+//                logger.finest( mpath );
 //                }
         }
     

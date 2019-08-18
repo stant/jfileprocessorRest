@@ -80,17 +80,17 @@ class WatchFolders1Impl {
     System.out.println( "outfile =" + outFile + "=" );
 
     // Create a Queue to receive your file create events
-    BlockingQueue<FileTimeEvent> fileEventQueue = new LinkedBlockingQueue<>(1000);
+    BlockingQueue<FileTimeEvent> fileEventQueue = new LinkedBlockingQueue<>(100100);
 
     // args: a name, arrayList of paths to watch, string with C/D/M create, delete. modify. events you want to watch
     // millisecond gap if file does not change in that time consider it done, your queue to receive events
     WatchFileEventsSw watchFileEventsSw = new WatchFileEventsSw( "watchFolders1", pathList, "CM", 1000, fileEventQueue );
-    watchFileEventsSw.startWatchService();
   
     // pass in your watcher that I can call the .stop() method on when you hit the "cancel" button
     codeProcessorPanel.setPlayer( watchFileEventsSw );
     
-    restart();
+    watchFileEventsSw.startEventTimeQueue();
+    putAllowToRunQueue();
     
     System.out.println( "\nfinal Q => " );
     outFile << "final Q => " + System.getProperty("line.separator");
@@ -112,31 +112,36 @@ class WatchFolders1Impl {
             while( true )
                 {
                 FileTimeEvent fte = fileEventQueue.take();
-                System.out.println( "> " + fte.getFilename() + "   event =" + fte.getEvent() + System.getProperty("line.separator") );
-                if ( fte.getEvent() == null )
+                System.out.println( "> " + fte.getFilename() + "   event =" + fte.getEventKind() + System.getProperty("line.separator") );
+                if ( fte.getEventKind() == null )
                     {
                     outFile << "--Canceled--" + System.getProperty("line.separator");
                     resultsData.setProcessStatus( codeProcessorPanel.PROCESS_STATUS_COPY_CANCELED );
                     resultsData.setMessage( "by user" );
                     break;
                     }
-                outFile << System.getProperty("line.separator") + "new file: =" + "> " + fte.getFilename() + "   event =" + fte.getEvent() + System.getProperty("line.separator");
-                outFile << "copy file: =" + "> " + fte.getFullFilePath() + System.getProperty("line.separator");
-                outFile << "  to file: =" + "> " + Paths.get("/net2/watch-2").resolve( Paths.get( fte.getFilename() ) ) + System.getProperty("line.separator");
+                outFile << System.getProperty("line.separator") + "new file: =" + "> " + fte.getFilename() + "   event =" + fte.getEventKind() + System.getProperty("line.separator");
+                if ( fte.getFullFilePath() == null )
+                    {
+                    outFile << "Error getFullFilePath: =" + "> " + fte.getFullFilePath() + "   event =" + fte.getEventKind() + "   watchKey =" + fte.getwatchKey() + System.getProperty("line.separator");
+                    continue;
+                    }
 
                 // HERE IS WHERE YOU DO WHAT YOU WANT WITH THE FILES CREATED !
                 try {
     //                Files.move( fte.getFullFilePath(), 
     //                    Paths.get("/net2/watch-final-2").resolve( Paths.get( fte.getFilename() ) ), 
     //                    StandardCopyOption.REPLACE_EXISTING);
+                    //outFile << "copy file: =" + "> " + fte.getFullFilePath() + "=";
+                    //outFile << "  to file: =" + "> " + Paths.get("/net2/watch-3").resolve( Paths.get( fte.getFilename() ) ) + "=" + System.getProperty("line.separator");;
                     Files.copy( fte.getFullFilePath(), 
-                        Paths.get("/net2/watch-2").resolve( Paths.get( fte.getFilename() ) ),   // c:\\watch-1
+                        Paths.get("/net2/watch-final-1").resolve( Paths.get( fte.getFilename() ) ),   // c:\\watch-1
                         StandardCopyOption.REPLACE_EXISTING);
-                outFile << "delete file: =" + "> " + fte.getFullFilePath() + System.getProperty("line.separator");
+                    //outFile << "delete file: =" + "> " + fte.getFullFilePath() + System.getProperty("line.separator");
                     Files.deleteIfExists( fte.getFullFilePath() );
                     }
                 catch (Exception e) {
-                    restart();
+                    putAllowToRunQueue();
                     e.printStackTrace();
                     }
                 }// while
@@ -163,7 +168,7 @@ class WatchFolders1Impl {
     textEditPanel.setState ( JFrame.NORMAL );
     }
 
-public void restart()
+public void putAllowToRunQueue()
     {
     try {
         allowToRunQueue.put( 1 );

@@ -28,6 +28,7 @@ public class JFileCopy //  implements Runnable
     String processStatus = "";
     String message = "";
     Boolean cancelFillFlag = false;
+    boolean copySpecificListOfFiles = false;
     Boolean isDoingCutFlag = false;
     String startingPath = null;
     ArrayList<String> copyPaths = new ArrayList<String>();
@@ -40,12 +41,14 @@ public class JFileCopy //  implements Runnable
     ArrayList<CopyOption> copyOptions = new ArrayList<CopyOption>();
     ConnUserInfo connUserInfo = null;
     
+//    public JFileCopy( ConnUserInfo connUserInfo, Boolean isDoingCutFlag, String startingPath, boolean copySpecificListOfFiles, ArrayList<String> copyPaths, String toPath, EnumSet<FileVisitOption> fileVisitOptions, ArrayList<CopyOption> copyOptions )
     public JFileCopy( ConnUserInfo connUserInfo, Boolean isDoingCutFlag, String startingPath, ArrayList<String> copyPaths, String toPath, EnumSet<FileVisitOption> fileVisitOptions, ArrayList<CopyOption> copyOptions )
     {
 //        this.copyFrame = copyFrame;\
         this.connUserInfo = connUserInfo;
         this.isDoingCutFlag = isDoingCutFlag;
         this.startingPath = startingPath;
+        this.copySpecificListOfFiles = copySpecificListOfFiles;
         this.copyPaths = copyPaths;
         this.toPath = toPath;
         this.fileVisitOptions = fileVisitOptions;
@@ -101,35 +104,42 @@ public class JFileCopy //  implements Runnable
         
         if ( connUserInfo.getCopyProcotol() == Constants.COPY_PROTOCOL_LOCAL )
             {
-            copier = new Copier( isDoingCutFlag, copyOptions, swingWorker );
-            try {
-                synchronized( dataSyncLock ) 
-                    {
-                    cancelFlag = false;
-                    cancelFillFlag = false;
-                    for ( String pathstr : copyPaths )
+            if ( copySpecificListOfFiles )
+                {
+                
+                }
+            else
+                {
+                copier = new Copier( isDoingCutFlag, copyOptions, swingWorker );
+                try {
+                    synchronized( dataSyncLock ) 
                         {
-                        logger.info( "\n-------  new filewalk: copy path =" + pathstr + "=" );
-                        copier.setPaths( Paths.get( pathstr ), startingPath, toPath );
-                        
-                        Files.walkFileTree( Paths.get( pathstr ), fileVisitOptions, Integer.MAX_VALUE, copier );
+                        cancelFlag = false;
+                        cancelFillFlag = false;
+                        for ( String pathstr : copyPaths )
+                            {
+                            logger.info( "\n-------  new filewalk: copy path =" + pathstr + "=" );
+                            copier.setPaths( Paths.get( pathstr ), startingPath, toPath );
 
-                        //break;  for testing to do just 1st path
+                            Files.walkFileTree( Paths.get( pathstr ), fileVisitOptions, Integer.MAX_VALUE, copier );
+
+                            //break;  for testing to do just 1st path
+                            }
                         }
                     }
-                }
-            catch (Exception ex) 
-                {
-                ex.printStackTrace();
-                copier.setProcessStatus( CopyFrame.PROCESS_STATUS_COPY_INCOMPLETED );
-                copier.setMessage( ex.toString() );
-                copier.getErrorList().add( " -> copy path - ERROR " + ex );
-                }
-        
-            copier.done();
-            if ( copier.getProcessStatus().equals( "" ) )
-                {
-                copier.setProcessStatus( CopyFrame.PROCESS_STATUS_COPY_COMPLETED );
+                catch (Exception ex) 
+                    {
+                    ex.printStackTrace();
+                    copier.setProcessStatus( CopyFrame.PROCESS_STATUS_COPY_INCOMPLETED );
+                    copier.setMessage( ex.toString() );
+                    copier.getErrorList().add( " -> copy path - ERROR " + ex );
+                    }
+
+                copier.done();
+                if ( copier.getProcessStatus().equals( "" ) )
+                    {
+                    copier.setProcessStatus( CopyFrame.PROCESS_STATUS_COPY_COMPLETED );
+                    }
                 }
             }
         else

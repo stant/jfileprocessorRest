@@ -9,6 +9,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -22,6 +23,8 @@ public class MyLogger extends java.util.logging.Logger
 //private final static Logger logger = logger.severeExc( ex );
 //    private static MyLogger logger2 = null;
 
+    private static Level currentLogLevel = Level.OFF;
+    
 static MyLogger mylogger = null;
 
 //    final java.util.logging.Logger logger = null;
@@ -39,7 +42,6 @@ static MyLogger mylogger = null;
         //StringBuffer outBuf = new StringBuffer();
         
         LogManager m = LogManager.getLogManager();
-        //Logger logger = m.getLogger(name);
         Logger logger = m.getLogger(name);
         if (logger == null) 
             {
@@ -74,11 +76,44 @@ static MyLogger mylogger = null;
         logger.addHandler( loghand );
         
         logger.setUseParentHandlers(false);
-        logger.setLevel( Level.WARNING );
+        logger.setLevel( currentLogLevel );
     
         return (MyLogger)logger;
         }
 
+    public static void setAllLoggerLevels( Level newLevel )
+        {    
+        synchronized( currentLogLevel )
+            {
+            currentLogLevel = newLevel;
+            }
+        LogManager m = LogManager.getLogManager();
+        Enumeration<String> enumList = m.getLoggerNames();
+        while ( enumList.hasMoreElements() )
+            {
+            String logname = enumList.nextElement();
+            System.out.println( "set loglevel (" + newLevel + ") for logger: " + logname );
+            Logger logger = m.getLogger( logname );
+            if (logger == null) 
+                {
+                continue;
+                }
+
+            logger.setLevel( currentLogLevel );
+            }
+        }
+
+    public static void setLoggerLevels( String logname, Level newLevel )
+        {    
+        LogManager m = LogManager.getLogManager();
+        Logger logger = m.getLogger( logname );
+        if (logger != null) 
+            {
+            logger.setLevel( newLevel );
+            System.out.println( "set loglevel (" + newLevel + ") for logger: " + logname );
+            }
+        }
+    
     
 // public  void init()
 //    {
@@ -163,13 +198,18 @@ public void severeExc( Exception exc )
 
  public static void main(String[] args) 
     {
-    MyLogger logger2 = MyLogger.getLogger("test");
+//    MyLogger logger2 = MyLogger.getLogger("test");
+    MyLogger logger2 = MyLogger.getLogger( MyLogger.class.getName() );
 
-     logger2.setLevel( Level.ALL );
+     logger2.setLevel( Level.FINE );
 
     logger2.log(Level.INFO, "message 1");
     logger2.log(Level.SEVERE, "message 2");
     logger2.log(Level.FINE, "message 3");
+    
+    logger2.fine( "this is my error 4" );
+    logger2.fine( "this is my error 5" );
+    logger2.fine( "this is my error 6" );
             
 //    logger.info( "log string =\n" + logger2.getLogString() + "\n=" );
     }    

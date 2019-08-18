@@ -15,7 +15,7 @@ import java.io.IOException;
  */
 public final class ProcessRunnableString implements Runnable {
 
-    private static final MyLogger logger = MyLogger.getLogger( ProcessRunnable.class.getName() );
+    private static final MyLogger logger = MyLogger.getLogger( ProcessRunnableString.class.getName() );
     String startDir = null;
     String cmd = null;
     int exitValue = 0;
@@ -30,7 +30,7 @@ public final class ProcessRunnableString implements Runnable {
     public void run() 
         {
         try {
-            logger.info( "ProcessRunnable start()" );
+            logger.info( "ProcessRunnableString start()" );
             logger.info( "(" + cmd + ") " );
             ProcessBuilder builder = new ProcessBuilder( cmd );
             if ( startDir != null )

@@ -87,7 +87,8 @@ public class StartApp //implements CommandLineRunner
 //                System.arraycopy( extraArgs, 0, allArgs, args.length, extraArgs.length );
 //                }
             
-            JFileFinderWin.main( args );
+            //JFileFinderWin.main( args );
+            StartJfileFinderWin.main( args );
             
 //            context = new SpringApplicationBuilder( JFileFinderWin.class ) .profiles("client").web( WebApplicationType.NONE ).headless(false).run(args);
 //

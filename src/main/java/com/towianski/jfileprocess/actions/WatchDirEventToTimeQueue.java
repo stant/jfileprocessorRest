@@ -7,13 +7,15 @@ package com.towianski.jfileprocess.actions;
 
 import com.towianski.models.FileTimeEvent;
 import com.towianski.utils.MyLogger;
-import java.nio.file.Path;
+import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.time.Instant;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -24,8 +26,8 @@ public class WatchDirEventToTimeQueue implements Runnable
     private static final MyLogger logger = MyLogger.getLogger( WatchDirEventToTimeQueue.class.getName() );
     private WatchService watchService = null;
     BlockingQueue<FileTimeEvent> fileEventTimeQueue = null;
-    private ConcurrentHashMap watchKeyToPathAndQueueMap = null;
     private boolean runFlag = true;
+    Semaphore waitSemaphore = null;
 
 //    static {
 //        try {
@@ -37,17 +39,12 @@ public class WatchDirEventToTimeQueue implements Runnable
 //            }
 //        }
 
-    public WatchDirEventToTimeQueue( WatchService watchService, BlockingQueue<FileTimeEvent> fileEventTimeQueue, ConcurrentHashMap watchKeyToPathAndQueueMap ) {
+    public WatchDirEventToTimeQueue( WatchService watchService, BlockingQueue<FileTimeEvent> fileEventTimeQueue, Semaphore waitSemaphore ) //boolean isReady, Object readyLock ) 
+    {
         logger.info( "WatchDirEventToTimeQueue() Constructor()" );
         this.watchService = watchService;
         this.fileEventTimeQueue = fileEventTimeQueue;
-        this.watchKeyToPathAndQueueMap = watchKeyToPathAndQueueMap;
-    }
-    
-    public WatchDirEventToTimeQueue( WatchService watchService, BlockingQueue<FileTimeEvent> fileEventTimeQueue ) {
-        logger.info( "WatchDirEventToTimeQueue() Constructor()" );
-        this.watchService = watchService;
-        this.fileEventTimeQueue = fileEventTimeQueue;
+        this.waitSemaphore = waitSemaphore;
     }
     
     public void cancelWatch()
@@ -56,7 +53,6 @@ public class WatchDirEventToTimeQueue implements Runnable
 
         try {
             runFlag = false;
-            watchService.close();
             }
         catch (Exception ex)
             {
@@ -65,11 +61,19 @@ public class WatchDirEventToTimeQueue implements Runnable
             }
         logger.info( "WatchDirEventToTimeQueue() exit cancelSearch()");
         }
-    
+
+
     @Override
     public void run() 
         {
-        logger.info( "entered WatchDirEventToTimeQueue() run()" );
+        logger.info( "entered WatchDirEventToTimeQueue() run() - wait until ready" );
+        try {
+            waitSemaphore.acquire();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(WatchDirEventToTimeQueue.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        logger.info( "WatchDirEventToTimeQueue() run() - now start" );
         //logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
         try {
             WatchKey watchKey;
@@ -80,10 +84,24 @@ public class WatchDirEventToTimeQueue implements Runnable
                     //logger.info( "Event kind:" + event.kind() + ". File affected =" + event.context() + "=");
                     Instant instant = Instant.now();
                     
-                    Path dir = (Path) watchKey.watchable();
-                    Path fullPath = dir.resolve( (Path) event.context() );
+                    WatchEvent.Kind kind = event.kind();
 
-                    FileTimeEvent fte = new FileTimeEvent( watchKey, fullPath, event.context().toString(), instant, event.kind() );
+                    if (kind == OVERFLOW) 
+                        {
+                        System.err.println( "*** Error - Watch Service Event OVERFLOW !!   watchKey =" + System.identityHashCode( watchKey ) );
+                        try {
+                            FileTimeEvent fte = new FileTimeEvent( watchKey, null, instant );
+                            fileEventTimeQueue.put( fte );
+                            watchKey.reset();
+                            }
+                        catch( Exception exc )
+                            {
+                            logger.info( "watchDir.processEvents() key.reset() error 2" );
+                            }
+                        continue;
+                        }
+
+                    FileTimeEvent fte = new FileTimeEvent( watchKey, event, instant );
                     fileEventTimeQueue.put( fte );
                     } // poll loop
                 

@@ -6,35 +6,33 @@
 package com.towianski.jfileprocess.actions;
 
 import com.towianski.utils.MyLogger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author stan
  */
-public class MsgBoxFrame extends javax.swing.JFrame {
+public class MsgBoxFrameEDT extends javax.swing.JFrame {
 
-    private static final MyLogger logger = MyLogger.getLogger( MsgBoxFrame.class.getName() );
+    private static final MyLogger logger = MyLogger.getLogger( MsgBoxFrameEDT.class.getName() );
     /**
      * Creates new form NewJFrame1
      */
-    public MsgBoxFrame() {
+    public MsgBoxFrameEDT() {
         initComponents();
 //        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 //        this.setLocation(dim.width/2-this.getSize().width/2, dim.height/2-this.getSize().height/2);
         this.setLocationRelativeTo( null );
     }
 
-    public MsgBoxFrame( String ss ) {
+    public MsgBoxFrameEDT( String ss ) {
         this();
         setMessage(ss);
     }
 
     public void setMessage( String text ) {
         message.setText( text );
-    }
-
-    public static void MsgBoxFrameEDT( String text )
-    {
         {
             final String tmp = text;
             java.awt.EventQueue.invokeLater(new Runnable() {
@@ -42,9 +40,9 @@ public class MsgBoxFrame extends javax.swing.JFrame {
                     new MsgBoxFrame( tmp ).setVisible( true );
                 }
             });
-        }        
+        }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -60,7 +58,6 @@ public class MsgBoxFrame extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(400, 70));
-        setPreferredSize(new java.awt.Dimension(640, 140));
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowOpened(java.awt.event.WindowEvent evt) {
                 formWindowOpened(evt);
@@ -97,7 +94,7 @@ public class MsgBoxFrame extends javax.swing.JFrame {
 
             new CloseWinOnTimer( this, "noMove", 3000 ){{setRepeats(false);}}.start();
         } catch (Exception ex) {
-            logger.severeExc( ex );
+            Logger.getLogger(MsgBoxFrameEDT.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }//GEN-LAST:event_formWindowOpened
@@ -119,20 +116,20 @@ public class MsgBoxFrame extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            logger.severeExc( ex );
+            java.util.logging.Logger.getLogger(MsgBoxFrameEDT.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            logger.severeExc( ex );
+            java.util.logging.Logger.getLogger(MsgBoxFrameEDT.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            logger.severeExc( ex );
+            java.util.logging.Logger.getLogger(MsgBoxFrameEDT.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            logger.severeExc( ex );
+            java.util.logging.Logger.getLogger(MsgBoxFrameEDT.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
 
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new MsgBoxFrame( "Test Message" ).setVisible( true );
+                new MsgBoxFrameEDT( "Test Message" ).setVisible( true );
             }
         });
     }

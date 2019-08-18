@@ -32,7 +32,11 @@ public class FillTableModelSwingWorker extends SwingWorker<ResultsData, Object> 
 
     @Override
     public ResultsData doInBackground() {
+        try {
         logger.info( "FillTableModelSwingWorker.doInBackground() before fillInFilesTable.run()" );
+        logger.info("id of the thread is " + Thread.currentThread().getId() );   
+        jFileFinderWin.releaseSearchLock();
+        jFileFinderWin.getSearchLock();
         jFileFinderWin.setProcessStatus( Constants.PROCESS_STATUS_FILL_STARTED );
         jFileFinderWin.fillInFilesTable( null );
         
@@ -44,6 +48,13 @@ public class FillTableModelSwingWorker extends SwingWorker<ResultsData, Object> 
 //                logger.info( "entered FillTableModelSwingWorker.doInBackground() set my own DoneFlag" );
 //            }
 //        });
+            }
+        catch (Exception ignore ) {}
+        finally
+            {
+            logger.info("id of the thread is " + Thread.currentThread().getId() );   
+            jFileFinderWin.releaseSearchLock();
+            }
         return jfilefinder.getResultsData();
     }
 
@@ -82,10 +93,11 @@ public class FillTableModelSwingWorker extends SwingWorker<ResultsData, Object> 
 //            jFileFinderSwingWorker = null;
             resultsData = null;
 //            jFileFinderWin.cleanup();
+            
 
             logger.info( "exiting FillTableModelSwingWorker.done()" );
             } 
-        catch (InterruptedException ignore) {}
+        catch (InterruptedException ignore ) {}
         catch (java.util.concurrent.ExecutionException e) 
             {
             String why = null;

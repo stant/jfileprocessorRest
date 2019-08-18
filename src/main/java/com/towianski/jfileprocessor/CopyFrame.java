@@ -6,7 +6,6 @@
 package com.towianski.jfileprocessor;
 
 import com.towianski.jfileprocess.actions.CloseWinOnTimer;
-import com.towianski.jfileprocess.actions.UpFolderAction;
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.ResultsData;
@@ -26,7 +25,6 @@ import java.nio.file.StandardCopyOption;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.logging.Level;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.KeyStroke;
@@ -38,7 +36,7 @@ import org.springframework.web.client.RestTemplate;
  */
 public class CopyFrame extends javax.swing.JFrame {
 
-    private static final MyLogger logger = MyLogger.getLogger( UpFolderAction.class.getName() );
+    private static final MyLogger logger = MyLogger.getLogger( CopyFrame.class.getName() );
 
     JFileFinderWin jFileFinderWin = null;
     Thread jfinderThread = null;

@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+import com.towianski.utils.MyLogger;
 import java.io.File;
 import java.io.PrintStream;
 import java.security.KeyManagementException;
@@ -27,8 +28,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -50,7 +49,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 @Profile("server")
 public class TomcatApp {
 
-    private static Log logger = LogFactory.getLog(TomcatApp.class);
+    private static final MyLogger logger = MyLogger.getLogger( TomcatApp.class.getName() );
     
     @Bean
     protected ServletContextListener listener() {

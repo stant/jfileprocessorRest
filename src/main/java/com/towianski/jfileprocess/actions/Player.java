@@ -10,7 +10,7 @@ package com.towianski.jfileprocess.actions;
  * @author stan
  */
 public interface Player {
-    
+
     public void go();   // cannot use start because runnable uses start to call run :-(
 
     public void stop();

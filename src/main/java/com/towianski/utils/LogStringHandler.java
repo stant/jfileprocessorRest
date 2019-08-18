@@ -9,29 +9,32 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 /**
  *
  * @author stan
  */
 public class LogStringHandler extends Handler {
-    private static final MyLogger logger = MyLogger.getLogger( LogStringHandler.class.getName() );
+    //private static final MyLogger logger = MyLogger.getLogger( LogStringHandler.class.getName() );
+    private static Logger logger = Logger.getLogger("LogStringHandler");
 
-    SimpleDateFormat sdf = new SimpleDateFormat( "yyyyMMdd.HHmmss");
+    SimpleDateFormat sdf = new SimpleDateFormat( "yyyy/MM/dd.HH:mm:ss");
 
     public LogStringHandler()
         {
-        logger.info( "new LogStringHandler()" );
+        System.out.println( "new LogStringHandler()" );
         }
     
     public void publish( LogRecord logRecord )
         {
         StringBuffer outBuf = new StringBuffer();
+        //outBuf.append( "publish->");
         outBuf.append( sdf.format( Calendar.getInstance().getTime() ) )
                 .append( " ");
         outBuf.append( logRecord.getLevel() + ": ");
         outBuf.append( logRecord.getSourceClassName() + ": ");
-        outBuf.append( logRecord.getSourceMethodName() + ": ");
+        outBuf.append( logRecord.getSourceMethodName() + "(): ");
 //        outBuf.append( "line " + Thread.currentThread().getStackTrace()[2].getLineNumber() + ": ");
 //            String fullClassName = Thread.currentThread().getStackTrace()[2].getClassName();
 //    String className = fullClassName.substring(fullClassName.lastIndexOf(".") + 1);
@@ -41,8 +44,11 @@ public class LogStringHandler extends Handler {
 //    Log.d(className + "." + methodName + "():" + lineNumber, message);
 
         outBuf.append( logRecord.getMessage() );
-        outBuf.append( "\n");
-        logger.info( "log-" + outBuf.toString() );
+        //outBuf.append( "\n");
+        //outBuf.append( "<-publish");
+//        logger.info( outBuf.toString() );
+        System.out.println( outBuf.toString() );
+        
         //logger.info( "logRecord.getLevel() =" + logRecord.getLevel() + "=" );
         //logger.info( "logRecord.getMessage() =" + logRecord.getMessage() + "=" );
 //        outBuf.setLength( 0 );

@@ -17,18 +17,32 @@ import java.time.Instant;
 public class FileTimeEvent {
     
     WatchKey watchKey = null;
-    Path fullFilePath = null;
-    String filename = null;
+    WatchEvent<?> watchEvent = null;
     Instant instant = null;
-    WatchEvent.Kind event = null;
+    
+    String filename = null;
+    Path fullFilePath = null;
+    WatchEvent.Kind eventKind = null;
 
-    public FileTimeEvent( WatchKey watchKey, Path fullFilePath, String filename, Instant instant, WatchEvent.Kind event )
+    public FileTimeEvent( WatchKey watchKey, WatchEvent<?> watchEvent, Instant instant )
     {
         this.watchKey = watchKey;
-        this.fullFilePath = fullFilePath;
-        this.filename = filename;
+        this.watchEvent = watchEvent;
         this.instant = instant;
-        this.event = event;
+    }
+
+    public void calcOtherValues() {
+        if ( watchEvent == null )
+            {
+            this.fullFilePath = null;    
+            }
+        else
+            {
+            filename = watchEvent.context().toString();
+            eventKind = watchEvent.kind();
+            Path dir = (Path) watchKey.watchable();
+            this.fullFilePath = dir.resolve( (Path) watchEvent.context() );
+            }
     }
 
     public WatchKey getWatchKey() {
@@ -40,7 +54,7 @@ public class FileTimeEvent {
     }
 
     public String getKey() {
-        return filename + event;
+        return filename + watchEvent;
     }
 
     public Path getFullFilePath() {
@@ -67,12 +81,12 @@ public class FileTimeEvent {
         this.instant = instant;
     }
 
-    public WatchEvent.Kind getEvent() {
-        return event;
+    public WatchEvent.Kind getEventKind() {
+        return eventKind;
     }
 
-    public void setEvent(WatchEvent.Kind Event) {
-        this.event = Event;
+    public void setEventKind(WatchEvent.Kind eventKind) {
+        this.eventKind = eventKind;
     }
     
     

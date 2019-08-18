@@ -9,7 +9,6 @@ import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
-import com.towianski.jfileprocess.actions.UpFolderAction;
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.Constants;
 import com.towianski.sshutils.JschSftpUtils;
@@ -35,7 +34,7 @@ import javax.swing.JOptionPane;
  */
 public class CopierNonWalker //extends SimpleFileVisitor<Path> 
 {
-    private static final MyLogger logger = MyLogger.getLogger( UpFolderAction.class.getName() );
+    private static final MyLogger logger = MyLogger.getLogger( CopierNonWalker.class.getName() );
 
     private Boolean isDoingCutFlag = false;
     private Path startingPath;

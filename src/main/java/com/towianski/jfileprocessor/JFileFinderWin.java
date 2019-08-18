@@ -6,6 +6,7 @@
 package com.towianski.jfileprocessor;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.towianski.boot.GlobalMemory;
 import com.towianski.boot.JFileProcessorVersion;
 import com.towianski.models.Constants;
 import com.towianski.chainfilters.ChainFilterOfBoolean;
@@ -165,14 +166,12 @@ import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.Banner;
 import org.springframework.boot.WebApplicationType;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
@@ -180,12 +179,17 @@ import org.springframework.web.client.RestTemplate;
  *
  * @author Stan Towianski - June 2015
  */
-@ComponentScan("com.towianski.boot.server")
-@SpringBootApplication
-@Profile("client")
+
 public class JFileFinderWin extends javax.swing.JFrame {
     
-    private static final MyLogger logger = MyLogger.getLogger( UpFolderAction.class.getName() );
+    @Autowired
+    private HandleSearchBtnQueueSw handleSearchBtnQueueSw;
+    
+    @Autowired
+    private GlobalMemory globalMemory;
+        
+    private final static MyLogger logger = MyLogger.getLogger( JFileFinderWin.class.getName() );
+
     private static File bookmarksFileLock = null;
 
     Thread jfinderThread = null;
@@ -228,8 +232,10 @@ public class JFileFinderWin extends javax.swing.JFrame {
     PrintStream console = System.out;            
     
     JFileFinderWin jFileFinderWin = this;
+//    HandleSearchBtnQueueSw handleSearchBtnQueueSw = null;
     int count = 0;
-        
+    boolean searchBtnIsWaiting = false;
+
     /**
      * Creates new form JFileFinder
      */
@@ -480,9 +486,9 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         logger.info( "read OS scriptsOsFile/menu-scripts from  =" + scriptsOsFile + "=" );
 
         (new File( JfpHomeTempDir )).mkdirs();
-
-        WatchConfigFilesSw watchConfigFilesSw = new WatchConfigFilesSw( this );
-        watchConfigFilesSw.actionPerformed( null, null );
+        
+//        globalMemory = StartJfileFinderWin.context.getBean( GlobalMemory.class );
+        logger.info( "JFileFinderWin.start()  globalMemory = " + globalMemory );
 
         setLookAndFeel();
         this.setVisible(true);
@@ -943,6 +949,14 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         this.showHiddenFilesFlag.setSelected( showHiddenFilesFlag );
     }
 
+    public synchronized boolean isSearchBtnIsWaiting() {
+        return searchBtnIsWaiting;
+    }
+
+    public synchronized void setSearchBtnIsWaiting(boolean searchBtnIsWaiting) {
+        this.searchBtnIsWaiting = searchBtnIsWaiting;
+    }
+
     public boolean getFileMgrMode() {
         return fileMgrMode.isSelected();
     }
@@ -992,7 +1006,8 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
     public void callSearchBtnActionPerformed(java.awt.event.ActionEvent evt)
         {   // FIXXX  I can get rid of this method !
 //        searchBtnAction( evt );
-        searchBtn.doClick();
+//        searchBtn.doClick();
+        handleSearchBtnQueueSw.putSearchBtnQueue();
         }
         
     public void clickConnectAndSearch(java.awt.event.ActionEvent evt)
@@ -1066,11 +1081,39 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         }
 
     public void stopSearch() {
-        jfilefinder.cancelSearch();
+        setProcessStatus( PROCESS_STATUS_SEARCH_CANCELED );
+        logger.finest( "stopSearch()" );
+                sleep(3000);
+        if ( jfilefinder != null )
+            jfilefinder.cancelSearch();
         }
 
     public void stopFill() {
-        jfilefinder.cancelFill();
+        setProcessStatus( PROCESS_STATUS_FILL_CANCELED );
+        logger.finest( "stopFill()" );
+                 sleep(3000);
+        if ( jfilefinder != null )
+            jfilefinder.cancelFill();
+        }
+
+    public void sleep( int x ) {
+        try {
+            Thread.sleep( x );
+        } catch (InterruptedException ex) {
+            logger.severeExc( ex);
+        }
+        }
+
+    public boolean trySearchLock() {
+        return globalMemory.trySearchLock();
+        }
+
+    public void getSearchLock() {
+        globalMemory.getSearchLock();
+        }
+
+    public void releaseSearchLock() {
+        globalMemory.releaseSearchLock();
         }
 
     public void setSearchBtn( String text, Color setColor )
@@ -1418,7 +1461,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                 watchStartingFolderThread.start();
                 }
             //watchStartingFolder.run( jFileFinderWin.pathsToNotWatch(),  );
-            watchStartingFolder.restart();
+            watchStartingFolder.putAllowToRunQueue();
             }
         logger.info( "exit startDirWatcher()" );
         }
@@ -1434,42 +1477,11 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         }
 
 
-        
-//    public boolean getSearchLock()
-//        {
-//        if ( searchLock.tryLock() )
-//            {
-//            // Got the lock
-//            logger.info( "got searchLock" );
-//            return true;
-////            try
-////                {
-////                logger.info( "got searchLock" );
-////                }
-////            finally
-////                {
-////                // Make sure to unlock so that we don't cause a deadlock
-////                searchLock.unlock();
-////                }
-//            }
-//        else
-//            {
-//            // Someone else had the lock, abort
-//            logger.info( "could NOT get searchLock" );
-//            }
-//        return false;
-//        }
-//    
-//    public void releaseSearchLock()
-//        {
-//        logger.info( "JFileFinderSwingWorker.releaseSearchLock()" );
-//        searchLock.unlock();
-//        }
-    
     public void searchBtnActionSwing( java.awt.event.ActionEvent evt )
     {
-        logger.info( "jfilewin searchBtnActionSwing() searchBtn.getText() =" + searchBtn.getText() + "=" );
+        logger.info("jfilewin searchBtnActionSwing() searchBtn.getText() =" + searchBtn.getText() + "=" );
         logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+        logger.finest( "searchBtnActionSwing()" );
         stopDirWatcher();
 
         if ( searchBtn.getText().equalsIgnoreCase( PROCESS_STATUS_CANCEL_SEARCH ) )
@@ -1477,18 +1489,18 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             logger.info( "hit stop button, got rootPaneCheckingEnabled =" + rootPaneCheckingEnabled + "=" );
             setProcessStatus( PROCESS_STATUS_SEARCH_CANCELED );
             this.stopSearch();
-            //JOptionPane.showConfirmDialog( null, "at call stop search" );
+            //logger.finest( "at call stop search" );
             }
         else if ( searchBtn.getText().equalsIgnoreCase( PROCESS_STATUS_CANCEL_FILL ) )
             {
             logger.info( "hit stop fill button, got rootPaneCheckingEnabled =" + rootPaneCheckingEnabled + "=" );
             setProcessStatus( PROCESS_STATUS_FILL_CANCELED );
             this.stopFill();
-            //JOptionPane.showConfirmDialog( null, "at call stop fill" );
+            //logger.finest( "at call stop fill" );
             }
         else
             {
-            //JOptionPane.showConfirmDialog( null, "at call do search" );
+            //logger.finest( "at call do search" );
             try {
                 String[] args = new String[3];
                 args[0] = startingFolder.getText().trim();
@@ -1723,6 +1735,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
     
     public void searchBtnAction( java.awt.event.ActionEvent evt )
         {
+        logger.finest( "searchBtnAction()" );
         logger.info( "searchBtnAction() with connUserInfo =" + connUserInfo + "=" );
 //        try
 //        {
@@ -1960,7 +1973,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         catch (Exception ex) 
             {
             logger.severeExc( ex);
-            System.err.println( "Error in setColumnSizes()" );
+            logger.severe( "Error in setColumnSizes()" );
             }
         }
         
@@ -2002,7 +2015,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         catch (Exception ex) 
             {
             logger.severeExc( ex);
-            System.err.println( "Error in setColumnRenderers()" );
+            logger.severe( "Error in setColumnRenderers()" );
             }
         }
         
@@ -3501,6 +3514,11 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             logLevelsLhm.put( Level.SEVERE.toString(), Level.SEVERE );
             logLevelsLhm.put( Level.ALL.toString(), Level.ALL );
             logLevel.setSelectedItem( Level.OFF.toString() );
+            logLevel.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    logLevelActionPerformed(evt);
+                }
+            });
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridx = 4;
             gridBagConstraints.gridy = 0;
@@ -4242,6 +4260,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
     private void searchBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchBtnActionPerformed
         countOnlyFlag = false;
         searchBtnAction( evt );
+        
     }//GEN-LAST:event_searchBtnActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
@@ -4516,7 +4535,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             for ( String fpath : StringsList )
                 {
                 copyPaths.add( fpath );
-                logger.info( "read clipboard fpath =" + fpath );
+                logger.finest( "read clipboard fpath =" + fpath );
                 }
             //if ( 1 == 1 ) return;
             copyFrame.setup( this, connUserInfo, isDoingCutFlag, copyPathStartPath, copyPaths, selectedPath );
@@ -4944,9 +4963,12 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                     }
                 }
             }
+
         
-//        logger.info( "leaving formWindowOpened()" );
-//        System.err.println( "leaving formWindowOpened()" );
+        WatchConfigFilesSw watchConfigFilesSw = new WatchConfigFilesSw( this );
+        watchConfigFilesSw.actionPerformed( null, null );
+
+        logger.info( "leaving formWindowOpened()" );
     }//GEN-LAST:event_formWindowOpened
 
     private void startCmdWin1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startCmdWin1ActionPerformed
@@ -5473,13 +5495,50 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                 jfpExecOrStop( getSelectedPath(), JfpConstants.ASSOC_CMD_TYPE_STOP );
     }//GEN-LAST:event_jfpStopActionPerformed
 
+    private void logLevelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logLevelActionPerformed
+        switch( logLevel.getSelectedItem().toString() )
+        {
+    //Level[] logLevelsArr = new Level [] { Level.ALL, Level.CONFIG, Level.FINE, Level.FINER, Level.FINEST, Level.INFO, Level.OFF, Level.SEVERE, Level.WARNING };
+            case "ALL":
+                logger.setAllLoggerLevels( Level.ALL );
+                break;
+            case "CONFIG":
+                logger.setAllLoggerLevels( Level.CONFIG );
+                break;
+            case "FINE":
+                logger.setAllLoggerLevels( Level.FINE );
+                break;
+            case "FINER":
+                logger.setAllLoggerLevels( Level.FINER );
+                break;
+            case "FINEST":
+                logger.setAllLoggerLevels( Level.FINEST );
+                break;
+            case "INFO":
+                logger.setAllLoggerLevels( Level.INFO );
+                break;
+            case "OFF":
+                logger.setAllLoggerLevels( Level.OFF );
+                break;
+            case "WARNING":
+                logger.setAllLoggerLevels( Level.WARNING );
+                break;
+            case "SEVERE":
+            default:
+                logger.setAllLoggerLevels( Level.SEVERE );
+                break;
+        }
+    }//GEN-LAST:event_logLevelActionPerformed
+
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
 //        System.setProperty("sun.java2d.uiScale", "2.0");
 //        logger.info( "set sun.java2d.uiScale = 2.0" );
-        startSwing( args );
+
+//        startSwing( args );
+        startSpringBoot(args);
     }
 
     public static void startSwing(String args[]) {
@@ -5624,9 +5683,20 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         
 //        ConfigurableApplicationContext context = new SpringApplicationBuilder(JFileFinderWin.class).headless(false).run(args);
         ConfigurableApplicationContext context = new SpringApplicationBuilder( JFileFinderWin.class ) .profiles("client").web( WebApplicationType.NONE ).bannerMode(Banner.Mode.OFF).headless(false).run(args);
+        
+        String[] beanNames = context.getBeanDefinitionNames();
 
+        logger.info( "\n---- List Of App Spring Beans ----");
+        for (String beanName : beanNames) {
+            logger.info(beanName + " : " + context.getBean(beanName).getClass().toString());
+        }
+        logger.info( "---- List Of App Spring Beans ----\n");
+
+        logger.info("jFileFinderWin jFileFinderWin = " + context.getBean(JFileFinderWin.class) );
+        
         EventQueue.invokeLater(() -> {
             JFileFinderWin jFileFinderWin = context.getBean(JFileFinderWin.class);
+            logger.info("HandleSearchBtnQueue jFileFinderWin = " + jFileFinderWin );
             jFileFinderWin.setVisible(true);
             if ( args.length > 0 )
                 {
@@ -5634,8 +5704,17 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                 jFileFinderWin.searchBtnActionPerformed( null );
                 }
             });   
-        
-        context.close();
+
+//            GlobalMemory ggg = context.getBean(GlobalMemory.class);
+            logger.info("globalMemory.print() lower" );
+            GlobalMemory ggg = (GlobalMemory) context.getBean( "globalMemory" );
+            ggg.print();
+
+            logger.info("GlobalMemory.print() UPPER" );
+            ggg = (GlobalMemory) context.getBean( "GlobalMemory" );
+            ggg.print();
+            logger.info("GlobalMemory.print() done" );
+     //   context.close();
     }
     
     @PreDestroy
