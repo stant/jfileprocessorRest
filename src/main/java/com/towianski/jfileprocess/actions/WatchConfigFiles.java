@@ -8,6 +8,7 @@ package com.towianski.jfileprocess.actions;
 import com.towianski.jfileprocessor.JFileFinderWin;
 import com.towianski.utils.DesktopUtils;
 import static com.towianski.utils.DesktopUtils.getJfpConfigHome;
+import com.towianski.utils.MyLogger;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -16,8 +17,6 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -25,6 +24,7 @@ import java.util.logging.Logger;
  */
 public class WatchConfigFiles implements Runnable
 {
+    private static final MyLogger logger = MyLogger.getLogger( WatchConfigFiles.class.getName() );
     private WatchService watchService = null;
     private JFileFinderWin jFileFinderWin = null;
     
@@ -35,30 +35,30 @@ public class WatchConfigFiles implements Runnable
     
     public void cancelWatch()
         {
-        System.out.println("WatchConfigFiles set cancelFlag to true");
+        logger.info( "WatchConfigFiles set cancelFlag to true");
 
         try {
             watchService.close();
             }
         catch (Exception ex)
             {
-            System.out.println("WatchConfigFiles set cancelFlag caught error !");
-            Logger.getLogger(WatchConfigFiles.class.getName()).log(Level.SEVERE, null, ex);
+            logger.info( "WatchConfigFiles set cancelFlag caught error !");
+            logger.severeExc( ex );
             }
-        System.out.println("WatchConfigFiles exit cancelSearch()");
+        logger.info( "WatchConfigFiles exit cancelSearch()");
         }
     
     @Override
     public void run() {
-        //System.out.println( "entered WatchConfigFiles run()" );
-        //System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+        //logger.info( "entered WatchConfigFiles run()" );
+        //logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
         try {
             WatchService watchService = FileSystems.getDefault().newWatchService();
             
             String bookmarksFile = Paths.get( DesktopUtils.getBookmarks().toString() ).getFileName().toString();
-            System.out.println( "Bookmarks File =" + bookmarksFile + "=" );
+            logger.info( "Bookmarks File =" + bookmarksFile + "=" );
             String fileAssocListFile = Paths.get( getJfpConfigHome( "FileAssocList.json", "file", false ).toString() ).getFileName().toString();
-            System.out.println( "fileAssocListFile =" + fileAssocListFile + "=" );
+            logger.info( "fileAssocListFile =" + fileAssocListFile + "=" );
             Path watchDir = Paths.get( getJfpConfigHome( "", "folder", false ).toString() );
             boolean bookmarksChanged = false;
             boolean fileAssocListChanged = false;
@@ -72,21 +72,21 @@ public class WatchConfigFiles implements Runnable
             WatchKey key;
             while ((key = watchService.take()) != null) {
                 for (WatchEvent<?> event : key.pollEvents()) {
-                    System.out.println(
+                    logger.info( 
                             "Event kind:" + event.kind()
                                     + ". File affected =" + event.context() + "=");
                     if ( event.kind() == StandardWatchEventKinds.ENTRY_MODIFY )
                         {
-                        //System.out.println( "GOT ENTRY_MODIFY" );
+                        //logger.info( "GOT ENTRY_MODIFY" );
                         if ( event.context().toString().equals( bookmarksFile ) )
                             {
-                            System.out.println( "Bookmarks File Changed =" + bookmarksFile + "=" );
+                            logger.info( "Bookmarks File Changed =" + bookmarksFile + "=" );
                             bookmarksChanged = true;
                             Thread.sleep( 1000 );
                             }
                         else if ( event.context().toString().equals( fileAssocListFile ) )
                             {
-                            System.out.println( "fileAssocListFile Changed =" + fileAssocListFile + "=" );
+                            logger.info( "fileAssocListFile Changed =" + fileAssocListFile + "=" );
                             fileAssocListChanged = true;
                             Thread.sleep( 1000 );
                             }
@@ -95,22 +95,22 @@ public class WatchConfigFiles implements Runnable
                 
                 if ( bookmarksChanged )
                     {
-                    System.out.println( "readin Bookmarks" );
+                    logger.info( "readin Bookmarks" );
                     bookmarksChanged = false;
                     jFileFinderWin.readInBookmarks();
                     }
                 if ( fileAssocListChanged )
                     {
-                    System.out.println( "readin fileAssocListFile" );
+                    logger.info( "readin fileAssocListFile" );
                     fileAssocListChanged = false;
                     jFileFinderWin.readInFileAssocList();
                     }
                 key.reset();
             }
         } catch (IOException ex) {
-            Logger.getLogger(WatchConfigFiles.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         } catch (InterruptedException ex) {
-            Logger.getLogger(WatchConfigFiles.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         }
     }
 }    

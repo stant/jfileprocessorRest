@@ -6,6 +6,7 @@
 package com.towianski.jfileprocess.actions;
 
 import com.towianski.jfileprocessor.JFileFinderWin;
+import com.towianski.utils.MyLogger;
 import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -16,6 +17,7 @@ import javax.swing.Action;
  */
 public class EnterAction extends AbstractAction
     {
+    private static final MyLogger logger = MyLogger.getLogger( EnterAction.class.getName() );
     JFileFinderWin win = null;
     
     public EnterAction( JFileFinderWin win )
@@ -27,14 +29,14 @@ public class EnterAction extends AbstractAction
 
     public void actionPerformed(ActionEvent e)
         {
-        //System.out.println("RenameActionPerformed( null ) do action");
+        //logger.info( "RenameActionPerformed( null ) do action");
         try
             {
             win.callEnterActionPerformed( null );
             } 
         catch (Exception ex)
             {
-            System.out.println("EnterActionPerformed( null ) " + ex);
+            logger.info( "EnterActionPerformed( null ) " + ex);
             ex.printStackTrace();
             }
         }

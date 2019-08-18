@@ -3,6 +3,7 @@ Copyright (C) 2019 Stan Towianski
  */
 package com.towianski.boot;
 
+import com.towianski.utils.MyLogger;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -14,6 +15,8 @@ import java.io.InputStream;
  */
 public class CustomClassLoader extends ClassLoader {
  
+    private static final MyLogger logger = MyLogger.getLogger( CustomClassLoader.class.getName() );
+
     @Override
     public Class findClass(String name) throws ClassNotFoundException {
         byte[] b = loadClassFromFile(name);
@@ -21,7 +24,7 @@ public class CustomClassLoader extends ClassLoader {
     }
  
     private byte[] loadClassFromFile(String fileName)  {
-        System.out.println( "fileName.replace('.', File.separatorChar) + \".class\" =" + fileName.replace('.', File.separatorChar) + ".class" + "=" );
+        logger.info( "fileName.replace('.', File.separatorChar) + \".class\" =" + fileName.replace('.', File.separatorChar) + ".class" + "=" );
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream(
                 fileName.replace('.', File.separatorChar) + ".class");
         byte[] buffer;

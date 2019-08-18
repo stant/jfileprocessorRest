@@ -6,6 +6,7 @@
 package com.towianski.jfileprocessor;
 
 import com.towianski.models.ResultsData;
+import com.towianski.utils.MyLogger;
 import javax.swing.SwingWorker;
 
 /**
@@ -14,6 +15,7 @@ import javax.swing.SwingWorker;
  */
 public class SftpConnectSwingWorker extends SwingWorker<ResultsData, Object> {
 
+    private static final MyLogger logger = MyLogger.getLogger( SftpConnectSwingWorker.class.getName() );
     JFileFinderWin jFileFinderWin = null;
     RestServerSw restServerSw;
     
@@ -28,14 +30,14 @@ public class SftpConnectSwingWorker extends SwingWorker<ResultsData, Object> {
         jFileFinderWin.stopDirWatcher();
 //        codeProcessorPanel.setProcessStatus(codeProcessorPanel.PROCESS_STATUS_STARTED );
         restServerSw.actionPerformed(null);        
-        System.out.println( "exit SftpConnectSwingWorker() " );  //with connUserInfo =" + connUserInfo + "=" );
+        logger.info( "exit SftpConnectSwingWorker() " );  //with connUserInfo =" + connUserInfo + "=" );
         return null;
     }
 
     @Override
     public void done() {
         try {
-            System.out.println( "entered SftpConnectSwingWorker.done()" );
+            logger.info( "entered SftpConnectSwingWorker.done()" );
             ResultsData resultsData = get();
 //            String partialMsg = "";
 //            String msg =  "Done";
@@ -49,7 +51,7 @@ public class SftpConnectSwingWorker extends SwingWorker<ResultsData, Object> {
 //                codeProcessorPanel.setProcessStatus(codeProcessorPanel.PROCESS_STATUS_COMPLETED );
 //                if ( codeProcessorPanel instanceof ScriptSwingWorker )
 //                    {
-//                    System.out.println( "do new CloseWinOnTimer( ScriptSwingWorker, 4000 )" );
+//                    logger.info( "do new CloseWinOnTimer( ScriptSwingWorker, 4000 )" );
 //                    new CloseWinOnTimer( codeProcessorPanel, 4000 ){{setRepeats(false);}}.start();
 //                    }
 //                }
@@ -79,7 +81,7 @@ public class SftpConnectSwingWorker extends SwingWorker<ResultsData, Object> {
             } else {
                 why = e.getMessage();
             }
-            System.out.println( "Error in CodeProcessorPanelSwingWorker(): " + why);
+            logger.info( "Error in CodeProcessorPanelSwingWorker(): " + why);
             e.printStackTrace();
             }
     }    

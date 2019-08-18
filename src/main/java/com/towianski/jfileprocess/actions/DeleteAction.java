@@ -6,8 +6,8 @@
 package com.towianski.jfileprocess.actions;
 
 import com.towianski.jfileprocessor.JFileFinderWin;
+import com.towianski.utils.MyLogger;
 import java.awt.event.ActionEvent;
-import java.awt.event.InputEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 
@@ -17,6 +17,7 @@ import javax.swing.Action;
  */
 public class DeleteAction extends AbstractAction
     {
+    private static final MyLogger logger = MyLogger.getLogger( DeleteAction.class.getName() );
     JFileFinderWin win = null;
     boolean isShiftMask = false;
     
@@ -29,13 +30,13 @@ public class DeleteAction extends AbstractAction
 
     public void actionPerformed(ActionEvent e)
         {
-        //System.out.println("DeleteActionPerformed( null ) do action");
+        //logger.info( "DeleteActionPerformed( null ) do action");
         try {
             win.callDeleteActionPerformed( e );
             } 
         catch (Exception ex)
             {
-            System.out.println("DeleteAction( null ) " + ex);
+            logger.info( "DeleteAction( null ) " + ex);
             ex.printStackTrace();
             }
         }

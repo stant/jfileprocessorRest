@@ -22,8 +22,7 @@ import javax.swing.KeyStroke;
  */
 public class SftpReturnFileFrame extends javax.swing.JFrame {
 
-//    private final static MyLogger logger = new MyLogger( Logger.getLogger( CopyFrame.class.getName() ) );
-    private final static MyLogger logger = MyLogger.getLogger(SftpReturnFileFrame.class.getName() );
+    private static final MyLogger logger = MyLogger.getLogger( SftpReturnFileFrame.class.getName() );
 
     ConnUserInfo connUserInfo = null;
     String locFile = null;
@@ -60,7 +59,7 @@ public class SftpReturnFileFrame extends javax.swing.JFrame {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                //System.out.println( "previewImportWin formWindow dispose()" );
+                //logger.info( "previewImportWin formWindow dispose()" );
                 win.dispatchEvent( new WindowEvent( win, WindowEvent.WINDOW_CLOSING )); 
                 win.dispose();
             }
@@ -155,7 +154,7 @@ public class SftpReturnFileFrame extends javax.swing.JFrame {
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
          * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
          */
-//        MyLogger logger = MyLogger.getLogger( CopyFrame.class.getName() );
+//        MyLogger logger = Mylogger.severeExc( ex );
 
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -165,13 +164,13 @@ public class SftpReturnFileFrame extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc( ex);
         } catch (InstantiationException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc( ex);
         } catch (IllegalAccessException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc(  ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc(  ex);
         }
         //</editor-fold>
 

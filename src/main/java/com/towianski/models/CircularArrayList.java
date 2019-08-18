@@ -5,6 +5,7 @@
  */
 package com.towianski.models;
 
+import com.towianski.utils.MyLogger;
 import java.util.ArrayList;
 
 /**
@@ -13,6 +14,7 @@ import java.util.ArrayList;
  */
 public class CircularArrayList {
     
+    private static final MyLogger logger = MyLogger.getLogger( CircularArrayList.class.getName() );
     private ArrayList<String> cal = new ArrayList<String>();
     
     int idx = -1;
@@ -48,7 +50,7 @@ public class CircularArrayList {
             highest = addAt;
             }
         idx = addAt;
-        System.out.println( "CircularArrayList ADD idx =" + idx+ "   addAt =" + addAt + "   highest =" + highest + "   max =" + max + "   newpath =" + newPath + "=" );
+        logger.info( "CircularArrayList ADD idx =" + idx+ "   addAt =" + addAt + "   highest =" + highest + "   max =" + max + "   newpath =" + newPath + "=" );
         cal.set( addAt, newPath );
         }
     
@@ -62,7 +64,7 @@ public class CircularArrayList {
             {
             return "";
             }
-        System.out.println( "CircularArrayList BACK idx =" + idx+ "   addAt =" + addAt + "   highest =" + highest + "   max =" + max );
+        logger.info( "CircularArrayList BACK idx =" + idx+ "   addAt =" + addAt + "   highest =" + highest + "   max =" + max );
         return cal.get( idx );
         }
     
@@ -76,7 +78,7 @@ public class CircularArrayList {
             {
             return "";
             }
-        System.out.println( "CircularArrayList FOR idx =" + idx+ "   addAt =" + addAt + "   highest =" + highest + "   max =" + max );
+        logger.info( "CircularArrayList FOR idx =" + idx+ "   addAt =" + addAt + "   highest =" + highest + "   max =" + max );
         return cal.get( idx );
         }
     

@@ -5,11 +5,10 @@ import com.towianski.jfileprocessor.RestServerSw;
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.Constants;
 import com.towianski.models.JfpRestURIConstants;
+import com.towianski.utils.MyLogger;
 import com.towianski.utils.Rest;
 import java.awt.Color;
 import java.io.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
 import org.springframework.web.client.RestTemplate;
 
@@ -19,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
  */
 public class WatchTomcatAppStartThread implements Runnable
     {
+    private static final MyLogger logger = MyLogger.getLogger( WatchTomcatAppStartThread.class.getName() );
     RestServerSw restServerSw = null;
     ConnUserInfo connUserInfo = null;
     String user = null;
@@ -45,7 +45,7 @@ public class WatchTomcatAppStartThread implements Runnable
     
     public void cancelWatchTomcatAppStartThread( boolean forceStop ) 
         {
-        System.out.println("WatchTomcatAppStartThread set cancelFlag to true - forceStop =" + forceStop );
+        logger.info( "WatchTomcatAppStartThread set cancelFlag to true - forceStop =" + forceStop );
         cancelFlag = true;
         connUserInfo.setState( ConnUserInfo.STATE_CANCEL );
         }
@@ -54,8 +54,8 @@ public class WatchTomcatAppStartThread implements Runnable
     public void run() {
         try
             {
-        System.out.println( "entered WatchTomcatAppStartThread waitUntilStarted()" );
-        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+        logger.info( "entered WatchTomcatAppStartThread waitUntilStarted()" );
+        logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
         RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
         
         isRunning = false;
@@ -66,26 +66,26 @@ public class WatchTomcatAppStartThread implements Runnable
             //while ( (response < 0 || ! (response == Constants.FILESYSTEM_DOS || response == Constants.FILESYSTEM_POSIX))  && ! cancelFlag )
             while ( ! cancelFlag && (connUserInfo.getState() != ConnUserInfo.STATE_CANCEL) && runThread != null && runThread.isAlive() )
                 {
-                System.out.println( "WatchTomcatAppStartThread.run() make rest " + connUserInfo.getToUri() + JfpRestURIConstants.SYS_GET_FILESYS + " call" );
+                logger.info( "WatchTomcatAppStartThread.run() make rest " + connUserInfo.getToUri() + JfpRestURIConstants.SYS_GET_FILESYS + " call" );
                 try
                     {
                     response = noHostVerifyRestTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.SYS_GET_FILESYS, Integer.class );
                     //jFileFinderWin.setFilesysType(response);
-                    //System.out.println( "jFileFinderWin.getFilesysType() =" + jFileFinderWin.getFilesysType() );
+                    //logger.info( "jFileFinderWin.getFilesysType() =" + jFileFinderWin.getFilesysType() );
                     }
                 catch( Exception exc )
                     {
-                    System.out.println( "WatchTomcatAppStartThread.run() get filesys rest threw Exception !!" );
+                    logger.info( "WatchTomcatAppStartThread.run() get filesys rest threw Exception !!" );
                     exc.printStackTrace();
                     response = -9;
                     }
-                System.out.println( "WatchTomcatAppStartThread SYS_GET_FILESYS response =" + response + "=" );
+                logger.info( "WatchTomcatAppStartThread SYS_GET_FILESYS response =" + response + "=" );
 
                 if ( response < 0 || cancelFlag || ! (response == Constants.FILESYSTEM_DOS || response == Constants.FILESYSTEM_POSIX) )
                     {
                     if ( isRunning )  // diff so flip status
                         {
-                        System.out.println( "WatchTomcatAppStartThread was running but now is not. reset button color" );
+                        logger.info( "WatchTomcatAppStartThread was running but now is not. reset button color" );
                         connUserInfo.setConnectedFlag( false );
                         //jFileFinderWin.setFilesysType(response);
                         SwingUtilities.invokeLater(new Runnable() 
@@ -101,10 +101,10 @@ public class WatchTomcatAppStartThread implements Runnable
                     }
                 else
                     {
-                    System.out.println( "WatchTomcatAppStartThread isRunning = " + isRunning );
+                    logger.info( "WatchTomcatAppStartThread isRunning = " + isRunning );
                     if ( ! isRunning )  // diff so flip status
                         {
-                        System.out.println( "WatchTomcatAppStartThread waitUntilStarted() set button color to green for connected" );
+                        logger.info( "WatchTomcatAppStartThread waitUntilStarted() set button color to green for connected" );
                         connUserInfo.setConnectedFlag( true );
                         connUserInfo.setToFilesysType( response );
                         jFileFinderWin.setFilesysType( response );
@@ -125,21 +125,21 @@ public class WatchTomcatAppStartThread implements Runnable
                     if ( firstWaitFlag )
                         {
                         firstWaitFlag = false;
-                        System.out.println( "pause 12 seconds first time. give longer pause to let server start." );
+                        logger.info( "pause 12 seconds first time. give longer pause to let server start." );
                         Thread.sleep( 12000 );
                         }
                     }
-                //System.out.println( "pause 4 secs" );
+                //logger.info( "pause 4 secs" );
                 if ( ! cancelFlag && (connUserInfo.getState() != ConnUserInfo.STATE_CANCEL) )
                     Thread.sleep( 4000 );
                 } // while
             }
         catch (InterruptedException ex)
             {
-            Logger.getLogger(WatchTomcatAppStartThread.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println( "WatchTomcatAppStartThread() interrupted" );
+            logger.severeExc( ex );
+            logger.info( "WatchTomcatAppStartThread() interrupted" );
             }
-        System.out.println( "WatchTomcatAppStartThread() - Done" );
+        logger.info( "WatchTomcatAppStartThread() - Done" );
         }
 
     public static void main(String[] args) throws IOException {

@@ -11,8 +11,6 @@ import java.io.PrintWriter;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.net.ssl.SSLContext;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
@@ -32,7 +30,7 @@ import java.nio.file.Files;
 
 public class Rest {
 
-    private final static MyLogger logger = MyLogger.getLogger( Rest.class.getName() );
+    private static final MyLogger logger = MyLogger.getLogger( Rest.class.getName() );
     private static File saveReadJsonlockFile = getJfpConfigHome( "save-read-json-file-LOCK", "file", false );
 
     static File programMemoryFile = null;
@@ -40,13 +38,13 @@ public class Rest {
     static {
         programMemoryFile = getJfpConfigHome( "ProgramMemory.json", "file", true );
 
-        System.out.println( "Rest.saveObjectToFile() Lock  fileName =" + saveReadJsonlockFile + "=" );
+        logger.info( "Rest.saveObjectToFile() Lock  fileName =" + saveReadJsonlockFile + "=" );
         }
 
     static public Object readObjectFromFile( String fileName, TypeReference typeRef )
         {
         synchronized( saveReadJsonlockFile ) {
-            System.out.println( "REST.readObjectFromFile()   fileName =" + fileName + "=" );
+            logger.info( "REST.readObjectFromFile()   fileName =" + fileName + "=" );
             Object obj = null;
     //        ProgramMemory programMemory = new ProgramMemory();
             //read json file data to String
@@ -67,18 +65,18 @@ public class Rest {
                 fromFile = getJfpConfigHome( fileName, "file", false );
                 if ( ! fromFile.exists() )
                     {
-                    System.out.println( "REST.readObjectFromFile() read file =" + fromFile.toString() + " does not exist." );
+                    logger.info( "REST.readObjectFromFile() read file =" + fromFile.toString() + " does not exist." );
                     return null;
                     }
     //            jsonData = Files.readAllBytes( Paths.get( System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + fileName ) );
-    //            System.out.println( "read file =" + fromFile.toString() + "= to get jsonData =" + jsonData.toString() + "=" );
+    //            logger.info( "read file =" + fromFile.toString() + "= to get jsonData =" + jsonData.toString() + "=" );
 
                 //create ObjectMapper instance
                 ObjectMapper objectMapper = new ObjectMapper();
 
                 //convert json string to object
                 obj = objectMapper.readValue( fromFile, typeRef );
-                //System.out.println( "REST.readObjectFromFile() ppobj.getShowHiddenFilesFlag() =" + ((typeRef)obj).isShowHiddenFilesFlag() + "=" );
+                //logger.info( "REST.readObjectFromFile() ppobj.getShowHiddenFilesFlag() =" + ((typeRef)obj).isShowHiddenFilesFlag() + "=" );
                 //JSON from file to Object
     //            Staff obj = mapper.readValue(new File("c:\\file.json"), Staff.class);            
                 }
@@ -102,12 +100,12 @@ public class Rest {
                     }
                 catch (IOException e) 
                     {
-                    System.out.println( "REST.readObjectFromFile() Error closing LOCK file!" );
+                    logger.info( "REST.readObjectFromFile() Error closing LOCK file!" );
                     e.printStackTrace();
                     }
                 }
 
-            System.out.println("Object\n" + jsonData);
+            logger.info( "Object\n" + jsonData);
             return obj;
         } //sync
     }
@@ -155,11 +153,11 @@ public class Rest {
 
                 //        StringWriter stringEmp = new StringWriter();
                 objectMapper.writeValue( toFile, obj );
-                System.out.println("write Object JSON file =" + toFile );
+                logger.info( "write Object JSON file =" + toFile );
                 } 
             catch (Exception e) 
                 {
-                System.out.println( "REST.saveObjectToFile()   Error!" );
+                logger.info( "REST.saveObjectToFile()   Error!" );
                 e.printStackTrace();
                 }
             finally
@@ -177,7 +175,7 @@ public class Rest {
                     }
                 catch (IOException e) 
                     {
-                    System.out.println( "REST.saveObjectToFile() Error closing LOCK file!" );
+                    logger.info( "REST.saveObjectToFile() Error closing LOCK file!" );
                     e.printStackTrace();
                     }
                 }
@@ -196,7 +194,7 @@ public class Rest {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("write JSON file = " + fileName );
+        logger.info( "write JSON file = " + fileName );
     }
 
 //    @Bean
@@ -205,7 +203,7 @@ public class Rest {
         {
         try //throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException
             {
-            System.out.println( "entered createNoHostVerifyRestTemplate()" );
+            logger.info( "entered createNoHostVerifyRestTemplate()" );
             SSLContext sslContext = SSLContexts.custom()
                 .loadTrustMaterial(null, new TrustSelfSignedStrategy())
                 .build();
@@ -225,15 +223,15 @@ public class Rest {
             }
         catch (NoSuchAlgorithmException ex)
             {
-            Logger.getLogger(Rest.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
             } 
         catch (KeyStoreException ex)
             {
-            Logger.getLogger(Rest.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
             } 
         catch (KeyManagementException ex)
             {
-            Logger.getLogger(Rest.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
             }
         return null;
         }
@@ -244,7 +242,7 @@ public class Rest {
         {
         try
             {
-            System.out.println( "entered createNoHostVerifyShortTimeoutRestTemplate()" );
+            logger.info( "entered createNoHostVerifyShortTimeoutRestTemplate()" );
             SSLContext sslContext = SSLContexts.custom()
                 .loadTrustMaterial(null, new TrustSelfSignedStrategy())
                 .build();
@@ -271,15 +269,15 @@ public class Rest {
             }
         catch (NoSuchAlgorithmException ex)
             {
-            Logger.getLogger(Rest.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
             } 
         catch (KeyStoreException ex)
             {
-            Logger.getLogger(Rest.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
             } 
         catch (KeyManagementException ex)
             {
-            Logger.getLogger(Rest.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
             }
         return null;
         }

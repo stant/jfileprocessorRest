@@ -15,12 +15,13 @@ import java.util.logging.LogRecord;
  * @author stan
  */
 public class LogStringHandler extends Handler {
+    private static final MyLogger logger = MyLogger.getLogger( LogStringHandler.class.getName() );
 
     SimpleDateFormat sdf = new SimpleDateFormat( "yyyyMMdd.HHmmss");
 
     public LogStringHandler()
         {
-        System.out.println( "new LogStringHandler()" );
+        logger.info( "new LogStringHandler()" );
         }
     
     public void publish( LogRecord logRecord )
@@ -41,9 +42,9 @@ public class LogStringHandler extends Handler {
 
         outBuf.append( logRecord.getMessage() );
         outBuf.append( "\n");
-        System.out.println( "log-" + outBuf.toString() );
-        //System.out.println( "logRecord.getLevel() =" + logRecord.getLevel() + "=" );
-        //System.out.println( "logRecord.getMessage() =" + logRecord.getMessage() + "=" );
+        logger.info( "log-" + outBuf.toString() );
+        //logger.info( "logRecord.getLevel() =" + logRecord.getLevel() + "=" );
+        //logger.info( "logRecord.getMessage() =" + logRecord.getMessage() + "=" );
 //        outBuf.setLength( 0 );
 //        outBuf = new StringBuffer();
         }
@@ -61,10 +62,10 @@ public class LogStringHandler extends Handler {
 //  
 //public void clearLog()
 //    {
-//    System.out.println( "log outBuf before clear =\n" + outBuf.toString() + "\n=" );
+//    logger.info( "log outBuf before clear =\n" + outBuf.toString() + "\n=" );
 //    outBuf.setLength( 0 );
 //    outBuf = new StringBuffer();
-//    System.out.println( "log outBuf after  clear =\n" + outBuf.toString() + "\n=" );
+//    logger.info( "log outBuf after  clear =\n" + outBuf.toString() + "\n=" );
 //    }
 
 }

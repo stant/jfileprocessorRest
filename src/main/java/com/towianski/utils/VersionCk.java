@@ -17,17 +17,18 @@ import java.util.regex.Pattern;
  * */
 public class VersionCk {
 
+    private static final MyLogger logger = MyLogger.getLogger( VersionCk.class.getName() );
     public static boolean isVersionHigher( String baseVersion, String testVersion )
         {
-        System.out.println( "versionToComparable( baseVersion ) =" + versionToComparable( baseVersion ) );
-        System.out.println( "versionToComparable( testVersion ) =" + versionToComparable( testVersion ) + " is this higher ? " + (versionToComparable( testVersion ).compareTo( versionToComparable( baseVersion ) ) > 0) );
+        logger.info( "versionToComparable( baseVersion ) =" + versionToComparable( baseVersion ) );
+        logger.info( "versionToComparable( testVersion ) =" + versionToComparable( testVersion ) + " is this higher ? " + (versionToComparable( testVersion ).compareTo( versionToComparable( baseVersion ) ) > 0) );
         return versionToComparable( testVersion ).compareTo( versionToComparable( baseVersion ) ) > 0;
         }
 
     //----  not worrying about += for something so small
     private static String versionToComparable( String version )
         {
-//        System.out.println("version - " + version);
+//        logger.info( "version - " + version);
         String versionNum = version;
         int at = version.indexOf( '-' );
         if ( at >= 0 )
@@ -43,14 +44,14 @@ public class VersionCk {
             {
             versionFormatted += "0000";
             }
-//        System.out.println( "converted min version =" + versionFormatted + "=   : " + versionNum );
+//        logger.info( "converted min version =" + versionFormatted + "=   : " + versionNum );
         return versionFormatted + getVersionModifier( version, at );
         }
 
     //----  use order low to high: -xyz, -SNAPSHOT, -ALPHA, -BETA, -RC, -RELEASE/nothing  returns: 0, 1, 2, 3, 4, 5
     private static String getVersionModifier( String version, int at )
         {
-//        System.out.println("version - " + version );
+//        logger.info( "version - " + version );
         String[] wordModsAr = { "-SNAPSHOT", "-ALPHA", "-BETA", "-RC", "-RELEASE" };        
         
         if ( at < 0 )
@@ -70,12 +71,12 @@ public class VersionCk {
     //----  add 2 chars for any number after first modifier.  -rc2 or -rc-2   returns 02
     private static String getSecondVersionModifier( String version )
         {
-        System.out.println( "second modifier =" + version + "=" );
+        logger.info( "second modifier =" + version + "=" );
         Matcher m = Pattern.compile("(.*?)(\\d+).*").matcher( version );
 //        if ( m.matches() )
-//            System.out.println( "match ? =" + m.matches() + "=   m.group(1) =" + m.group(1) + "=   m.group(2) =" + m.group(2) + "=   m.group(3) =" + (m.groupCount() >= 3 ? m.group(3) : "x") );
+//            logger.info( "match ? =" + m.matches() + "=   m.group(1) =" + m.group(1) + "=   m.group(2) =" + m.group(2) + "=   m.group(3) =" + (m.groupCount() >= 3 ? m.group(3) : "x") );
 //        else
-//            System.out.println( "No match" );
+//            logger.info( "No match" );
         return m.matches() ? String.format( "%2s", m.group(2) ).replace(' ', '0') : "00";
         }
     
@@ -110,10 +111,10 @@ public class VersionCk {
 
     private static void checkVersion(String baseVersion, String testVersion) 
         {
-        System.out.println( "baseVersion - " + baseVersion );
-        System.out.println( "testVersion - " + testVersion );
-        System.out.println( "isVersionHigher = " + isVersionHigher( baseVersion, testVersion ) );
-        System.out.println( "---------------");
+        logger.info( "baseVersion - " + baseVersion );
+        logger.info( "testVersion - " + testVersion );
+        logger.info( "isVersionHigher = " + isVersionHigher( baseVersion, testVersion ) );
+        logger.info( "---------------");
         }
     
     }

@@ -24,7 +24,7 @@ public class ChainFilterOfSizes implements FilterChainFilter {
     
     public ChainFilterOfSizes()
         {
-        //System.out.println( "new ChainFilterOfSizes()" );
+        //logger.info( "new ChainFilterOfSizes()" );
         }
     
     public ChainFilterOfSizes( String op1, String setSize1, String logicOp, String op2, String setSize2 ) 
@@ -55,7 +55,7 @@ public class ChainFilterOfSizes implements FilterChainFilter {
     public Boolean accept( Path fpath, BasicFileAttributes attr, ChainFilterArgs chainFilterArgs, JFileFinder jFileFinder )
         {
         long size = attr.size();
-        //System.out.println( "entered test for FilterOfSizes() - test size: " + size + " compared to setsize:" + setSize1 );
+        //logger.info( "entered test for FilterOfSizes() - test size: " + size + " compared to setsize:" + setSize1 );
         if ( doLogic == '1' )
             {
             return acceptOp1( fpath, attr );
@@ -75,15 +75,15 @@ public class ChainFilterOfSizes implements FilterChainFilter {
     public Boolean acceptOp1( Path fpath, BasicFileAttributes attr )
         {
         long size = attr.size();
-        //System.out.println( "entered test for FilterOfSizes() - test size: " + size + " compared to setsize:" + setSize1 );
+        //logger.info( "entered test for FilterOfSizes() - test size: " + size + " compared to setsize:" + setSize1 );
         if ( op1.equals( "<" ) && size < setSize1 )
             {
-            //System.out.println( "true <" );
+            //logger.info( "true <" );
             return true;
             }
         else if ( op1.equals( "<=" ) && size <= setSize1 )
             {
-            //System.out.println( "true >" );
+            //logger.info( "true >" );
             return true;
             }
         else if ( op1.equals( "=" ) && size == setSize1 )
@@ -102,7 +102,7 @@ public class ChainFilterOfSizes implements FilterChainFilter {
             {
             return true;
             }
-        //System.out.println( "false" );
+        //logger.info( "false" );
         return false; 
         }
     
@@ -110,15 +110,15 @@ public class ChainFilterOfSizes implements FilterChainFilter {
     public Boolean acceptOp2( Path fpath, BasicFileAttributes attr )
         {
         long size = attr.size();
-        //System.out.println( "entered test for FilterOfSizes() - test size: " + size + " compared to setsize:" + setSize1 );
+        //logger.info( "entered test for FilterOfSizes() - test size: " + size + " compared to setsize:" + setSize1 );
         if ( op2.equals( "<" ) && size < setSize2 )
             {
-            //System.out.println( "true <" );
+            //logger.info( "true <" );
             return true;
             }
         else if ( op2.equals( "<=" ) && size <= setSize2 )
             {
-            //System.out.println( "true >" );
+            //logger.info( "true >" );
             return true;
             }
         else if ( op2.equals( "=" ) && size == setSize2 )
@@ -137,7 +137,7 @@ public class ChainFilterOfSizes implements FilterChainFilter {
             {
             return true;
             }
-        //System.out.println( "false" );
+        //logger.info( "false" );
         return false; 
         }
 }

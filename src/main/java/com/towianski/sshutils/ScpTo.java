@@ -17,6 +17,7 @@ package com.towianski.sshutils;
  *
  */
 import com.jcraft.jsch.*;
+import com.towianski.utils.MyLogger;
 import java.awt.*;
 import javax.swing.*;
 import java.io.*;
@@ -24,6 +25,8 @@ import java.util.Properties;
 
 public class ScpTo{
     
+private static final MyLogger logger = MyLogger.getLogger( ScpTo.class.getName() );
+
 public void copyTo( String lfile, String user, String password, String rhost, String rfile )
     {
     //scpTo.copyTo( file.toString(), " ", "", "localhost", "/tmp/" + file.getName().toString() );
@@ -38,68 +41,68 @@ public void copyTo( String lfile, String user, String password, String rhost, St
 //      String rfile=remoteFile.substring(remoteFile.indexOf(':')+1);
 
       JSch jsch=new JSch();
-    System.out.println( "try scpTo   user =" + user + "=   to password =" + password + "=" );
-    System.out.println( "try scpTo   rhost =" + rhost + "=  to remoteFile =" + rfile + "=" );
+    logger.info( "try scpTo   user =" + user + "=   to password =" + password + "=" );
+    logger.info( "try scpTo   rhost =" + rhost + "=  to remoteFile =" + rfile + "=" );
 
       Session session=jsch.getSession(user, rhost, 22);
-    System.out.println( "at 2" );
+    logger.info( "at 2" );
 
       session.setPassword( password );
 
       Properties config = new Properties();
       config.put("StrictHostKeyChecking","no");
-    System.out.println( "at 3" );
+    logger.info( "at 3" );
       session.setConfig(config);
 
       // username and password will be given via UserInfo interface.
 //      UserInfo ui=new MyUserInfo();
-//    System.out.println( "at 3" );
+//    logger.info( "at 3" );
 //      session.setUserInfo(ui);
 
-    System.out.println( "at 4" );
+    logger.info( "at 4" );
       session.connect();
-    System.out.println( "at 5" );
+    logger.info( "at 5" );
 
       session.setConfig("cipher.s2c", "none,aes128-cbc,3des-cbc,blowfish-cbc");
       session.setConfig("cipher.c2s", "none,aes128-cbc,3des-cbc,blowfish-cbc");
 
       session.rekey();
-    System.out.println( "at 6 - after rekey for no cipher" );
+    logger.info( "at 6 - after rekey for no cipher" );
       
       boolean ptimestamp = true;
 
       // exec 'scp -t rfile' remotely
       String command="scp " + (ptimestamp ? "-p" :"") +" -t "+rfile;
-    System.out.println( "at 6" );
+    logger.info( "at 6" );
       Channel channel=session.openChannel("exec");
-    System.out.println( "at 7" );
+    logger.info( "at 7" );
       ((ChannelExec)channel).setCommand(command);
-    System.out.println( "at 8" );
+    logger.info( "at 8" );
 
       // get I/O streams for remote scp
       OutputStream out=channel.getOutputStream();
-    System.out.println( "at 9" );
+    logger.info( "at 9" );
       InputStream in=channel.getInputStream();
-    System.out.println( "at 10" );
+    logger.info( "at 10" );
 
       channel.connect();
-    System.out.println( "at 11" );
+    logger.info( "at 11" );
 
       if(checkAck(in)!=0){
 	return;
       }
 
       File _lfile = new File(lfile);
-    System.out.println( "at 12" );
+    logger.info( "at 12" );
 
       if(ptimestamp){
         command="T"+(_lfile.lastModified()/1000)+" 0";
         // The access time should be sent here,
         // but it is not accessible with JavaAPI ;-<
         command+=(" "+(_lfile.lastModified()/1000)+" 0\n"); 
-    System.out.println( "at 13" );
+    logger.info( "at 13" );
         out.write(command.getBytes()); out.flush();
-    System.out.println( "at 14" );
+    logger.info( "at 14" );
         if(checkAck(in)!=0){
         	return;
         }
@@ -108,7 +111,7 @@ public void copyTo( String lfile, String user, String password, String rhost, St
       // send "C0644 filesize filename", where filename should not include '/'
       long filesize=_lfile.length();
       command="C0644 "+filesize+" ";
-    System.out.println( "at 15" );
+    logger.info( "at 15" );
       if(lfile.lastIndexOf('/')>0){
         command+=lfile.substring(lfile.lastIndexOf('/')+1);
       }
@@ -116,9 +119,9 @@ public void copyTo( String lfile, String user, String password, String rhost, St
         command+=lfile;
       }
       command+="\n";
-    System.out.println( "at 16" );
+    logger.info( "at 16" );
       out.write(command.getBytes()); out.flush();
-    System.out.println( "at 17" );
+    logger.info( "at 17" );
       if(checkAck(in)!=0){
 	return;
       }
@@ -126,13 +129,13 @@ public void copyTo( String lfile, String user, String password, String rhost, St
       // send a content of lfile
       fis=new FileInputStream(lfile);
       byte[] buf=new byte[1024];
-    System.out.println( "at 17" );
+    logger.info( "at 17" );
       while(true){
         int len=fis.read(buf, 0, buf.length);
 	if(len<=0) break;
         out.write(buf, 0, len); //out.flush();
       }
-    System.out.println( "at 18" );
+    logger.info( "at 18" );
       fis.close();
       fis=null;
       // send '\0'
@@ -141,16 +144,16 @@ public void copyTo( String lfile, String user, String password, String rhost, St
 	return;
       }
       out.close();
-    System.out.println( "at 19" );
+    logger.info( "at 19" );
 
       channel.disconnect();
       session.disconnect();
 
-    System.out.println( "DONE." );
+    logger.info( "DONE." );
 	return;
     }
     catch(Exception e){
-      System.out.println(e);
+      logger.severeExc(e);
       try{if(fis!=null)fis.close();}catch(Exception ee){}
     }
   }
@@ -160,8 +163,8 @@ public void exec( String user, String password, String rhost )
     try{
       JSch jsch=new JSch();  
 
-    System.out.println( "try exec   user =" + user + "=   to password =" + password + "=" );
-    System.out.println( "try exec   rhost =" + rhost + "=" );
+    logger.info( "try exec   user =" + user + "=   to password =" + password + "=" );
+    logger.info( "try exec   rhost =" + rhost + "=" );
 
     if ( user == null )
         {
@@ -175,23 +178,23 @@ public void exec( String user, String password, String rhost )
         }
       
     Session session=jsch.getSession(user, rhost, 22);
-    System.out.println( "at 2" );
+    logger.info( "at 2" );
 
     session.setPassword( password );
 
     Properties config = new Properties();
     config.put("StrictHostKeyChecking","no");
-    System.out.println( "at 3" );
+    logger.info( "at 3" );
     session.setConfig(config);
 
       // username and password will be given via UserInfo interface.
 //      UserInfo ui=new MyUserInfo();
-//    System.out.println( "at 3" );
+//    logger.info( "at 3" );
 //      session.setUserInfo(ui);
 
-    System.out.println( "at 4" );
+    logger.info( "at 4" );
       session.connect();
-    System.out.println( "at 5" );
+    logger.info( "at 5" );
 
       
       String xhost="localhost";
@@ -236,7 +239,7 @@ public void exec( String user, String password, String rhost )
         }
         if(channel.isClosed()){
           if(in.available()>0) continue; 
-          System.out.println("exit-status: "+channel.getExitStatus());
+          logger.info( "exit-status: "+channel.getExitStatus());
           break;
         }
         try{Thread.sleep(1000);}catch(Exception ee){}
@@ -245,7 +248,7 @@ public void exec( String user, String password, String rhost )
       session.disconnect();
     }
     catch(Exception e){
-      System.out.println(e);
+      logger.severeExc(e);
     }
   }
 
@@ -280,7 +283,7 @@ public void execX11ForwardingOrig( String user, String password, String host )
     Properties config = new Properties();
     config.put("StrictHostKeyChecking","no");
     config.put("ForwardX11Trusted","yes" );
-    System.out.println( "at 3" );
+    logger.info( "at 3" );
     session.setConfig(config);
 
 
@@ -302,7 +305,7 @@ public void execX11ForwardingOrig( String user, String password, String host )
       channel.connect();
     }
     catch(Exception e){
-      System.out.println(e);
+      logger.severeExc( e);
     }
 }
   
@@ -318,8 +321,8 @@ public void execX11Forwarding( String user, String password, String rhost )
     try{
       JSch jsch=new JSch();  
 
-    System.out.println( "try execX11Forwarding   user =" + user + "=   to password =" + password + "=" );
-    System.out.println( "try execX11Forwarding   rhost =" + rhost + "=" );
+    logger.info( "try execX11Forwarding   user =" + user + "=   to password =" + password + "=" );
+    logger.info( "try execX11Forwarding   rhost =" + rhost + "=" );
 
     if ( user == null )
         {
@@ -333,13 +336,13 @@ public void execX11Forwarding( String user, String password, String rhost )
         }
       
     Session session=jsch.getSession(user, rhost, 22);
-    System.out.println( "at 2" );
+    logger.info( "at 2" );
 
     session.setPassword( password );
 
     Properties config = new Properties();
     config.put("StrictHostKeyChecking","no");
-    System.out.println( "at 3" );
+    logger.info( "at 3" );
     session.setConfig(config);
 
       String display=JOptionPane.showInputDialog("Please enter display name", 
@@ -357,7 +360,7 @@ public void execX11Forwarding( String user, String password, String rhost )
       session.connect();
 
       Channel channel=session.openChannel("exec");
-    System.out.println( "at 4" );
+    logger.info( "at 4" );
 
 //      String command=JOptionPane.showInputDialog("Enter command", 
 //                                                 "echo =$DISPLAY=; cd /net2/programs/jFileProcessor; /usr/bin/java -jar /net2/programs/jFileProcessor/JFileProcessor.jar ");
@@ -366,19 +369,19 @@ public void execX11Forwarding( String user, String password, String rhost )
       
       command += "\n";
       ((ChannelExec)channel).setCommand(command);
-    System.out.println( "at 5" );
+    logger.info( "at 5" );
       
       channel.setXForwarding(true);
 
       channel.setInputStream(System.in);
       channel.setOutputStream(System.out);
-    System.out.println( "at 6" );
+    logger.info( "at 6" );
 
       channel.connect();
-    System.out.println( "at 7" );
+    logger.info( "at 7" );
     }
     catch(Exception e){
-      System.out.println(e);
+      logger.severeExc( e);
     }
   }
 
@@ -410,7 +413,7 @@ public void execX11Two( String user, String password, String rhost )
 
                 
                 session.connect();
-	    	System.out.println("Connected");
+	    	logger.info( "Connected");
 	    	
 	    	Channel channel=session.openChannel("exec");
 	        ((ChannelExec)channel).setCommand(defCommand);
@@ -431,14 +434,14 @@ public void execX11Two( String user, String password, String rhost )
 	            System.out.print(new String(tmp, 0, i));
 	          }
 	          if(channel.isClosed()){
-	            System.out.println("exit-status: "+channel.getExitStatus());
+	            logger.info( "exit-status: "+channel.getExitStatus());
 	            break;
 	          }
 	          try{Thread.sleep(1000);}catch(Exception ee){}
 	        }
 	        channel.disconnect();
 	        session.disconnect();
-	        System.out.println("DONE");
+	        logger.info( "DONE");
 	    }catch(Exception e){
 	    	e.printStackTrace();
 	    }
@@ -459,8 +462,8 @@ public void execX11( String user, String password, String rhost )
     try{
       JSch jsch=new JSch();  
 
-    System.out.println( "try execX11   user =" + user + "=   to password =" + password + "=" );
-    System.out.println( "try execX11   rhost =" + rhost + "=" );
+    logger.info( "try execX11   user =" + user + "=   to password =" + password + "=" );
+    logger.info( "try execX11   rhost =" + rhost + "=" );
 
     if ( user == null )
         {
@@ -474,23 +477,23 @@ public void execX11( String user, String password, String rhost )
         }
       
     Session session=jsch.getSession(user, rhost, 22);
-    System.out.println( "at 1" );
+    logger.info( "at 1" );
 
     session.setPassword( password );
 
     Properties config = new Properties();
     config.put("StrictHostKeyChecking","no");
-    System.out.println( "at 2" );
+    logger.info( "at 2" );
     session.setConfig(config);
-    System.out.println( "at 2.5" );
+    logger.info( "at 2.5" );
 
       String display=JOptionPane.showInputDialog("Please enter display name", 
 						 xhost+":"+xport);
-    System.out.println( "at 2.6" );
+    logger.info( "at 2.6" );
       xhost=display.substring(0, display.indexOf(':'));
       xport=Integer.parseInt(display.substring(display.indexOf(':')+1));
 
-    System.out.println( "execX11   xhost =" + xhost + "=   to (xport+6000) =" + (xport+6000) + "=" );
+    logger.info( "execX11   xhost =" + xhost + "=   to (xport+6000) =" + (xport+6000) + "=" );
       session.setX11Host(xhost);
       session.setX11Port(xport+6000);
 
@@ -501,7 +504,7 @@ public void execX11( String user, String password, String rhost )
     session.connect();
 
       Channel channel=session.openChannel("shell");
-    System.out.println( "at 3" );
+    logger.info( "at 3" );
 
 //      String command=JOptionPane.showInputDialog("Enter command", 
 //                                                 "echo =$DISPLAY=; cd /net2/programs/jFileProcessor; /usr/bin/java -jar /net2/programs/jFileProcessor/JFileProcessor.jar ");
@@ -509,7 +512,7 @@ public void execX11( String user, String password, String rhost )
                                                   defCommand + " \n");
 
 //      ((ChannelExec)channel).setCommand(command);
-//    System.out.println( "at 4" );
+//    logger.info( "at 4" );
       
       channel.setXForwarding(true);
 
@@ -519,14 +522,14 @@ public void execX11( String user, String password, String rhost )
 
 //    channel.setInputStream(System.in);
       channel.setOutputStream(System.out);
-    System.out.println( "at 5" );
+    logger.info( "at 5" );
 
 //    channel.setPty(true);
     channel.connect();
-    System.out.println( "at 6" );
+    logger.info( "at 6" );
     }
     catch(Exception e){
-      System.out.println(e);
+      logger.severeExc( e);
     }
   }
 

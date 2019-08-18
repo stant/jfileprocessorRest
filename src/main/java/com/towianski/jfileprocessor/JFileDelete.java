@@ -7,20 +7,20 @@ package com.towianski.jfileprocessor;
 
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.ResultsData;
+import com.towianski.utils.MyLogger;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 
 
 public class JFileDelete //  implements Runnable 
 {
+    private static final MyLogger logger = MyLogger.getLogger( JFileDelete.class.getName() );
     Boolean deleteFilesOnlyFlag = false;
     boolean deleteToTrashFlag = true;
     Boolean deleteReadonlyFlag = false;
@@ -54,12 +54,12 @@ public class JFileDelete //  implements Runnable
         }
 
     public ResultsData getResultsData() {
-        //System.out.println( "entered jfilecopy getResultsData()" );
+        //logger.info( "entered jfilecopy getResultsData()" );
         ResultsData resultsData = new ResultsData();
         try {
 //            if ( connUserInfo.isUsingSftp() )
 //                {
-//                System.out.println("jFileCopy use deleterNonWalker results" );
+//                logger.info( "jFileCopy use deleterNonWalker results" );
 //                resultsData = new ResultsData( cancelFlag, deleterNonWalker.getProcessStatus(), deleterNonWalker.getMessage(), deleterNonWalker.getNumTested(), deleterNonWalker.getNumFilesDeleted(), deleterNonWalker.getNumFoldersDeleted() );
 //                }
 //            else
@@ -69,7 +69,7 @@ public class JFileDelete //  implements Runnable
             }
         catch( Exception ex )
             {
-            System.out.println( "ERROR in jFileDelete.getResultsData()" );
+            logger.info( "ERROR in jFileDelete.getResultsData()" );
             ex.printStackTrace();
             }
         //ResultsData resultsData = new ResultsData();
@@ -77,13 +77,13 @@ public class JFileDelete //  implements Runnable
     }
     
     static void usage() {
-        System.out.println("jFileDelete <path>" + " -name \"<glob_pattern>\"");
+        logger.info( "jFileDelete <path>" + " -name \"<glob_pattern>\"");
         System.exit(-1);
     }
 
     public void run( DeleteFrameSwingWorker swingWorker )
         {
-        System.out.println( "JFileDelete.run() connUserInfo.isUsingSftp() =" + connUserInfo.isUsingSftp() + "=" );
+        logger.info( "JFileDelete.run() connUserInfo.isUsingSftp() =" + connUserInfo.isUsingSftp() + "=" );
 //        if ( connUserInfo.isUsingSftp() )
 //            {
 //            Sftp sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost() );
@@ -96,13 +96,13 @@ public class JFileDelete //  implements Runnable
 //                    cancelFlag = false;
 //                    for ( Path fpath : deletePaths )
 //                        {
-//                        System.out.println( "ck delete path =" + fpath + "=" );
+//                        logger.info( "ck delete path =" + fpath + "=" );
 //                        String filename = fpath.toString().replace( "\\", "/" );
-//                        System.out.println( "ck delete path =" + filename + "=" );
+//                        logger.info( "ck delete path =" + filename + "=" );
 //                        if ( fpath.toFile().exists() || Files.isSymbolicLink( fpath ) )
 ////                        if ( chanSftp.lstat( filename ).getSize() >= 0 || chanSftp.lstat( filename ).isLink() )
 //                            {
-//                            System.out.println( "\n-------  new DeleterNonWalker: copy path =" + filename + "=" );
+//                            logger.info( "\n-------  new DeleterNonWalker: copy path =" + filename + "=" );
 //                            deleterNonWalker.deleteRecursiveRemote( filename );  // toPath gets calced to targetPath from setPaths()
 //
 //                            //break;  for testing to do just 1st path
@@ -117,7 +117,7 @@ public class JFileDelete //  implements Runnable
 //                } 
 //            catch (Exception ex) 
 //                {
-//                Logger.getLogger(JFileCopy.class.getName()).log(Level.SEVERE, null, ex);
+//                logger.severeExc( ex );
 //                }
 //            finally
 //                {
@@ -135,7 +135,7 @@ public class JFileDelete //  implements Runnable
                 try {
                     for ( String strpath : deletePaths )
                         {
-                        System.out.println( "delete strpath =" + strpath + "=   deleteReadonlyFlag =" + deleteReadonlyFlag );
+                        logger.info( "delete strpath =" + strpath + "=   deleteReadonlyFlag =" + deleteReadonlyFlag );
                         if ( deleteReadonlyFlag )
                             {
                             chmoder.chmodRecursive( strpath, "777" );
@@ -153,15 +153,15 @@ public class JFileDelete //  implements Runnable
 //                catch ( java.nio.file.AccessDeniedException exAccessDenied ) 
                 catch (IOException ioex) 
                     {
-                    //System.out.println( "up ERROR  " + "my error getSimpleName" + ioex.getClass().getSimpleName() );
-                    System.out.println( "delete io ERROR:  " + ioex );
+                    //logger.info( "up ERROR  " + "my error getSimpleName" + ioex.getClass().getSimpleName() );
+                    logger.info( "delete io ERROR:  " + ioex );
                     deleter.setProcessStatus( DeleteFrame.PROCESS_STATUS_DELETE_INCOMPLETE );
                     deleter.setMessage( ioex.toString() );
                     if ( ! connUserInfo.isConnectedFlag() )
                         {
                         JOptionPane.showMessageDialog( null, ioex.getClass().getSimpleName() + ": " + ioex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE );
                         }
-                    Logger.getLogger(JFileDelete.class.getName()).log(Level.SEVERE, null, ioex);
+                    logger.severeExc( ioex );
                     ioex.printStackTrace();
                     }
                 catch (Exception ex) 
@@ -172,8 +172,8 @@ public class JFileDelete //  implements Runnable
                         {
                         JOptionPane.showMessageDialog( null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE );
                         }
-                    Logger.getLogger(JFileDelete.class.getName()).log(Level.SEVERE, null, ex);
-                    System.out.println( "delete ERROR:  " + ex );
+                    logger.severeExc( ex );
+                    logger.info( "delete ERROR:  " + ex );
                     }
 //                }
             deleter.done();
@@ -197,7 +197,7 @@ public class JFileDelete //  implements Runnable
 //        filePattern = "*.xml";
 //        startingPath = args[0];
 //        filePattern = args[1];
-        System.out.println("java Delete args[0] =" + args[0] +  "=  args[1] =" + args[1] + "=  args[2] =" + args[2] + "=");
+        logger.info( "java Delete args[0] =" + args[0] +  "=  args[1] =" + args[1] + "=  args[2] =" + args[2] + "=");
 
 //        JFileDelete jfiledeleter = new JFileDelete( args[0], args[1], args[2], null, null );
 
@@ -206,7 +206,7 @@ public class JFileDelete //  implements Runnable
 //        try {
 //            jfinderThread.join();
 //        } catch (InterruptedException ex) {
-//            Logger.getLogger(JFileFinder.class.getName()).log(Level.SEVERE, null, ex);
+//            logger.severeExc( ex );
 //        }
         }
 }    

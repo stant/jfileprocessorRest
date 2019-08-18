@@ -6,6 +6,7 @@
 package com.towianski.jfileprocess.actions;
 
 import com.towianski.utils.DesktopUtils;
+import com.towianski.utils.MyLogger;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
@@ -18,6 +19,7 @@ import javax.swing.Timer;
  */
 public class CloseWinOnTimer extends Timer 
 {
+    private static final MyLogger logger = MyLogger.getLogger( CloseWinOnTimer.class.getName() );
     
     public CloseWinOnTimer( final JFrame jframe, final int delay )
     {
@@ -30,7 +32,7 @@ public class CloseWinOnTimer extends Timer
 
                @Override
                public void actionPerformed(ActionEvent e) {
-                  System.out.println( "entered CloseWinOnTimer " + delay + " actionPerformed()" );
+                  logger.info( "entered CloseWinOnTimer " + delay + " actionPerformed()" );
       //            Window win = SwingUtilities.getWindowAncestor(deleteFrame);
       //            win.dispose();
                     if ( delay > 0 )

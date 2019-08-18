@@ -128,7 +128,7 @@ public class TomcatApp {
 
 	static
             {
-            System.out.println( "TomcatApp Static block" );
+            logger.info( "TomcatApp Static block" );
 
             disableSslVerification();
                 
@@ -142,7 +142,7 @@ public class TomcatApp {
                         {
                         public boolean verify(String hostname,
                                         javax.net.ssl.SSLSession sslSession) {
-                                System.out.println( "TomcatApp setDefaultHostnameVerifier. verify()" );
+                                logger.info( "TomcatApp setDefaultHostnameVerifier. verify()" );
 //						if (hostname.equals("localhost")) {
                                         return true;
 //						}
@@ -154,7 +154,7 @@ public class TomcatApp {
         
     private static void disableSslVerification() {
         try{
-                System.out.println( "TomcatApp Static disableSslVerification" );
+                logger.info( "TomcatApp Static disableSslVerification" );
             // Create a trust manager that does not validate certificate chains
             TrustManager[] trustAllCerts = new TrustManager[] {new X509TrustManager() {
                 public X509Certificate[] getAcceptedIssuers() {
@@ -186,7 +186,7 @@ public class TomcatApp {
         } catch (KeyManagementException e) {
             e.printStackTrace();
         }
-                System.out.println( "TomcatApp Static disableSslVerification - Done" );
+                logger.info( "TomcatApp Static disableSslVerification - Done" );
     }
 
 //    HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier()
@@ -220,7 +220,7 @@ public class TomcatApp {
         for ( int i = 0; i < args.length; i++ )
             {
             logger.info( "** args [" + i + "] =" + args[i] + "=" );
-            System.out.println( "** args [" + i + "] =" + args[i] + "=" );
+            logger.info( "** args [" + i + "] =" + args[i] + "=" );
             if ( args[i].toLowerCase().startsWith( "--logging.file" ) )
                 {
                 loggingFile = args[i].substring( "--logging.file=".length() );
@@ -234,7 +234,7 @@ public class TomcatApp {
 
         logger.info( "*** after SpringApplication.run(TomcatApp.class, args)" );
         
-            System.out.println( "server using port =" + context.getEnvironment().getProperty("local.server.port") + "=" );
+            logger.info( "server using port =" + context.getEnvironment().getProperty("local.server.port") + "=" );
 
         stdOutFilePropertyChange( loggingFile );
         stdErrFilePropertyChange( loggingFile );
@@ -260,10 +260,10 @@ public class TomcatApp {
     private static void stdOutFilePropertyChange( String stdOutFile )
     {
         try {
-//            System.out.println( "stdOutFilePropertyChange() do nothing for now !" );
+//            logger.info( "stdOutFilePropertyChange() do nothing for now !" );
 //            if ( 1 == 1 ) return;
             
-            System.out.println( "stdOutFilePropertyChange() set to file =" + stdOutFile + "=" );
+            logger.info( "stdOutFilePropertyChange() set to file =" + stdOutFile + "=" );
             if ( stdOutFile != null && ! stdOutFile.equals( "" ) )
                 {
                 System.setOut(new PrintStream(new File( stdOutFile ) ) );
@@ -283,10 +283,10 @@ public class TomcatApp {
     private static void stdErrFilePropertyChange( String stdErrFile )
     {
         try {
-//            System.out.println( "stdErrFilePropertyChange() do nothing for now !" );
+//            logger.info( "stdErrFilePropertyChange() do nothing for now !" );
 //            if ( 1 == 1 ) return;
             
-            System.out.println( "stdErrFilePropertyChange() set to file =" + stdErrFile + "=" );
+            logger.info( "stdErrFilePropertyChange() set to file =" + stdErrFile + "=" );
             if ( stdErrFile != null && ! stdErrFile.equals( "" ) )
                 {
                 System.setErr(new PrintStream(new File( stdErrFile ) ) );

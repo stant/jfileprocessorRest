@@ -3,6 +3,7 @@ package com.towianski.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.towianski.utils.MyLogger;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -17,6 +18,7 @@ import javax.swing.table.AbstractTableModel;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ProcessorTblModel extends AbstractTableModel 
 {
+    private static final MyLogger logger = MyLogger.getLogger( ProcessorTblModel.class.getName() );
     private ArrayList<String>colNames;
     private ArrayList<ArrayList> data;
     public static int FILESTBLMODEL_STATUS_BTN = 0;
@@ -52,8 +54,8 @@ public class ProcessorTblModel extends AbstractTableModel
 //        colNames = colNamesArg;
 //        data = dataArg;
 //        
-//        System.out.println( "row count =" + data.length );
-//        System.out.println( "col count =" + data[0].length );
+//        logger.info( "row count =" + data.length );
+//        logger.info( "col count =" + data[0].length );
 //        }
 
     public ProcessorTblModel()
@@ -78,8 +80,8 @@ public class ProcessorTblModel extends AbstractTableModel
             
             data.add( 0, newRow );
         
-        System.out.println( "GUI DEFAULT CONSTRUCTOR() row count =" + data.size() );
-        System.out.println( "col count =" + data.get(0).size() );
+        logger.info( "GUI DEFAULT CONSTRUCTOR() row count =" + data.size() );
+        logger.info( "col count =" + data.get(0).size() );
         }
 
     public ProcessorTblModel( ArrayList<String> colNamesArg, ArrayList<ArrayList> dataArg )
@@ -87,8 +89,8 @@ public class ProcessorTblModel extends AbstractTableModel
         colNames = colNamesArg;
         data = dataArg;
         
-        System.out.println( "row count =" + data.size() );
-        System.out.println( "col count =" + data.get(0).size() );
+        logger.info( "row count =" + data.size() );
+        logger.info( "col count =" + data.get(0).size() );
         }
 
     public ArrayList<String> getColNames()
@@ -129,11 +131,11 @@ public class ProcessorTblModel extends AbstractTableModel
     @Override
     public Object getValueAt(int row, int col) 
         {
-        //System.out.println( "getValueAt row =" + row + "  col =" + col );
+        //logger.info( "getValueAt row =" + row + "  col =" + col );
         try {
             if ( data.get(row).get(col) == "" ) 
                 {
-                //System.out.println( "NOT EXISTS getValueAt row =" + row + "  col =" + col );
+                //logger.info( "NOT EXISTS getValueAt row =" + row + "  col =" + col );
                 }
             } 
         catch( Exception ex )
@@ -147,7 +149,7 @@ public class ProcessorTblModel extends AbstractTableModel
     @Override
     public void setValueAt(Object aValue, int row, int col) 
         {
-        //System.out.println( "setValueAt  value =" + aValue + "=  row =" + row + "  col =" + col );
+        //logger.info( "setValueAt  value =" + aValue + "=  row =" + row + "  col =" + col );
         //if ( 1 == 1 ) return;
         try {
             if ( row < data.size() && col < data.get( row ).size() )
@@ -162,7 +164,7 @@ public class ProcessorTblModel extends AbstractTableModel
             } 
         catch( Exception ex )
             {
-            System.out.println( "setValueAt  Exception for value =" + aValue + "=  row =" + row + "  col =" + col );
+            logger.info( "setValueAt  Exception for value =" + aValue + "=  row =" + row + "  col =" + col );
             ex.printStackTrace();
             }
         //refresh();   NOTE:  DOING THIS CAUSED IT TO DROP A WHOLE COLUMN ! !
@@ -189,9 +191,9 @@ public class ProcessorTblModel extends AbstractTableModel
             }
         catch ( Exception ex )
             {
-            System.out.println( "column type exc:\n" );
+            logger.info( "column type exc:\n" );
             ex.printStackTrace();
-            System.out.println( "\n" );
+            logger.info( "\n" );
             }
         return String.class;
     }
@@ -205,7 +207,7 @@ public class ProcessorTblModel extends AbstractTableModel
     @JsonIgnore
     public void insertColAt( int col ) 
         {
-        //System.out.println( "getValueAt row =" + row + "  col =" + col );
+        //logger.info( "getValueAt row =" + row + "  col =" + col );
         try {
             colNames.add( col, " NEW " );
 
@@ -229,9 +231,9 @@ public class ProcessorTblModel extends AbstractTableModel
     @JsonIgnore
     public void insertRowAt( int row, String Path ) 
         {
-        //System.out.println( "getValueAt row =" + row + "  col =" + col );
+        //logger.info( "getValueAt row =" + row + "  col =" + col );
         try {
-            //System.out.println( "before add row table col count =" + this.getColumnCount() );
+            //logger.info( "before add row table col count =" + this.getColumnCount() );
             ArrayList newRow = new ArrayList();
             newRow.add( FILETYPE_NORMAL );
             newRow.add( FOLDERTYPE_FOLDER  );
@@ -243,7 +245,7 @@ public class ProcessorTblModel extends AbstractTableModel
             newRow.add( "---" );
             
             data.add( 0, newRow );
-            //System.out.println( "after add row table col count =" + this.getColumnCount() );
+            //logger.info( "after add row table col count =" + this.getColumnCount() );
             editableCells = new HashMap<String,Boolean>();
             } 
         catch( Exception ex )
@@ -261,9 +263,9 @@ public class ProcessorTblModel extends AbstractTableModel
     @JsonIgnore
     public void replaceRowAt( int row, String Path ) 
         {
-        //System.out.println( "getValueAt row =" + row + "  col =" + col );
+        //logger.info( "getValueAt row =" + row + "  col =" + col );
         try {
-            //System.out.println( "before add row table col count =" + this.getColumnCount() );
+            //logger.info( "before add row table col count =" + this.getColumnCount() );
             ArrayList newRow = new ArrayList();
             newRow.add( FILETYPE_NORMAL );
             newRow.add( FOLDERTYPE_FOLDER  );
@@ -275,7 +277,7 @@ public class ProcessorTblModel extends AbstractTableModel
             newRow.add( "---" );
             
             data.set( 0, newRow );
-            //System.out.println( "after add row table col count =" + this.getColumnCount() );
+            //logger.info( "after add row table col count =" + this.getColumnCount() );
             editableCells = new HashMap<String,Boolean>();
             } 
         catch( Exception ex )
@@ -295,7 +297,7 @@ public class ProcessorTblModel extends AbstractTableModel
         {
         ArrayList newRow = new ArrayList();
         try {
-            //System.out.println( "before add row table col count =" + this.getColumnCount() );
+            //logger.info( "before add row table col count =" + this.getColumnCount() );
             newRow.add( FILETYPE_NORMAL );
             newRow.add( FOLDERTYPE_FOLDER  );
             newRow.add( Path );
@@ -320,11 +322,11 @@ public class ProcessorTblModel extends AbstractTableModel
     @JsonIgnore
     public void deleteRowAt( int row ) 
         {
-        //System.out.println( "delete row =" + row + "  col =" + col );
+        //logger.info( "delete row =" + row + "  col =" + col );
         try {
-            //System.out.println( "before add row table col count =" + this.getColumnCount() );
+            //logger.info( "before add row table col count =" + this.getColumnCount() );
             data.remove( row );
-            //System.out.println( "after add row table col count =" + this.getColumnCount() );
+            //logger.info( "after add row table col count =" + this.getColumnCount() );
             editableCells = new HashMap<String,Boolean>();
             } 
         catch( Exception ex )
@@ -345,7 +347,7 @@ public class ProcessorTblModel extends AbstractTableModel
     public boolean isCellEditable( int row, int col )  // custom isCellEditable function
         {
         //if ( editableCells.containsKey( row + "-" + col ) )
-//        System.out.println( "cell " + row + ", " + col + " is edittable" );
+//        logger.info( "cell " + row + ", " + col + " is edittable" );
         return editableCells.containsKey( row + "-" + col );
         }
     
@@ -355,7 +357,7 @@ public class ProcessorTblModel extends AbstractTableModel
         if ( value )
             {   
             editableCells.put( row + "-" + col, true );
-            System.out.println( "set edittable cell " + row + ", " + col );
+            logger.info( "set edittable cell " + row + ", " + col );
             }
         else
             {
@@ -370,7 +372,7 @@ public class ProcessorTblModel extends AbstractTableModel
 //      public void mouseClicked(MouseEvent mouseEvent) {
 //        int index = previewImportTbl.convertColumnIndexToModel(previewImportTbl.columnAtPoint(mouseEvent.getPoint()));
 //        if (index >= 0) {
-//          System.out.println("Clicked on column " + index);
+//          logger.info( "Clicked on column " + index);
 //        }
 //      };
 //    }

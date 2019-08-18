@@ -10,10 +10,8 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
-import com.towianski.jfileprocessor.CopierNonWalker;
+import com.towianski.utils.MyLogger;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 /**
@@ -21,6 +19,9 @@ import javax.swing.JOptionPane;
  * @author stowians
  */
 public class Sftp {
+    
+    private static final MyLogger logger = MyLogger.getLogger( Sftp.class.getName() );
+
     JSch jsch=new JSch();  
     com.jcraft.jsch.ChannelSftp chanSftp = null;
     Channel channel = null;
@@ -32,8 +33,8 @@ public Sftp( String user, String password, String rhost, int sshPort )
     {
     try
         {
-        System.out.println( "Sftp user =" + user + "=   to rhost =" + rhost + "=" );
-//        System.out.println( "Sftp   password =" + password + "=" );
+        logger.info( "Sftp user =" + user + "=   to rhost =" + rhost + "=" );
+//        logger.info( "Sftp   password =" + password + "=" );
 
         if ( user == null )
             {
@@ -47,52 +48,52 @@ public Sftp( String user, String password, String rhost, int sshPort )
             }
       
         session=jsch.getSession(user, rhost, sshPort);
-        System.out.println( "Sftp at 2" );
+        logger.info( "Sftp at 2" );
 
         session.setPassword( password );
 
         Properties config = new Properties();
         config.put("StrictHostKeyChecking","no");
-        System.out.println( "Sftp at StrictHostKeyChecking" );
+        logger.info( "Sftp at StrictHostKeyChecking" );
 //        config.put("cipher.s2c", "arcfour,aes128-cbc,3des-cbc,blowfish-cbc");
-//        System.out.println( "Sftp at cipher s2c" );
+//        logger.info( "Sftp at cipher s2c" );
 //        config.put("cipher.c2s", "arcfour,aes128-cbc,3des-cbc,blowfish-cbc");
-//        System.out.println( "Sftp at cipher c2s" );
+//        logger.info( "Sftp at cipher c2s" );
         session.setConfig(config);
-        System.out.println( "Sftp at 3" );
+        logger.info( "Sftp at 3" );
 
           // username and password will be given via UserInfo interface.
     //      UserInfo ui=new MyUserInfo();
-    //    System.out.println( "at 3" );
+    //    logger.info( "at 3" );
     //      session.setUserInfo(ui);
 
-        System.out.println( "Sftp at 4" );
+        logger.info( "Sftp at 4" );
         session.connect();
-        System.out.println( "Sftp at 5" );
+        logger.info( "Sftp at 5" );
 
 //        session.setConfig("cipher.s2c", "arcfour,aes128-cbc,3des-cbc,blowfish-cbc");
-//        System.out.println( "Sftp at 6a" );
+//        logger.info( "Sftp at 6a" );
 //        session.setConfig("cipher.c2s", "arcfour,aes128-cbc,3des-cbc,blowfish-cbc");
-//        System.out.println( "Sftp at 6b" );
+//        logger.info( "Sftp at 6b" );
 
 //        session.rekey();
-//        System.out.println( "Sftp at 6 - after rekey for no cipher" );
+//        logger.info( "Sftp at 6 - after rekey for no cipher" );
 
         channel=session.openChannel( "sftp" );
-        System.out.println( "Sftp at 7" );
+        logger.info( "Sftp at 7" );
         channel.connect();
-        System.out.println( "Sftp at 8" );
+        logger.info( "Sftp at 8" );
         chanSftp = (com.jcraft.jsch.ChannelSftp)channel;
-        System.out.println( "Sftp at 9" );
+        logger.info( "Sftp at 9" );
         isConnected = true;
         message = "";
-        System.out.println( "Sftp done" );
+        logger.info( "Sftp done" );
         }
     catch(Exception ex)
         {
         isConnected = false;
         message = "Sftp(): " + ex;
-        System.out.println( "Sftp(): " + ex );
+        logger.info( "Sftp(): " + ex );
         }
     }
 
@@ -117,7 +118,7 @@ public boolean exists( String path )
         } 
     catch (Exception ex)
         {
-        Logger.getLogger(Sftp.class.getName()).log(Level.SEVERE, null, "does not exist/no stat");
+        logger.severeExc( ex );
         }
     return false;
     }
@@ -129,7 +130,7 @@ public void mkDir( String path )
         } 
     catch (Exception ex)
         {
-        Logger.getLogger(Sftp.class.getName()).log(Level.SEVERE, null, ex);
+        logger.severeExc( ex );
         }
     }
     
@@ -141,7 +142,7 @@ public boolean isDir( String path )
         } 
     catch (SftpException ex)
         {
-        Logger.getLogger(Sftp.class.getName()).log(Level.SEVERE, null, ex);
+        logger.severeExc( ex );
         return false;
         }
     return sourceSftpAttrs.isDir();
@@ -154,7 +155,7 @@ public void touch( String path )
         } 
     catch (Exception ex)
         {
-        Logger.getLogger(Sftp.class.getName()).log(Level.SEVERE, null, ex);
+        logger.severeExc( ex );
         }
     }
     
@@ -166,7 +167,7 @@ public void close()
         session.disconnect();
         }
     catch(Exception e){
-      System.out.println(e);
+      logger.severeExc(e);
     }
   }
         

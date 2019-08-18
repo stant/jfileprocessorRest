@@ -12,6 +12,7 @@ import com.towianski.models.ConnUserInfo;
 import com.towianski.models.DeleteModel;
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.models.ResultsData;
+import com.towianski.utils.MyLogger;
 import com.towianski.utils.Rest;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -23,8 +24,6 @@ import java.nio.file.FileVisitOption;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.KeyStroke;
@@ -36,6 +35,7 @@ import org.springframework.web.client.RestTemplate;
   */
 public class DeleteFrame extends javax.swing.JFrame {
 
+    private static final MyLogger logger = MyLogger.getLogger( DeleteFrame.class.getName() );
     JFileFinderWin jFileFinderWin = null;
     Thread jfinderThread = null;
     JFileFinderSwingWorker jFileFinderSwingWorker = null;
@@ -89,7 +89,7 @@ public class DeleteFrame extends javax.swing.JFrame {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                //System.out.println( "previewImportWin formWindow dispose()" );
+                //logger.info( "previewImportWin formWindow dispose()" );
                 win.dispatchEvent( new WindowEvent( win, WindowEvent.WINDOW_CLOSING )); 
                 win.dispose();
             }
@@ -349,7 +349,7 @@ public class DeleteFrame extends javax.swing.JFrame {
         {
         if ( doCmdBtn.getText().equalsIgnoreCase( PROCESS_STATUS_DELETE_CANCEL ) )
             {
-            System.out.println( "hit stop button, got rootPaneCheckingEnabled =" + rootPaneCheckingEnabled + "=" );
+            logger.info( "hit stop button, got rootPaneCheckingEnabled =" + rootPaneCheckingEnabled + "=" );
             setProcessStatus( PROCESS_STATUS_DELETE_CANCELED );
             this.stopSearch();
             //JOptionPane.showConfirmDialog( null, "at call stop search" );
@@ -364,15 +364,15 @@ public class DeleteFrame extends javax.swing.JFrame {
                } 
             catch (Exception ex)
                 {
-                Logger.getLogger(JFileDelete.class.getName()).log(Level.SEVERE, null, ex);
+                logger.severeExc( ex );
                 }
             }
         }
     
     public void deleteBtnActionRest( java.awt.event.ActionEvent evt )
         {
-        System.out.println("jfilewin deleteBtnActionRest()" );
-        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+        logger.info( "jfilewin deleteBtnActionRest()" );
+        logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
         stopDirWatcher();
 
         DeleteModel deleteModel = extractDeleteModel();
@@ -383,16 +383,16 @@ public class DeleteFrame extends javax.swing.JFrame {
         //object in the list and hence convert it to default JSON object type LinkedHashMap
 //        FilesTblModel filesTblModel = restTemplate.getForObject( SERVER_URI+JfpRestURIConstants.GET_FILES, FilesTblModel.class, SearchModel.class );
 
-        System.out.println( "rest send deleteModel =" + deleteModel + "=" );
+        logger.info( "rest send deleteModel =" + deleteModel + "=" );
 
         String response = noHostVerifyRestTemplate.postForEntity( connUserInfo.getToUri() + JfpRestURIConstants.DELETE, deleteModel, String.class).getBody();
-        System.out.println( "response =" + response + "=" );
+        logger.info( "response =" + response + "=" );
         resultsData = Rest.jsonToObject( response, ResultsData.class );
-        System.out.println( "resultsData.getFilesMatched() =" + resultsData.getFilesMatched() );
+        logger.info( "resultsData.getFilesMatched() =" + resultsData.getFilesMatched() );
 
         // from deleteframeswingworker done()
         try {
-            //System.out.println( "entered SwingWork.done()" );
+            //logger.info( "entered SwingWork.done()" );
             NumberFormat numFormat = NumberFormat.getIntegerInstance();
             String partialMsg = "";
             String msg = "Deleted " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) + " folders out of " + numFormat.format( resultsData.getFilesVisited() );
@@ -431,7 +431,7 @@ public class DeleteFrame extends javax.swing.JFrame {
             deletePaths = null;            
             
             this.callSearchBtnActionPerformed();
-            //System.out.println( "exiting SwingWork.done()" );
+            //logger.info( "exiting SwingWork.done()" );
             }
         catch ( Exception e ) 
             {
@@ -442,13 +442,13 @@ public class DeleteFrame extends javax.swing.JFrame {
             } else {
                 why = e.getMessage();
             }
-            System.out.println( "Error in DeleteFrameSwingWorker(): " + why);
+            logger.info( "Error in DeleteFrameSwingWorker(): " + why);
             }
         }
 
     public DeleteModel extractDeleteModel()
         {
-        System.out.println("jfilewin extractDeleteModel() " );  //searchBtn.getText() =" + searchBtn.getText() + "=" );
+        logger.info( "jfilewin extractDeleteModel() " );  //searchBtn.getText() =" + searchBtn.getText() + "=" );
         DeleteModel deleteModel = new DeleteModel();
 //      filedelete = new JFileDelete( connUserInfo, startingPath, deletePaths, deleteFilesOnlyFlag.isSelected(), 
 //            deleteToTrashFlag.isSelected(), deleteReadonlyFlag.isSelected(), jFileFinderWin.getFilesysType() );
@@ -496,13 +496,13 @@ public class DeleteFrame extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(DeleteFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(DeleteFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(DeleteFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(DeleteFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         }
         //</editor-fold>
         //</editor-fold>

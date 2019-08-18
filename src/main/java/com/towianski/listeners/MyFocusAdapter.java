@@ -29,17 +29,17 @@ public class MyFocusAdapter extends FocusAdapter
 
         @Override
         public void focusGained( FocusEvent e) {
-            //System.out.println( "TableCellListener().focusGained() for " + e.getSource() );
+            //logger.info( "TableCellListener().focusGained() for " + e.getSource() );
         }
          
         @Override
         public void focusLost( FocusEvent e) {
-            //System.out.println( "TableCellListener().focusLost() for " + e.getSource() );
+            //logger.info( "TableCellListener().focusLost() for " + e.getSource() );
             if ( e.getSource().toString().startsWith( "com.towianski.renderers.TableCellListener" ) )
                 {
                 if ( this.tableCellListener.getOnOffFlag() )
                     {
-                    //System.out.println( "TableCellListener().focusLost() call processEditingCanceled()" );
+                    //logger.info( "TableCellListener().focusLost() call processEditingCanceled()" );
                     this.tableCellListener.processEditingCanceled();
                     }
                 }

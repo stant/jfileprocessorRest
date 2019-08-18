@@ -5,11 +5,10 @@ import com.towianski.jfileprocessor.RestServerSw;
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.Constants;
 import com.towianski.models.JfpRestURIConstants;
+import com.towianski.utils.MyLogger;
 import com.towianski.utils.Rest;
 import java.awt.Color;
 import java.io.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
 import org.springframework.web.client.RestTemplate;
 
@@ -19,6 +18,8 @@ import org.springframework.web.client.RestTemplate;
  */
 public class TomcatAppMonitor implements Runnable
     {
+    private static final MyLogger logger = MyLogger.getLogger( TomcatAppMonitor.class.getName() );
+
     ConnUserInfo connUserInfo = null;
     String user = null;
     String passwd = null;
@@ -48,8 +49,8 @@ public class TomcatAppMonitor implements Runnable
     
     public void cancelTomcatAppMonitor( boolean forceStop )
         {
-        System.out.println( "cancelTomcatAppMonitor() set cancelFlag to true" );
-        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+        logger.info( "cancelTomcatAppMonitor() set cancelFlag to true" );
+        logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
         cancelFlag = true;
         connUserInfo.setState( ConnUserInfo.STATE_CANCEL );
 
@@ -64,34 +65,34 @@ public class TomcatAppMonitor implements Runnable
             });
 
         //Thread.currentThread().interrupt();
-        System.out.println("exit cancelTomcatAppMonitor()");
+        logger.info( "exit cancelTomcatAppMonitor()");
         }
     
     public void cancelAppThread( boolean forceStop )
         {
-        System.out.println("TomcatAppMonitor cancelAppThread()");
-        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+        logger.info( "TomcatAppMonitor cancelAppThread()");
+        logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
 //        if ( runThread != null && runThread.isAlive() )
 //            {
-//            System.out.println( "cancel runThread/tomcatAppThread" );
+//            logger.info( "cancel runThread/tomcatAppThread" );
 //            tomcatAppThread.cancelTomcatAppThread( forceStop );
 //            }
 
         if ( runThread != null && runThread.isAlive() )
             {
-            System.out.println( "call to stop remote server first!" );
+            logger.info( "call to stop remote server first!" );
             tomcatAppThread.cancelTomcatAppThread(forceStop);
-            System.out.println( "interrupt runThread/tomcatAppThread" );
+            logger.info( "interrupt runThread/tomcatAppThread" );
             runThread.interrupt();
             }
         
         if ( watchStartThread != null && watchStartThread.isAlive() )
             {
-            System.out.println( "interrupt watchStartThread" );
+            logger.info( "interrupt watchStartThread" );
             watchStartThread.interrupt();
             }
         
-        System.out.println("exit TomcatAppMonitor cancelAppThread()");
+        logger.info( "exit TomcatAppMonitor cancelAppThread()");
         }
     
     // Starts 2 threads.
@@ -101,8 +102,8 @@ public class TomcatAppMonitor implements Runnable
     @Override
     public void run() 
         {
-        System.out.println( "entered TomcatAppMonitor.run()" );
-        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+        logger.info( "entered TomcatAppMonitor.run()" );
+        logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
         RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
 
         cancelFlag = false;
@@ -116,7 +117,7 @@ public class TomcatAppMonitor implements Runnable
         watchStartThread = ProcessInThread.newThread( "watchTomcatAppStartThread", 0, false, watchTomcatAppStartThread );
         watchStartThread.start();
 //        tomcatAppThread.run();
-        //System.out.println( "after first tomcatAppThread.run()" );
+        //logger.info( "after first tomcatAppThread.run()" );
         
         //waitUntilStarted();
         try
@@ -128,24 +129,24 @@ public class TomcatAppMonitor implements Runnable
 
                 if ( watchStartThread != null && watchStartThread.isAlive() )
                     {
-                    System.out.println( "join watchTomcatAppStartThread" );
+                    logger.info( "join watchTomcatAppStartThread" );
                     try
                         {
                         watchStartThread.join();
                         } 
                     catch (InterruptedException ex)
                         {
-                        System.out.println( "TomcatAppMonitor.cancelAppThread() - InterruptedException on watchStartThread.join()" );
-                        Logger.getLogger(TomcatAppMonitor.class.getName()).log(Level.SEVERE, null, ex);
+                        logger.info( "TomcatAppMonitor.cancelAppThread() - InterruptedException on watchStartThread.join()" );
+                        logger.severeExc( ex );
                         }
-                    System.out.println( "Done/joined watchTomcatAppStartThread" );
+                    logger.info( "Done/joined watchTomcatAppStartThread" );
                     }
                 }
             } 
         catch (InterruptedException ex)
             {
-            System.out.println( "TomcatAppMonitor.wait() - InterruptedException" );
-            Logger.getLogger(TomcatAppMonitor.class.getName()).log(Level.SEVERE, null, ex);
+            logger.info( "TomcatAppMonitor.wait() - InterruptedException" );
+            logger.severeExc( ex );
             }
         connUserInfo.setConnectedFlag( false );
         SwingUtilities.invokeLater(new Runnable() 
@@ -163,12 +164,12 @@ public class TomcatAppMonitor implements Runnable
 ////                        runThread = ProcessInThread.newThread( "TomcatAppMonitor", count++, false, tomcatAppThread );
 ////                        runThread.start();
 //                tomcatAppThread.run();
-//                System.out.println( "after tomcatAppThread.run()  downTimes =" + downTimes );
+//                logger.info( "after tomcatAppThread.run()  downTimes =" + downTimes );
 //                Thread.sleep( 1000 );
 //                }
 //            catch( InterruptedException intexc )
 //                {
-//                System.out.println( "TomcatAppMonitor sleep interrupted" );
+//                logger.info( "TomcatAppMonitor sleep interrupted" );
 ////                SwingUtilities.invokeLater(new Runnable() 
 ////                    {
 ////                    public void run() {
@@ -187,7 +188,7 @@ public class TomcatAppMonitor implements Runnable
 //                exc.printStackTrace();
 //                }
 //            } // while
-        //System.out.println( "TomcatAppMonitor.run() STOP any existing running server" );
+        //logger.info( "TomcatAppMonitor.run() STOP any existing running server" );
         //cancelAppThread( false );
         
         //connUserInfo.setConnectedFlag( false );
@@ -197,13 +198,13 @@ public class TomcatAppMonitor implements Runnable
 //                jFileFinderWin.setRmtConnectBtnBackgroundReset();
 //                }
 //            });
-        System.out.println( "Exiting TomcatAppMonitor run() - Done" );
+        logger.info( "Exiting TomcatAppMonitor run() - Done" );
         }
                 
     public void waitUntilStarted()
         {
-        System.out.println( "entered TomcatAppMonitor waitUntilStarted()" );
-        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+        logger.info( "entered TomcatAppMonitor waitUntilStarted()" );
+        logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
         RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
         
         boolean isRunning = false;
@@ -213,35 +214,35 @@ public class TomcatAppMonitor implements Runnable
         
         while ( (response < 0 || ! (response == Constants.FILESYSTEM_DOS || response == Constants.FILESYSTEM_POSIX))  && ! cancelFlag )
             {
-            System.out.println( "TomcatAppMonitor.run() make rest " + JfpRestURIConstants.SYS_GET_FILESYS + " call" );
+            logger.info( "TomcatAppMonitor.run() make rest " + JfpRestURIConstants.SYS_GET_FILESYS + " call" );
             try
                 {
                 response = noHostVerifyRestTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.SYS_GET_FILESYS, Integer.class );
-                System.out.println( "TomcatAppMonitor.run() SYS_GET_FILESYS response =" + response );
+                logger.info( "TomcatAppMonitor.run() SYS_GET_FILESYS response =" + response );
 //                connUserInfo.setToFilesysType(response);
-//                System.out.println( "connUserInfo.getToFilesysType() =" + connUserInfo.getToFilesysType() );
+//                logger.info( "connUserInfo.getToFilesysType() =" + connUserInfo.getToFilesysType() );
                 jFileFinderWin.setFilesysType(response);
-                System.out.println( "jFileFinderWin.getFilesysType() =" + jFileFinderWin.getFilesysType() );
+                logger.info( "jFileFinderWin.getFilesysType() =" + jFileFinderWin.getFilesysType() );
                 }
             catch( Exception exc )
                 {
-                System.out.println( "TomcatAppMonitor.run() get filesys rest threw Exception !!" );
+                logger.info( "TomcatAppMonitor.run() get filesys rest threw Exception !!" );
                 exc.printStackTrace();
                 response = -9;
                 }
-            System.out.println( "TomcatAppMonitor.waitUntilStarted response =" + response + "=" );
+            logger.info( "TomcatAppMonitor.waitUntilStarted response =" + response + "=" );
             try
                 {
                 if ( cancelFlag )
                     {
-                    System.out.println( "cancel so no pause." );
+                    logger.info( "cancel so no pause." );
                     }
                 else if ( response < 0 || ! (response == Constants.FILESYSTEM_DOS || response == Constants.FILESYSTEM_POSIX) )
                     {
                     if ( firstWaitFlag )
                         {
                         firstWaitFlag = false;
-                        System.out.println( "pause 12 seconds first time. give longer pause to let server start." );
+                        logger.info( "pause 12 seconds first time. give longer pause to let server start." );
                         Thread.sleep( 12000 );
                         }
                     else
@@ -252,16 +253,16 @@ public class TomcatAppMonitor implements Runnable
                 } 
             catch (InterruptedException ex)
                 {
-                Logger.getLogger(TomcatAppMonitor.class.getName()).log(Level.SEVERE, null, ex);
+                logger.severeExc( ex );
                 }
 
             if ( --waitCount < 1 )  break;
             }
-        System.out.println( "TomcatAppMonitor waitUntilStarted() after while loop" );
+        logger.info( "TomcatAppMonitor waitUntilStarted() after while loop" );
 
         if ( response < 0 || cancelFlag || ! (response == Constants.FILESYSTEM_DOS || response == Constants.FILESYSTEM_POSIX) )
             {
-            System.out.println( "TomcatAppMonitor waitUntilStarted() reset button color" );
+            logger.info( "TomcatAppMonitor waitUntilStarted() reset button color" );
             connUserInfo.setConnectedFlag( false );
             SwingUtilities.invokeLater(new Runnable() 
                 {
@@ -272,7 +273,7 @@ public class TomcatAppMonitor implements Runnable
             }
         else
             {
-            System.out.println( "TomcatAppMonitor waitUntilStarted() set button color to green for connected" );
+            logger.info( "TomcatAppMonitor waitUntilStarted() set button color to green for connected" );
             connUserInfo.setConnectedFlag( true );
             SwingUtilities.invokeLater(new Runnable() 
                 {

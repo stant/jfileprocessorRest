@@ -20,28 +20,28 @@ public class ChainFilterOfMaxDepth implements FilterChainFilter {
     
     public ChainFilterOfMaxDepth()
         {
-        //System.out.println( "new ChainFilterOfMaxDepth()" );
+        //logger.info( "new ChainFilterOfMaxDepth()" );
         }
     
     public ChainFilterOfMaxDepth( String startingFolder, String maxDepth ) 
         {
         this.maxDepth = Paths.get( startingFolder ).getNameCount() + Integer.parseInt( maxDepth );
-        //System.out.println( "Paths.get( startingFolder ).getNameCount() =" + Paths.get( startingFolder ).getNameCount() + "   Integer.parseInt( maxDepth ) =" + Integer.parseInt( maxDepth ) );
+        //logger.info( "Paths.get( startingFolder ).getNameCount() =" + Paths.get( startingFolder ).getNameCount() + "   Integer.parseInt( maxDepth ) =" + Integer.parseInt( maxDepth ) );
         }
     
     // These must be the same parms for all filters that get used.
     //  First check is do we show this folder?
     public Boolean accept( Path fpath, BasicFileAttributes attr, ChainFilterArgs chainFilterArgs, JFileFinder jFileFinder )
         {
-        //System.out.println( "maxdepth for path =" + fpath + "   depthcount =" + fpath.getNameCount() );
+        //logger.info( "maxdepth for path =" + fpath + "   depthcount =" + fpath.getNameCount() );
 //        if ( attr.isDirectory() )
 //            {
-            //System.out.println( " folder <=  max =" + maxDepth + "  true/false =" + (fpath.getNameCount() <= maxDepth) );
+            //logger.info( " folder <=  max =" + maxDepth + "  true/false =" + (fpath.getNameCount() <= maxDepth) );
             return fpath.getNameCount() <= maxDepth;
 //            }
 //        else
 //            {
-//            System.out.println( " file   <  max =" + maxDepth + "  true/false =" + (fpath.getNameCount() < maxDepth) );
+//            logger.info( " file   <  max =" + maxDepth + "  true/false =" + (fpath.getNameCount() < maxDepth) );
 //            return fpath.getNameCount() < maxDepth;
 //            }
         }

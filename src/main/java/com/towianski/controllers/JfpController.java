@@ -11,12 +11,10 @@ import com.towianski.models.JfpRestURIConstants;
 import com.towianski.models.ResultsData;
 import com.towianski.models.SearchModel;
 import com.towianski.utils.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.towianski.utils.MyLogger;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import java.util.logging.Level;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +30,7 @@ import org.springframework.http.ResponseEntity;
 //@Profile("warserver")
 public class JfpController {
 	
-	private static final Logger logger = LoggerFactory.getLogger(JfpController.class);
+    private static final MyLogger logger = MyLogger.getLogger( JfpController.class.getName() );
 
         @RequestMapping(value = JfpRestURIConstants.SEARCH, method = RequestMethod.POST)
         public ResponseEntity<ResultsData> search(@RequestBody SearchModel parm) {
@@ -73,7 +71,7 @@ public class JfpController {
 //            catch (UnsupportedEncodingException ex)
             catch (Exception ex)
                 {
-                java.util.logging.Logger.getLogger(JfpController.class.getName()).log(Level.SEVERE, null, ex);
+                logger.severeExc(ex );
                 }
             String response = "ok";
             return new ResponseEntity<>(response, HttpStatus.OK);

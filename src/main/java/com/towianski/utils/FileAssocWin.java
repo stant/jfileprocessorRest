@@ -28,6 +28,7 @@ import javax.swing.KeyStroke;
  */
 public class FileAssocWin extends javax.swing.JDialog {
 
+    private static final MyLogger logger = MyLogger.getLogger( FileAssocWin.class.getName() );
     static FileAssocWin fileAssocWin = null;
     static boolean okFlag = false;
     static boolean deleteFlag = false;
@@ -79,10 +80,10 @@ public class FileAssocWin extends javax.swing.JDialog {
         matchingFileAssocList = fileAssocList.getFileAssocList( filename );
         showFileAssoc( 0 );
         
-        System.out.println( "winAction =" + winAction );
+        logger.info( "winAction =" + winAction );
         if ( winAction == JfpConstants.ASSOC_WINDOW_ACTION_SELECT )
             {
-//            System.out.println( "doing select" );
+//            logger.info( "doing select" );
             okBtn.setText( "Select" );
             deleteBtn.setVisible( false );
             this.setTitle( "Choose one to Use" );
@@ -108,15 +109,15 @@ public class FileAssocWin extends javax.swing.JDialog {
                 faIdx = matchingFileAssocList.size();
                 }
             }
-        System.out.println( "\nSHOW faIdx =" + faIdx );
+        logger.info( "\nSHOW faIdx =" + faIdx );
         if ( matchingFileAssocList != null && faIdx < matchingFileAssocList.size() )
             {
             this.setTitle( "Edit" );
             fa = matchingFileAssocList.get( faIdx );
-            System.out.println( "\nEDIT faIdx =" + faIdx + "\nmatched and got fa.getAssocType =" + fa.getAssocType() + "=" );
-            System.out.println( "matched and got fa.getMatchType =" + fa.getMatchType() + "=" );
-            System.out.println( "matched and got fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
-            System.out.println( "matched and got fa.exec =" + fa.getExec() + "=" );
+            logger.info( "\nEDIT faIdx =" + faIdx + "\nmatched and got fa.getAssocType =" + fa.getAssocType() + "=" );
+            logger.info( "matched and got fa.getMatchType =" + fa.getMatchType() + "=" );
+            logger.info( "matched and got fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
+            logger.info( "matched and got fa.exec =" + fa.getExec() + "=" );
             setAssocType( fa.getAssocType() );
             setMatchType( fa.getMatchType());
             setMatchPattern( fa.getMatchPattern());
@@ -233,7 +234,7 @@ public class FileAssocWin extends javax.swing.JDialog {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                //System.out.println( "previewImportWin formWindow dispose()" );
+                //logger.info( "previewImportWin formWindow dispose()" );
                 okFlag = false;
                 win.dispatchEvent( new WindowEvent( win, WindowEvent.WINDOW_CLOSING )); 
                 win.dispose();
@@ -525,23 +526,23 @@ public class FileAssocWin extends javax.swing.JDialog {
     private void okBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okBtnActionPerformed
         okFlag = true;
         deleteFlag = false;
-        System.out.println( "file assoc win OK");
+        logger.info( "file assoc win OK");
         fa = new FileAssoc( getAssocType(), getMatchType(), getMatchPattern(), getExec(), getStop() );
         if ( isOkFlag() && winAction == JfpConstants.ASSOC_WINDOW_ACTION_EDIT )
             {
-            System.out.println( "matched and got fa.getAssocType =" + fa.getAssocType() + "=" );
-            System.out.println( "matched and got fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
-            System.out.println( "matched and got fa.exec =" + fa.getExec() + "=" );
+            logger.info( "matched and got fa.getAssocType =" + fa.getAssocType() + "=" );
+            logger.info( "matched and got fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
+            logger.info( "matched and got fa.exec =" + fa.getExec() + "=" );
             fileAssocList.addFileAssoc( fa );
             if ( faIdx < matchingFileAssocList.size() )
                 {
                 matchingFileAssocList.set( faIdx, fa );  //update
-                System.out.println( "file assoc UPDATE");
+                logger.info( "file assoc UPDATE");
                 }
             else
                 {
                 matchingFileAssocList.add( fa );  //add
-                System.out.println( "file assoc ADD");
+                logger.info( "file assoc ADD");
                 this.setVisible( false );
                 }
             Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
@@ -560,7 +561,7 @@ public class FileAssocWin extends javax.swing.JDialog {
     private void cancelBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelBtnActionPerformed
         okFlag = false;
         deleteFlag = false;
-        System.out.println( "file assoc win CANCEL");
+        logger.info( "file assoc win CANCEL");
         this.setVisible( false );
     }//GEN-LAST:event_cancelBtnActionPerformed
 
@@ -628,12 +629,12 @@ public class FileAssocWin extends javax.swing.JDialog {
 
     private void deleteBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBtnActionPerformed
         int reply = JOptionPane.showConfirmDialog( null, "Are you sure to Delete ? ", "File Association", JOptionPane.YES_NO_OPTION);
-        System.out.println( "reply =" + reply + "=" );
+        logger.info( "reply =" + reply + "=" );
         if ( reply == JOptionPane.YES_OPTION )
             {
             okFlag = false;
             deleteFlag = true;
-            System.out.println( "file assoc win Delete");
+            logger.info( "file assoc win Delete");
             fa = new FileAssoc( getAssocType(), getMatchType(), getMatchPattern(), getExec(), getStop() );
             if ( faIdx < matchingFileAssocList.size() )
                 {
@@ -690,13 +691,13 @@ public class FileAssocWin extends javax.swing.JDialog {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(FileAssocWin.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(FileAssocWin.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(FileAssocWin.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(FileAssocWin.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         }
         //</editor-fold>
         //</editor-fold>

@@ -6,6 +6,7 @@
 package com.towianski.jfileprocess.actions;
 
 import com.towianski.jfileprocessor.JFileFinderWin;
+import com.towianski.utils.MyLogger;
 import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -16,6 +17,7 @@ import javax.swing.Action;
  */
 public class PasteAction extends AbstractAction
     {
+    private static final MyLogger logger = MyLogger.getLogger( PasteAction.class.getName() );
     JFileFinderWin win = null;
     
     public PasteAction( JFileFinderWin win )
@@ -27,14 +29,14 @@ public class PasteAction extends AbstractAction
 
     public void actionPerformed(ActionEvent e)
         {
-        //System.out.println("RenameActionPerformed( null ) do action");
+        //logger.info( "RenameActionPerformed( null ) do action");
         try
             {
             win.callPasteActionPerformed( null );
             } 
         catch (Exception ex)
             {
-            System.out.println( "callPasteActionPerformed( null ) " + ex );
+            logger.info( "callPasteActionPerformed( null ) " + ex );
             ex.printStackTrace();
             }
         }

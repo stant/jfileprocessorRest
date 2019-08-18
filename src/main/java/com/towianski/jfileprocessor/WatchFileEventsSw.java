@@ -10,6 +10,7 @@ import com.towianski.jfileprocess.actions.ProcessInThread;
 import com.towianski.jfileprocess.actions.WatchDirEventToTimeQueue;
 import com.towianski.jfileprocess.actions.WatchDirEventsToCallerEventsQueue;
 import com.towianski.models.FileTimeEvent;
+import com.towianski.utils.MyLogger;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -17,8 +18,6 @@ import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.springframework.stereotype.Component;
 
 /**
@@ -27,6 +26,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class WatchFileEventsSw implements Player {
+    private static final MyLogger logger = MyLogger.getLogger( WatchFileEventsSw.class.getName() );
     JFileFinderWin jFileFinderWin = null;
     private WatchService watchService = null;
     BlockingQueue<FileTimeEvent> fileEventTimeQueue = new LinkedBlockingQueue<>();
@@ -72,28 +72,28 @@ public class WatchFileEventsSw implements Player {
 
 //    public synchronized void cancelWatch() 
 //        {
-//        System.out.println( "enter WatchFileEventsSw.cancelWatch()" );
+//        logger.info( "enter WatchFileEventsSw.cancelWatch()" );
 //        ProcessInThread.stopThread( eventQueueThread );
 //        ProcessInThread.stopThread( firstWatchThread );
-//        System.out.println( "exit WatchFileEventsSw.cancelWatch()" );
+//        logger.info( "exit WatchFileEventsSw.cancelWatch()" );
 //        }
     
     public void stop()
         {
-        System.out.println("WatchFileEventsSw.stop()");
+        logger.info( "WatchFileEventsSw.stop()");
         ProcessInThread.stopThread( eventQueueThread );
         ProcessInThread.stopThread( firstWatchThread );
         try {
             watchService.close();
         } catch (IOException ex) {
-            Logger.getLogger(WatchFileEventsSw.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         }
-        System.out.println( "exit WatchFileEventsSw.stop()" );
+        logger.info( "exit WatchFileEventsSw.stop()" );
         }
 
     public void pause()
         {
-        System.out.println("WatchFileEventsSw.pause()");
+        logger.info( "WatchFileEventsSw.pause()");
         //watchDirEventsToCallerEventsQueue.stop();
         ProcessInThread.stopThread( eventQueueThread );
         // it shuts it down and makes it return a null event which .take() below will catch and stop on
@@ -141,7 +141,7 @@ public class WatchFileEventsSw implements Player {
         
     public void startWatchService() {
         try {
-            System.out.println( "WatchFileEventsSw() startWatchService() !" );
+            logger.info( "WatchFileEventsSw() startWatchService() !" );
             watchService = FileSystems.getDefault().newWatchService();
             
             watchDirEventToTimeQueue = new WatchDirEventToTimeQueue( watchService, fileEventTimeQueue );
@@ -149,7 +149,7 @@ public class WatchFileEventsSw implements Player {
             firstWatchThread.start();
             }
         catch (IOException ex) {
-            Logger.getLogger(WatchFileEventsSw.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
             }
         }
 

@@ -52,21 +52,21 @@ public class MyMouseAdapter extends MouseAdapter
 //            }
             if ( e.getSource() == filesTblScrollPane )
                 {
-                //System.out.println( "mouseclicked on filesTblScrollPane" );
+                //logger.info( "mouseclicked on filesTblScrollPane" );
                 return;
                 }
             
             if (e.getClickCount() == 2) {
                 JTable filesTbl = (JTable)e.getSource();
                 //int rowIndex = filesTbl.getSelectedRow();
-                //System.out.println( "rowIndex =" + rowIndex );
+                //logger.info( "rowIndex =" + rowIndex );
                 int rowIndex = filesTbl.convertRowIndexToModel( filesTbl.getSelectedRow() );
-                //System.out.println( "converted rowIndex =" + rowIndex );
+                //logger.info( "converted rowIndex =" + rowIndex );
                 String selectedPath = (String) filesTbl.getModel().getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH );
 //                Boolean isDir = (Boolean) filesTbl.getModel().getValueAt(rowIndex, FilesTblModel.FILESTBLMODEL_FOLDERTYPE );
                 int folderType = (Integer) filesTbl.getModel().getValueAt(rowIndex, FilesTblModel.FILESTBLMODEL_FOLDERTYPE );
-                //System.out.println( "selected row file =" + selectedPath );
-//                System.out.println( "myMouseAdapter mouseClicked selected folderType =" + folderType );
+                //logger.info( "selected row file =" + selectedPath );
+//                logger.info( "myMouseAdapter mouseClicked selected folderType =" + folderType );
                 if ( folderType == FilesTblModel.FOLDERTYPE_FOLDER ) // skipping no access folder for now !
                     {
                     jFileFinderWin.setStartingFolder( selectedPath );

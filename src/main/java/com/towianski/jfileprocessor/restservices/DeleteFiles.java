@@ -10,6 +10,7 @@ import com.towianski.jfileprocessor.DeleteFrame;
 import com.towianski.jfileprocessor.JFileDelete;
 import com.towianski.models.DeleteModel;
 import com.towianski.models.ResultsData;
+import com.towianski.utils.MyLogger;
 import java.nio.file.Path;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ import java.util.List;
 public class DeleteFiles
 //public class DeleteFiles extends SwingWorker<ResultsData, Long> {
     {
+    private static final MyLogger logger = MyLogger.getLogger( DeleteFiles.class.getName() );
 
     DeleteFrame deleteFrame = null;
     ArrayList<Path> deletePaths = new ArrayList<Path>();
@@ -67,11 +69,11 @@ public class DeleteFiles
         {
         ResultsData resultsData = new ResultsData();
         try {
-            //System.out.println( "entered SwingWork.done()" );
+            //logger.info( "entered SwingWork.done()" );
             resultsData = doInBackground();
             //Integer ii = get();
-            //System.out.println( "SwingWork.done() at 2  ii = " + ii );
-            //System.out.println( "SwingWork.done() got ans =" + matchedPathsList + "=" );
+            //logger.info( "SwingWork.done() at 2  ii = " + ii );
+            //logger.info( "SwingWork.done() got ans =" + matchedPathsList + "=" );
             NumberFormat numFormat = NumberFormat.getIntegerInstance();
             String partialMsg = "";
             String msg = "Deleted " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) + " folders out of " + numFormat.format( resultsData.getFilesVisited() );
@@ -103,7 +105,7 @@ public class DeleteFiles
             deletePaths = null;            
             
      //       deleteFrame.callSearchBtnActionPerformed();
-            //System.out.println( "exiting SwingWork.done()" );
+            //logger.info( "exiting SwingWork.done()" );
             }
         catch ( Exception e) 
             {
@@ -114,7 +116,7 @@ public class DeleteFiles
             } else {
                 why = e.getMessage();
             }
-            System.out.println( "Error in DeleteFiles(): " + why);
+            logger.info( "Error in DeleteFiles(): " + why);
             }
         return resultsData;
         }

@@ -7,6 +7,7 @@ package com.towianski.jfileprocessor;
 
 import com.towianski.jfileprocess.actions.CloseWinOnTimer;
 import com.towianski.models.ResultsData;
+import com.towianski.utils.MyLogger;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.SwingWorker;
 
@@ -16,6 +17,7 @@ import javax.swing.SwingWorker;
  */
 public class GroovySwingWorker extends SwingWorker<ResultsData, Object> {
 
+    private static final MyLogger logger = MyLogger.getLogger( GroovySwingWorker.class.getName() );
     JFileFinderWin jFileFinderWin = null;
     CodeProcessorPanel codeProcessorPanel = null;
     String currentDirectory = null;
@@ -44,7 +46,7 @@ public class GroovySwingWorker extends SwingWorker<ResultsData, Object> {
     @Override
     public void done() {
         try {
-            System.out.println( "entered GroovySwingWork.done()" );
+            logger.info( "entered GroovySwingWork.done()" );
             ResultsData resultsData = get();
             String partialMsg = "";
             String msg =  "Done";
@@ -58,7 +60,7 @@ public class GroovySwingWorker extends SwingWorker<ResultsData, Object> {
                 codeProcessorPanel.setProcessStatus(codeProcessorPanel.PROCESS_STATUS_COMPLETED );
                 if ( codeProcessorPanel instanceof ScriptSwingWorker )
                     {
-                    System.out.println( "do new CloseWinOnTimer( ScriptSwingWorker, 4000 )" );
+                    logger.info( "do new CloseWinOnTimer( ScriptSwingWorker, 4000 )" );
                     new CloseWinOnTimer( codeProcessorPanel, 4000 ){{setRepeats(false);}}.start();
                     }
                 }
@@ -88,7 +90,7 @@ public class GroovySwingWorker extends SwingWorker<ResultsData, Object> {
             } else {
                 why = e.getMessage();
             }
-            System.out.println( "Error in CodeProcessorPanelSwingWorker(): " + why);
+            logger.info( "Error in CodeProcessorPanelSwingWorker(): " + why);
             e.printStackTrace();
             }
     }    

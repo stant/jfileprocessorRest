@@ -20,27 +20,27 @@ public class ChainFilterOfMinDepth implements FilterChainFilter {
     
     public ChainFilterOfMinDepth()
         {
-        //System.out.println( "new ChainFilterOfMinDepth()" );
+        //logger.info( "new ChainFilterOfMinDepth()" );
         }
     
     public ChainFilterOfMinDepth( String startingFolder, String minDepth ) 
         {
         this.minDepth = Paths.get( startingFolder ).getNameCount() + Integer.parseInt( minDepth );
-        //System.out.println( "Paths.get( startingFolder ).getNameCount() =" + Paths.get( startingFolder ).getNameCount() + "   Integer.parseInt( minDepth ) =" + Integer.parseInt( minDepth ) );
+        //logger.info( "Paths.get( startingFolder ).getNameCount() =" + Paths.get( startingFolder ).getNameCount() + "   Integer.parseInt( minDepth ) =" + Integer.parseInt( minDepth ) );
         }
     
     // These must be the same parms for all filters that get used.
     public Boolean accept( Path fpath, BasicFileAttributes attr, ChainFilterArgs chainFilterArgs, JFileFinder jFileFinder )
         {
-        //System.out.println( "mindepth accept2 it for path =" + fpath + "   depthcount =" + fpath.getNameCount() );
+        //logger.info( "mindepth accept2 it for path =" + fpath + "   depthcount =" + fpath.getNameCount() );
 //        if ( attr.isDirectory() )
 //            {
-            //System.out.println( " folder  >=  min =" + minDepth + "  true/false =" + (fpath.getNameCount() >= minDepth) );
+            //logger.info( " folder  >=  min =" + minDepth + "  true/false =" + (fpath.getNameCount() >= minDepth) );
             return fpath.getNameCount() >= minDepth;
 //            }
 //        else
 //            {
-//            System.out.println( " file   >  min =" + minDepth + "  true/false =" + (fpath.getNameCount() > minDepth) );
+//            logger.info( " file   >  min =" + minDepth + "  true/false =" + (fpath.getNameCount() > minDepth) );
 //            return fpath.getNameCount() > minDepth;
 //            }
         }

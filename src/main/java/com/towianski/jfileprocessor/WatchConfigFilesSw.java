@@ -8,16 +8,16 @@ package com.towianski.jfileprocessor;
 import com.towianski.jfileprocess.actions.ProcessInThread;
 import com.towianski.jfileprocess.actions.WatchConfigFiles;
 import com.towianski.models.Constants;
+import com.towianski.utils.MyLogger;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
  * @author stan
  */
 public class WatchConfigFilesSw {
+    private static final MyLogger logger = MyLogger.getLogger( WatchConfigFilesSw.class.getName() );
     JFileFinderWin jFileFinderWin = null;
     Thread watchThread = null;
     WatchConfigFiles watchConfigFiles = null;
@@ -30,12 +30,12 @@ public class WatchConfigFilesSw {
 
     public synchronized void cancelWatch() 
         {
-        System.out.println( "enter WatchConfigFilesSw.cancelWatch()" );
+        logger.info( "enter WatchConfigFilesSw.cancelWatch()" );
         if ( watchConfigFiles != null )
             {
             watchConfigFiles.cancelWatch();
             }
-        System.out.println( "exit WatchConfigFilesSw.cancelWatch()" );
+        logger.info( "exit WatchConfigFilesSw.cancelWatch()" );
         }
 
     public void actionPerformed( ArrayList<String> pathsToNotWatch, Path watchFolder ) {                                         
@@ -46,16 +46,16 @@ public class WatchConfigFilesSw {
         else
             {
             try {
-//                System.out.println( "WatchConfigFilesSw doCmdBtnActionPerformed start" );
-//                System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+//                logger.info( "WatchConfigFilesSw doCmdBtnActionPerformed start" );
+//                logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
 
                 watchConfigFiles = new WatchConfigFiles( jFileFinderWin );
                 watchThread = ProcessInThread.newThread( "watchConfigFiles", count++, true, watchConfigFiles );
                 watchThread.start();
-//                System.out.println( "watchConfigFilesSw (" + watchFolder + ") after start watch thread, now exit actionPerformed" );
+//                logger.info( "watchConfigFilesSw (" + watchFolder + ") after start watch thread, now exit actionPerformed" );
                 } 
             catch (Exception ex) {
-                Logger.getLogger(WatchConfigFilesSw.class.getName()).log(Level.SEVERE, null, ex);
+                logger.severeExc( ex );
             } 
         }
         

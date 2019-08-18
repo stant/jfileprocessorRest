@@ -24,8 +24,7 @@ import static com.towianski.models.Constants.SHOWFILESFOLDERSCB_FOLDERS_ONLY;
 import static com.towianski.models.Constants.SHOWFILESFOLDERSCB_NEITHER;
 import com.towianski.models.ResultsData;
 import com.towianski.models.SearchModel;
-import com.towianski.utils.Rest;
-import javax.swing.JOptionPane;
+import com.towianski.utils.MyLogger;
 
 /**
  *
@@ -33,25 +32,26 @@ import javax.swing.JOptionPane;
  */
 public class SearchFiles
     {
+    private static final MyLogger logger = MyLogger.getLogger( SearchFiles.class.getName() );
     public SearchFiles()
         {
         }
     
     public ResultsData find( SearchModel searchModel )
         {
-        System.out.println("jfilewin searchBtn() searchModel.getSearchBtnText() =" + searchModel.getSearchBtnText() + "=" );
-        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+        logger.info( "jfilewin searchBtn() searchModel.getSearchBtnText() =" + searchModel.getSearchBtnText() + "=" );
+        logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
 //        stopDirWatcher();
 
 //        if ( searchModel.getSearchBtnText().equalsIgnoreCase( PROCESS_STATUS_CANCEL_SEARCH ) )
 //            {
-//            System.out.println( "hit stop button, got rootPaneCheckingEnabled =" + rootPaneCheckingEnabled + "=" );
+//            logger.info( "hit stop button, got rootPaneCheckingEnabled =" + rootPaneCheckingEnabled + "=" );
 ////            setProcessStatus( PROCESS_STATUS_SEARCH_CANCELED );
 ////            this.stopSearch();
 //            }
 //        else if ( searchModel.getSearchBtnText().equalsIgnoreCase( PROCESS_STATUS_CANCEL_FILL ) )
 //            {
-//            System.out.println( "hit stop fill button, got rootPaneCheckingEnabled =" + rootPaneCheckingEnabled + "=" );
+//            logger.info( "hit stop fill button, got rootPaneCheckingEnabled =" + rootPaneCheckingEnabled + "=" );
 ////            setProcessStatus( PROCESS_STATUS_FILL_CANCELED );
 ////            this.stopFill();
 //            }
@@ -81,7 +81,7 @@ public class SearchFiles
 //                }
 //            }
                 
-                System.out.println( "tabsLogic button.getText() =" + (searchModel.getTabsLogicType()) + "=" );
+                logger.info( "tabsLogic button.getText() =" + (searchModel.getTabsLogicType()) + "=" );
                 FilterChain chainFilterList = new FilterChain( searchModel.getTabsLogicType() );
                 FilterChain chainFilterFolderList = new FilterChain( searchModel.getTabsLogicType() );
                 FilterChain chainFilterPreVisitFolderList = new FilterChain( searchModel.getTabsLogicType() );
@@ -89,7 +89,7 @@ public class SearchFiles
                 try {
                     if ( ! searchModel.getFilePattern().equals( "" ) )
                         {
-                        System.out.println( "add filter of names!" );
+                        logger.info( "add filter of names!" );
                         ChainFilterOfNames chainFilterOfNames = new ChainFilterOfNames( searchModel.getPatternType(), (searchModel.getStartingFolder() + searchModel.getFilePattern()).replace( "\\", "\\\\" ) );
                         if ( searchModel.getShowFilesFoldersType().equals( SHOWFILESFOLDERSCB_FOLDERS_ONLY )  ||
                              searchModel.getShowFilesFoldersType().equals( SHOWFILESFOLDERSCB_BOTH ) )
@@ -111,18 +111,18 @@ public class SearchFiles
                     }
 
                 try {
-                    System.out.println( "searchModel.getShowFilesFoldersType() =" + searchModel.getShowFilesFoldersType() + "=" );
+                    logger.info( "searchModel.getShowFilesFoldersType() =" + searchModel.getShowFilesFoldersType() + "=" );
                     if ( searchModel.getShowFilesFoldersType().equals( SHOWFILESFOLDERSCB_FILES_ONLY ) 
                          || searchModel.getShowFilesFoldersType().equals( SHOWFILESFOLDERSCB_NEITHER ) )
                         {
-                        System.out.println( "add filter Boolean False for folders" );
+                        logger.info( "add filter Boolean False for folders" );
                         ChainFilterOfBoolean chainFilterOfBoolean = new ChainFilterOfBoolean( false );
                         chainFilterFolderList.addFilter( chainFilterOfBoolean );
                         }
                     if ( searchModel.getShowFilesFoldersType().equals( SHOWFILESFOLDERSCB_FOLDERS_ONLY ) 
                          || searchModel.getShowFilesFoldersType().equals( SHOWFILESFOLDERSCB_NEITHER ) )
                         {
-                        System.out.println( "add filter Boolean False for files" );
+                        logger.info( "add filter Boolean False for files" );
                         ChainFilterOfBoolean chainFilterOfBoolean = new ChainFilterOfBoolean( false );
                         chainFilterList.addFilter( chainFilterOfBoolean );
                         }
@@ -137,7 +137,7 @@ public class SearchFiles
                 try {
                     if ( ! searchModel.getSize1().equals( "" ) )
                         {
-                        System.out.println( "add filter of sizes!" );
+                        logger.info( "add filter of sizes!" );
                         ChainFilterOfSizes chainFilterOfSizes = new ChainFilterOfSizes( searchModel.getSize1Op(), searchModel.getSize1(), searchModel.getSizeLogicOp(), searchModel.getSize2Op(), searchModel.getSize2() );
                         chainFilterList.addFilter( chainFilterOfSizes );
                         }
@@ -152,8 +152,8 @@ public class SearchFiles
                 try {
                     if ( searchModel.getDate1() != null )
                         {
-                        System.out.println( "add filter of dates!" );
-                        System.out.println( "selected date =" + searchModel.getDate1() + "=" );
+                        logger.info( "add filter of dates!" );
+                        logger.info( "selected date =" + searchModel.getDate1() + "=" );
                         ChainFilterOfDates chainFilterOfDates = new ChainFilterOfDates( searchModel.getDate1Op(), searchModel.getDate1(), searchModel.getDateLogicOp(), searchModel.getDate2Op(), searchModel.getDate2() );
                         chainFilterList.addFilter( chainFilterOfDates );
                         }
@@ -168,8 +168,8 @@ public class SearchFiles
                 try {
                     if ( ! searchModel.getMaxDepth().equals( "" ) )
                         {
-                        System.out.println( "add filter of maxdepth!" );
-                        System.out.println( "selected maxdepth =" + searchModel.getMaxDepth() + "=" );
+                        logger.info( "add filter of maxdepth!" );
+                        logger.info( "selected maxdepth =" + searchModel.getMaxDepth() + "=" );
                         ChainFilterOfMaxDepth chainFilterOfMaxDepth = new ChainFilterOfMaxDepth( searchModel.getStartingFolder(), searchModel.getMaxDepth() );
                         chainFilterFolderList.addFilter( chainFilterOfMaxDepth );
                         chainFilterList.addFilter( chainFilterOfMaxDepth );
@@ -187,8 +187,8 @@ public class SearchFiles
                 try {
                     if ( ! searchModel.getStopFileCount().equals( "" ) )
                         {
-                        System.out.println( "add filter of stopFileCount!" );
-                        System.out.println( "selected stopFileCount =" + searchModel.getStopFileCount() + "=" );
+                        logger.info( "add filter of stopFileCount!" );
+                        logger.info( "selected stopFileCount =" + searchModel.getStopFileCount() + "=" );
                         ChainFilterOfMaxFileCount chainFilterOfMaxFileCount = new ChainFilterOfMaxFileCount( searchModel.getStartingFolder(), searchModel.getStopFileCount() );
                         chainFilterList.addFilter( chainFilterOfMaxFileCount );
                         }
@@ -203,8 +203,8 @@ public class SearchFiles
                 try {
                     if ( ! searchModel.getStopFolderCount().equals( "" ) )
                         {
-                        System.out.println( "add filter of stopFolderCount!" );
-                        System.out.println( "selected stopFolderCount =" + searchModel.getStopFolderCount() + "=" );
+                        logger.info( "add filter of stopFolderCount!" );
+                        logger.info( "selected stopFolderCount =" + searchModel.getStopFolderCount() + "=" );
                         ChainFilterOfMaxFolderCount chainFilterOfMaxFolderCount = new ChainFilterOfMaxFolderCount( searchModel.getStartingFolder(), searchModel.getStopFolderCount() );
                         chainFilterFolderList.addFilter( chainFilterOfMaxFolderCount );
                         }
@@ -219,8 +219,8 @@ public class SearchFiles
                 try {
                     if ( ! searchModel.getMinDepth().equals( "" ) )
                         {
-                        System.out.println( "add filter of minDepth!" );
-                        System.out.println( "selected minDepth =" + searchModel.getMinDepth() + "=" );
+                        logger.info( "add filter of minDepth!" );
+                        logger.info( "selected minDepth =" + searchModel.getMinDepth() + "=" );
                         ChainFilterOfMinDepth chainFilterOfMinDepth = new ChainFilterOfMinDepth( searchModel.getStartingFolder(), searchModel.getMinDepth() );
                         chainFilterFolderList.addFilter( chainFilterOfMinDepth );
                         chainFilterList.addFilter( chainFilterOfMinDepth );
@@ -238,7 +238,7 @@ public class SearchFiles
                 try {
                     if ( ! searchModel.isShowHiddenFilesFlag() )
                         {
-                        System.out.println( "add filter of do not show hidden files!" );
+                        logger.info( "add filter of do not show hidden files!" );
                         ChainFilterOfShowHidden filter = new ChainFilterOfShowHidden( false );
                         chainFilterList.addFilter( filter );
                         chainFilterFolderList.addFilter( filter );
@@ -256,13 +256,13 @@ public class SearchFiles
                 jfilefinder = new JFileFinder( searchModel.getStartingFolder(), searchModel.getPatternType(), searchModel.getFilePattern(), chainFilterList, chainFilterFolderList, chainFilterPreVisitFolderList );
 //                jFileFinderSwingWorker = new JFileFinderSwingWorker( this, jfilefinder, searchModel.getStartingFolder(), searchModel.getPatternType(), searchModel.getFilePattern(), countOnlyFlag );
     
-                System.out.println( "*************  jFileFinderSwingWorker.execute()  ****************" );
+                logger.info( "*************  jFileFinderSwingWorker.execute()  ****************" );
             
 //                jFileFinderSwingWorker.execute();   //doInBackground();
                 return getRecords( jfilefinder );
             } 
             catch (Exception ex) {
-//                logger.log(Level.SEVERE, null, ex);
+//                logger.severe( null, ex);
             }
         }
         return new ResultsData();
@@ -271,10 +271,10 @@ public class SearchFiles
     public ResultsData getRecords( JFileFinder jfilefinder ) 
         {
 //        public ResultsData doInBackground() {
-        System.out.println( "JFileFinderSwingWorker.doInBackground() before jfilefinder.run()" );
+        logger.info( "JFileFinderSwingWorker.doInBackground() before jfilefinder.run()" );
 //        stopDirWatcher();
 //        jFileFinderWin.setProcessStatus( jFileFinderWin.PROCESS_STATUS_SEARCH_STARTED );
-//        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+//        logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
         jfilefinder.run( null );
         ResultsData resultsData = jfilefinder.getResultsData();   //get();
         jfilefinder.getFilesTableModel();
@@ -286,10 +286,10 @@ public class SearchFiles
 //    }
 //
         try {
-//            System.out.println( "entered JFileFinderSwingWorker.done()" );
-//            System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+//            logger.info( "entered JFileFinderSwingWorker.done()" );
+//            logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
 //            ResultsData resultsData = jfilefinder.getResultsData();   //get();
-            //System.out.println( "SwingWork.done() got ans =" + matchedPathsList + "=" );
+            //logger.info( "SwingWork.done() got ans =" + matchedPathsList + "=" );
             //jFileFinderWin.resetSearchBtn();
 //            NumberFormat numFormat = NumberFormat.getIntegerInstance();
 //            String partialMsg = "";
@@ -306,10 +306,10 @@ public class SearchFiles
 //                    + " folders out of " + numFormat.format( resultsData.getFilesTested() ) + " files and " + numFormat.format( resultsData.getFoldersTested() ) + " folders.  Total "
 //                    + numFormat.format( resultsData.getFilesVisited() ) + partialMsg );
 
-            System.out.println( "exiting FillTableModelSwingWorker.done()" );
+            logger.info( "exiting FillTableModelSwingWorker.done()" );
             
 //            jFileFinderWin.releaseSearchLock();
-            System.out.println( "exiting JFileFinderSwingWorker.done()" );
+            logger.info( "exiting JFileFinderSwingWorker.done()" );
         }
         catch (Exception e) 
             {
@@ -320,7 +320,7 @@ public class SearchFiles
             } else {
                 why = e.getMessage();
             }
-            System.out.println("Error retrieving file: " + why);
+            logger.info( "Error retrieving file: " + why);
             e.printStackTrace();
             }
         return resultsData;

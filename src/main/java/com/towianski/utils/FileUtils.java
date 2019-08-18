@@ -15,8 +15,6 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -31,10 +29,12 @@ import org.springframework.web.client.RestTemplate;
  */
 public class FileUtils
     {
+    private static final MyLogger logger = MyLogger.getLogger( FileUtils.class.getName() );
+    
     public static boolean exists( ConnUserInfo connUserInfo, String targetPath )
         {
-        System.out.println("jfilewin Exists()" );
-        System.out.println("jfilewin Exists()  connUserInfo.isConnectedFlag() =" + connUserInfo.isConnectedFlag() + "=" );
+        logger.info( "jfilewin Exists()" );
+        logger.info( "jfilewin Exists()  connUserInfo.isConnectedFlag() =" + connUserInfo.isConnectedFlag() + "=" );
 
         if ( connUserInfo.isConnectedFlag() )
             {
@@ -44,15 +44,15 @@ public class FileUtils
             }
         else
             {
-            System.out.println("local Exists()" );
+            logger.info( "local Exists()" );
             return Files.exists( Paths.get( targetPath ) );
             }
         }
 
     public static void createDirectory( ConnUserInfo connUserInfo, String targetPath )
         {
-        System.out.println("jfilewin createDirectory()" );
-        System.out.println("jfilewin createDirectory()  connUserInfo.isConnectedFlag() =" + connUserInfo.isConnectedFlag() + "=" );
+        logger.info( "jfilewin createDirectory()" );
+        logger.info( "jfilewin createDirectory()  connUserInfo.isConnectedFlag() =" + connUserInfo.isConnectedFlag() + "=" );
 
         if ( connUserInfo.isConnectedFlag() )
             {
@@ -62,21 +62,21 @@ public class FileUtils
             }
         else
             {
-            System.out.println("local Exists()" );
+            logger.info( "local Exists()" );
             try
                 {
                 Files.createDirectory( Paths.get( targetPath ) );
                 } catch (IOException ex)
                 {
-                Logger.getLogger(FileUtils.class.getName()).log(Level.SEVERE, null, ex);
+                logger.severeExc( ex );
                 }
             }
         }
 
     public static void fileMove( ConnUserInfo connUserInfo, String sourcePath, String targetPath )
         {
-        System.out.println("jfilewin FileMove()" );
-        System.out.println("jfilewin FileMove()  connUserInfo.isConnectedFlag() =" + connUserInfo.isConnectedFlag() + "=" );
+        logger.info( "jfilewin FileMove()" );
+        logger.info( "jfilewin FileMove()  connUserInfo.isConnectedFlag() =" + connUserInfo.isConnectedFlag() + "=" );
 
         if ( connUserInfo.isConnectedFlag() )
             {
@@ -101,7 +101,7 @@ public class FileUtils
                 HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity( params, headers );
                 HttpEntity<String> response = noHostVerifyRestTemplate.exchange( connUserInfo.getToUri() + JfpRestURIConstants.RENAME_FILE 
                                     , HttpMethod.PUT, requestEntity, String.class );  //, params );
-                System.out.println("jfilewin FileMove()  response =" + response + "=" );
+                logger.info( "jfilewin FileMove()  response =" + response + "=" );
                 }
             catch( Exception exc )
                 {
@@ -110,9 +110,9 @@ public class FileUtils
             }
         else
             {
-            System.out.println("jfilewin FileMove()" );
+            logger.info( "jfilewin FileMove()" );
     //        Path sourcePath = Paths.get( tcl.getOldValue().toString().trim() );
-            System.out.println( "try to move dir source =" + sourcePath + "=   target =" + targetPath + "=" );
+            logger.info( "try to move dir source =" + sourcePath + "=   target =" + targetPath + "=" );
             if ( Files.exists( Paths.get( sourcePath ) ) )
                 {
                 try
@@ -121,7 +121,7 @@ public class FileUtils
                     } 
                 catch (IOException ex)
                     {
-                    Logger.getLogger(FileUtils.class.getName()).log(Level.SEVERE, null, ex);
+                    logger.severeExc( ex );
                     }
                 }
             }
@@ -131,7 +131,7 @@ public class FileUtils
             throws IOException 
         {
         Path targetPath = Paths.get( path );
-        System.out.println("jfilewin touch()  connUserInfo.isConnectedFlag() =" + connUserInfo.isConnectedFlag() + "=" );
+        logger.info( "jfilewin touch()  connUserInfo.isConnectedFlag() =" + connUserInfo.isConnectedFlag() + "=" );
 
         if ( connUserInfo.isConnectedFlag() )
             {

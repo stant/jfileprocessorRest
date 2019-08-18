@@ -5,7 +5,9 @@
  */
 package com.towianski.jfileprocessor;
 
+import com.towianski.jfileprocess.actions.UpFolderAction;
 import com.towianski.jfileprocessor.services.CallGroovy;
+import com.towianski.utils.MyLogger;
 import groovy.lang.Binding;
 import java.awt.Color;
 import java.awt.Font;
@@ -31,12 +33,13 @@ import javax.swing.KeyStroke;
  */
 public class TextEditPanel extends javax.swing.JFrame {
 
-        LinkedHashMap<String,String> savedPathsHm = new LinkedHashMap<String,String>();
-        JFileFinderWin jFileFinderWin = null;
-        DefaultComboBoxModel listOfFilesPanelModel = null;
-        String currentDirectory = "";
-        String currentFile = "";
-        static Color buttonBgColor = null;
+    private static final MyLogger logger = MyLogger.getLogger( UpFolderAction.class.getName() );
+    LinkedHashMap<String,String> savedPathsHm = new LinkedHashMap<String,String>();
+    JFileFinderWin jFileFinderWin = null;
+    DefaultComboBoxModel listOfFilesPanelModel = null;
+    String currentDirectory = "";
+    String currentFile = "";
+    static Color buttonBgColor = null;
 
     /**
      * Creates new 
@@ -90,7 +93,7 @@ public class TextEditPanel extends javax.swing.JFrame {
     
     public void readFile( File selectedFile )
         {
-        System.out.println( "TextEditPanel File to read =" + selectedFile + "=" );
+        logger.info( "TextEditPanel File to read =" + selectedFile + "=" );
         currentDirectory = selectedFile.getParent();
         currentFile = selectedFile.getAbsolutePath();
         
@@ -120,7 +123,7 @@ public class TextEditPanel extends javax.swing.JFrame {
     
     public void saveToFile( File selectedFile )
         {
-        System.out.println( "File to save to =" + selectedFile + "=" );
+        logger.info( "File to save to =" + selectedFile + "=" );
         currentDirectory = selectedFile.getParent();
         currentFile = selectedFile.getAbsolutePath();
         
@@ -136,7 +139,7 @@ public class TextEditPanel extends javax.swing.JFrame {
 
             codePane.write(bw);
 //            int numItems = thisListModel.getSize();
-//            System.out.println( "thisListModel.getSize() num of items =" + numItems + "=" );
+//            logger.info( "thisListModel.getSize() num of items =" + numItems + "=" );
 //            
 //            //loop for jtable rows
 //            for( int i = 0; i < numItems; i++ )
@@ -163,9 +166,9 @@ public class TextEditPanel extends javax.swing.JFrame {
         File currentDir = new File( currentDirectory );
 //        this.pathRoots = new String[] { currentDir.getAbsolutePath() };
         CallGroovy callGroovy = new CallGroovy( new String[] { currentDir.getAbsolutePath() } );
-        System.out.println( "before call: callGroovy.testGroovyScriptEngineVsGroovyShell();" );
+        logger.info( "before call: callGroovy.testGroovyScriptEngineVsGroovyShell();" );
         Binding binding = new Binding();
-        System.out.println( "start codeProcessorPanel.jFileFinderWin.getStartingFolder() =" + this.jFileFinderWin.getStartingFolder() + "=" );
+        logger.info( "start codeProcessorPanel.jFileFinderWin.getStartingFolder() =" + this.jFileFinderWin.getStartingFolder() + "=" );
 
 //        DefaultComboBoxModel defaultComboBoxModel = (DefaultComboBoxModel) jFileFinderWin.getListPanelModel( (String) listOfLists.getSelectedItem() );
         
@@ -180,7 +183,7 @@ public class TextEditPanel extends javax.swing.JFrame {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                //System.out.println( "previewImportWin formWindow dispose()" );
+                //logger.info( "previewImportWin formWindow dispose()" );
                 win.dispatchEvent( new WindowEvent( win, WindowEvent.WINDOW_CLOSING )); 
                 win.dispose();
             }

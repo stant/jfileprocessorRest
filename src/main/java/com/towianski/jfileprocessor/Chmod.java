@@ -7,6 +7,7 @@ package com.towianski.jfileprocessor;
 
 import com.towianski.models.Constants;
 import com.towianski.utils.DesktopUtils;
+import com.towianski.utils.MyLogger;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,8 +17,6 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -25,6 +24,7 @@ import java.util.logging.Logger;
  */
 public class Chmod
 {
+    private static final MyLogger logger = MyLogger.getLogger( Chmod.class.getName() );
     private Path fromPath;
     private long numFilesChmodd = 0;
     private long numFoldersChmodd = 0;
@@ -55,7 +55,7 @@ public class Chmod
         this.deleteReadonlyFlag = deleteReadonlyFlag;
         this.fsType = fsType;
         this.swingWorker = swingWorker;
-        System.out.println( "Deleter this.fromPath =" + this.fromPath + "=" );
+        logger.info( "Deleter this.fromPath =" + this.fromPath + "=" );
         cancelFlag = false;        
     }
 
@@ -211,7 +211,7 @@ public class Chmod
                 }
             }
         catch (IOException ex) {
-            Logger.getLogger(Deleter.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         }
     }
 
@@ -222,8 +222,8 @@ public class Chmod
     
     public void chmodRecursive( File filename, String octPerms ) throws IOException
         {
-//        System.out.println( "entered chmodRecursive()" );
-        System.out.println( "ck to chmod =" + filename + "=" );
+//        logger.info( "entered chmodRecursive()" );
+        logger.info( "ck to chmod =" + filename + "=" );
         if ( filename.toString().endsWith( "." ) || filename.toString().endsWith( ".." ) )
             {
             return;
@@ -245,13 +245,13 @@ public class Chmod
                 }
 //            else
 //                {
-//                System.out.println( "found no files in =" + filename + "=" );
+//                logger.info( "found no files in =" + filename + "=" );
 //                }
             } 
         catch (Exception ex) 
             {
-            System.out.println( "chmod Done" );
-            Logger.getLogger(DeleterNonWalker.class.getName()).log(Level.SEVERE, null, ex);
+            logger.info( "chmod Done" );
+            logger.severeExc( ex );
             ex.printStackTrace();
             return;   // done
             }
@@ -261,13 +261,13 @@ public class Chmod
     // matches to standard out.
     void done() 
         {
-        System.out.println( "Tested:  " + numTested );
-        System.out.println( "Chmodd Files count: " + numFilesChmodd );
-        System.out.println( "Chmodd Folders count: " + numFoldersChmodd );
+        logger.info( "Tested:  " + numTested );
+        logger.info( "Chmodd Files count: " + numFilesChmodd );
+        logger.info( "Chmodd Folders count: " + numFoldersChmodd );
 
 //            for ( Path mpath : matchedPathsList )
 //                {
-//                System.out.println( mpath );
+//                logger.info( mpath );
 //                }
         }
     

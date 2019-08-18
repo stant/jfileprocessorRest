@@ -5,10 +5,9 @@
  */
 package com.towianski.jfileprocess.actions;
 
+import com.towianski.utils.MyLogger;
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -16,6 +15,7 @@ import java.util.logging.Logger;
  */
 public final class ProcessRunnableString implements Runnable {
 
+    private static final MyLogger logger = MyLogger.getLogger( ProcessRunnable.class.getName() );
     String startDir = null;
     String cmd = null;
     int exitValue = 0;
@@ -30,8 +30,8 @@ public final class ProcessRunnableString implements Runnable {
     public void run() 
         {
         try {
-            System.out.println( "ProcessRunnable start()" );
-            System.out.println( "(" + cmd + ") " );
+            logger.info( "ProcessRunnable start()" );
+            logger.info( "(" + cmd + ") " );
             ProcessBuilder builder = new ProcessBuilder( cmd );
             if ( startDir != null )
                 {
@@ -42,11 +42,11 @@ public final class ProcessRunnableString implements Runnable {
             Process process = builder.start();
             process.waitFor();
             exitValue = process.exitValue();
-            System.out.println( "process.waitFor() rc = " + exitValue );
+            logger.info( "process.waitFor() rc = " + exitValue );
         } catch (IOException ex) {
-            Logger.getLogger(ProcessRunnableString.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         } catch (InterruptedException ex) {
-            Logger.getLogger(ProcessRunnableString.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         }
 	}
 

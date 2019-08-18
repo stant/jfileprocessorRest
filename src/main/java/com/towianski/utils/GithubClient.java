@@ -12,8 +12,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -22,6 +20,7 @@ import org.springframework.web.client.RestTemplate;
  */
 public class GithubClient {
     
+    private static final MyLogger logger = MyLogger.getLogger( GithubClient.class.getName() );
 //    private Client client;
 //    private WebTarget userTarget;
 //    private WebTarget userRepoTarget;
@@ -61,7 +60,7 @@ public class GithubClient {
         try {
             RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
             String response = noHostVerifyRestTemplate.getForEntity( "https://api.github.com" + JfpRestURIConstants.GET_LATEST_GITHUB_VERSION_NUMBER, String.class).getBody();
-            System.out.println( "response =" + response + "=" );
+            logger.info( "response =" + response + "=" );
             byte[] jsonBytes = response.getBytes(Charset.forName("UTF-8"));
             JsonNode rootNode = createJsonNodeFromBytes( jsonBytes );
 //             printJsonNode( rootNode );
@@ -76,7 +75,7 @@ public class GithubClient {
     public static void main(String[] args) 
         {
         GithubClient githubClient = new GithubClient();
-        //System.out.println( "find github user =" + githubClient.findUserByUsername( "stant" ) + "=" );
+        //logger.info( "find github user =" + githubClient.findUserByUsername( "stant" ) + "=" );
 
         //ConvJsonToMap convJsonToMap = new ConvJsonToMap();
         //convJsonToMap.prettyPrintBytes( githubClient.findUserByUsername( "stant" ).getBytes(Charset.forName("UTF-8")) );
@@ -85,7 +84,7 @@ public class GithubClient {
 //        JacksonTreeNodeExample jacksonTreeNodeExample = new JacksonTreeNodeExample();
 //        //String findReleaseCountStr = githubClient.findReleaseCount( "opscode-cookbooks", "tomcat" );
 //        String findReleaseCountStr = githubClient.findReleaseCount( args[0], args[1] );
-//        System.out.println( "findReleaseCount =" + findReleaseCountStr + "=" );
+//        logger.info( "findReleaseCount =" + findReleaseCountStr + "=" );
 //        byte[] jsonBytes = findReleaseCountStr.getBytes(Charset.forName("UTF-8"));
 //        //convJsonToMap.prettyPrintBytes( jsonBytes );
 //        JsonNode rootNode = jacksonTreeNodeExample.createJsonNodeFromBytes( jsonBytes );
@@ -93,7 +92,7 @@ public class GithubClient {
 //        jacksonTreeNodeExample.printJsonNode( rootNode );
 
 //        String findReleaseCountStr = githubClient.findReleaseCount( args[0], args[1] );
-//        System.out.println( "findReleaseCount =" + findReleaseCountStr + "=" );
+//        logger.info( "findReleaseCount =" + findReleaseCountStr + "=" );
 //        byte[] jsonBytes = findReleaseCountStr.getBytes(Charset.forName("UTF-8"));
 //        JsonNode rootNode = jacksonTreeNodeExample.createJsonNodeFromBytes( jsonBytes );
 //        jacksonTreeNodeExample.printJsonNode( rootNode );
@@ -107,9 +106,9 @@ public class GithubClient {
         try {
             rootNode = mapper.readTree( jsonBytes );
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(GithubClient.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         } catch (IOException ex) {
-            Logger.getLogger(GithubClient.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         }
         return rootNode;
     }
@@ -124,38 +123,38 @@ public class GithubClient {
 //                    new FileReader( "F:\\data\\testfiles\\releases.json" ));
 //            rootNode = mapper.readTree( fileReader );
 //        } catch (FileNotFoundException ex) {
-//            Logger.getLogger(JacksonTreeNodeExample.class.getName()).log(Level.SEVERE, null, ex);
+//            logger.severeExc( ex );
 //        } catch (IOException ex) {
-//            Logger.getLogger(JacksonTreeNodeExample.class.getName()).log(Level.SEVERE, null, ex);
+//            logger.severeExc( ex );
 //        }
 //        return rootNode;
 //    }
     
     public static void printJsonNode( JsonNode rootNode )
     {
-//        System.out.println( "assets[0].name = " + rootNode.get(0).get( "assets" ).get(0).get( "name" ).asText() );
-//        System.out.println( "assets[0].name = " + rootNode.get(0).get( "assets" ).get(0).get( "download_count" ).asText() );
+//        logger.info( "assets[0].name = " + rootNode.get(0).get( "assets" ).get(0).get( "name" ).asText() );
+//        logger.info( "assets[0].name = " + rootNode.get(0).get( "assets" ).get(0).get( "download_count" ).asText() );
     try {
-        System.out.println( "rootNode size = " + rootNode.size() );
+        logger.info( "rootNode size = " + rootNode.size() );
             Iterator<String> fieldNameIterator = rootNode.fieldNames();
             while (fieldNameIterator.hasNext()) {
                 String fieldName = fieldNameIterator.next();
-                System.out.println( "rootNode fieldName =" + fieldName + "=    value =" + rootNode.get(fieldName).asText() + "=" );
+                logger.info( "rootNode fieldName =" + fieldName + "=    value =" + rootNode.get(fieldName).asText() + "=" );
                 }
 
         for ( JsonNode jnode : rootNode )
             {
-            System.out.println( "jnode -----------------------------------" );
+            logger.info( "jnode -----------------------------------" );
             // Iterate over node's properties
             fieldNameIterator = jnode.fieldNames();
             while (fieldNameIterator.hasNext()) {
                 String fieldName = fieldNameIterator.next();
-                System.out.println( "jnode fieldName = " + fieldName + "=" );
+                logger.info( "jnode fieldName = " + fieldName + "=" );
                 }
                 
             if ( jnode.get( "name" ) != null )
                 {
-                System.out.println( "jnode = " + jnode.get( "name" ).asText() );
+                logger.info( "jnode = " + jnode.get( "name" ).asText() );
                 }
             if ( jnode.get( "assets" ) != null )
                 {
@@ -163,11 +162,11 @@ public class GithubClient {
                     {
                     if ( jnode.get( "name" ) != null )
                         {
-                        System.out.println( "    asset[name] = " + asset.get( "name" ).asText() );
+                        logger.info( "    asset[name] = " + asset.get( "name" ).asText() );
                         }
                     //if ( jnode.get( "download_count" ) != null )
                         {
-                        System.out.println( "    asset[download_count] = " + asset.get( "download_count" ).asText() );
+                        logger.info( "    asset[download_count] = " + asset.get( "download_count" ).asText() );
                         }
                     }
                 }

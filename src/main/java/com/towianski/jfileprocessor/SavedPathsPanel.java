@@ -7,7 +7,9 @@ package com.towianski.jfileprocessor;
 
 import com.towianski.boot.JFileProcessorVersion;
 import com.towianski.jfileprocess.actions.ProcessInThread;
+import com.towianski.jfileprocess.actions.UpFolderAction;
 import com.towianski.utils.DesktopUtils;
+import com.towianski.utils.MyLogger;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -26,8 +28,9 @@ import javax.swing.JOptionPane;
  */
 public class SavedPathsPanel extends javax.swing.JPanel {
 
-        HashMap<String,String> savedPathsHm = new HashMap<String,String>();
-        JFileFinderWin jFileFinderWin = null;
+    private static final MyLogger logger = MyLogger.getLogger( UpFolderAction.class.getName() );
+    HashMap<String,String> savedPathsHm = new HashMap<String,String>();
+    JFileFinderWin jFileFinderWin = null;
 
     /**
      * Creates new form SavedPathsPanel
@@ -133,7 +136,7 @@ public class SavedPathsPanel extends javax.swing.JPanel {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         DefaultListModel listModel = (DefaultListModel) savedPathsList.getModel();
-        System.out.println( "add path() startingFolder.getText() =" + jFileFinderWin.getStartingFolder() + "=" );
+        logger.info( "add path() startingFolder.getText() =" + jFileFinderWin.getStartingFolder() + "=" );
         String ans = JOptionPane.showInputDialog( "Name: ", Paths.get( jFileFinderWin.getStartingFolder() ).getFileName() );
         if ( ans == null )
             {
@@ -155,7 +158,7 @@ public class SavedPathsPanel extends javax.swing.JPanel {
         DefaultListModel listModel = (DefaultListModel) savedPathsList.getModel();
         int index = savedPathsList.getSelectedIndex();
         String strPath = listModel.getElementAt(index).toString();
-        System.out.println( "delete path() index =" + index + "   element =" + strPath + "=" );
+        logger.info( "delete path() index =" + index + "   element =" + strPath + "=" );
         if ( strPath.equals( "New Window" ) || strPath.equals( "Trash" ) )
             {
             return;
@@ -187,11 +190,11 @@ public class SavedPathsPanel extends javax.swing.JPanel {
                 cmdList.add( JFileProcessorVersion.getFileName() );
 
                 int rc = jp.execJava2( cmdList, true );
-                System.out.println( "SavedPathsPanel.javaprocess.exec start new window rc = " + rc + "=" );
+                logger.info( "SavedPathsPanel.javaprocess.exec start new window rc = " + rc + "=" );
             } catch (IOException ex) {
-                Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+                logger.severeExc( ex );
             } catch (InterruptedException ex) {
-                Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+                logger.severeExc( ex );
             }
             return;
             }
@@ -210,20 +213,20 @@ public class SavedPathsPanel extends javax.swing.JPanel {
                 cmdList.add( DesktopUtils.getTrashFolder().toString() );
                 
                 int rc = jp.execJava2( cmdList, true );
-                System.out.println( "javaprocess.exec start new window Trash rc = " + rc + "=" );
+                logger.info( "javaprocess.exec start new window Trash rc = " + rc + "=" );
             } catch (IOException ex) {
-                Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+                logger.severeExc( ex );
             } catch (InterruptedException ex) {
-                Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+                logger.severeExc( ex );
             }
             return;
             }
         
-        System.out.println( "savedPathsHm.get( strPath ) =" + savedPathsHm.get( strPath ) + "=" );
+        logger.info( "savedPathsHm.get( strPath ) =" + savedPathsHm.get( strPath ) + "=" );
         String[] arr = savedPathsHm.get( strPath ).split( "," );
         for ( String ttt : arr )
             {
-            System.out.println( "bookmarks piece =" + ttt + "=" );
+            logger.info( "bookmarks piece =" + ttt + "=" );
             }
         if ( arr.length > 3 )
             {
@@ -244,7 +247,7 @@ public class SavedPathsPanel extends javax.swing.JPanel {
                 }
             else
                 {
-                System.out.println( "  -- switch server" );
+                logger.info( "  -- switch server" );
                 jFileFinderWin.setRmtUser( arrList.get( 1 ) );
                 jFileFinderWin.setRmtPasswd( arrList.get( 2 ) );
                 jFileFinderWin.setRmtHost( arrList.get( 3 ) );

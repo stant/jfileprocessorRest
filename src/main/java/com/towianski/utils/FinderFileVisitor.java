@@ -19,7 +19,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.logging.Level;
 
 /**
  *
@@ -27,7 +26,7 @@ import java.util.logging.Level;
  */
 public class FinderFileVisitor extends SimpleFileVisitor<Path>
         {
-        private final static MyLogger logger = MyLogger.getLogger( JFileFinder.class.getName() );
+        private static final MyLogger logger = MyLogger.getLogger( FinderFileVisitor.class.getName() );
     
         private long numFileMatches = 0;
         private long numFolderMatches = 0;
@@ -88,19 +87,19 @@ public class FinderFileVisitor extends SimpleFileVisitor<Path>
 //                      rowList.add( attr.isDirectory() );
 //                      rowList.add( attr.isSymbolicLink() );
                         numFileMatches++;
-//                      System.out.println( "Match =" + file );
+//                      logger.info( "Match =" + file );
                         matchedPathsList.add( file );
 //                      int at = pathStr.indexOf( System.getProperty( "file.separator" ), startingPathLength );
-//                      System.out.println( "search from string =" + pathStr.substring(startingPathLength) + "=" );
-//                      System.out.println( "startingPathLength =" + startingPathLength );
-//                      System.out.println( "path separator >" + System.getProperty( "file.separator" ) + "<" );
-//                      System.out.println( "at =" + at );
+//                      logger.info( "search from string =" + pathStr.substring(startingPathLength) + "=" );
+//                      logger.info( "startingPathLength =" + startingPathLength );
+//                      logger.info( "path separator >" + System.getProperty( "file.separator" ) + "<" );
+//                      logger.info( "at =" + at );
 //                      String pkgpath = pathStr.substring( startingPathLength, at );
                         }
                     } 
                 catch (Exception ex) 
                     {
-                    logger.log(Level.SEVERE, null, ex);
+                    logger.severeExc( ex);
                     return false;
                     }
                 }
@@ -121,25 +120,25 @@ public class FinderFileVisitor extends SimpleFileVisitor<Path>
             if ( chainFilterFolderList != null )
                 {
                 try {
-//                    System.out.println( "folder match ? =" + fpath.toString() );
-//                    System.out.println( "folder match result = " + chainFilterFolderList.testFilters( fpath, attrs, chainFilterArgs, jFileFinder ) );
+//                    logger.info( "folder match ? =" + fpath.toString() );
+//                    logger.info( "folder match result = " + chainFilterFolderList.testFilters( fpath, attrs, chainFilterArgs, jFileFinder ) );
                     if ( chainFilterFolderList.testFilters( fpath, attrs, chainFilterArgs, jFileFinder ) )
                         {
                         numFolderMatches++;
-//                        System.out.println( "Match =" + fpath + "   numFolderMatches =" + numFolderMatches );
+//                        logger.info( "Match =" + fpath + "   numFolderMatches =" + numFolderMatches );
                         matchedPathsList.add( fpath );
                         }
                     }
                 catch (Exception ex) 
                     {
-                    logger.log(Level.SEVERE, null, ex);
+                    logger.severeExc( ex);
                     return false;
                     }
                 }
             else
                 {
                 numFolderMatches++;
-//                System.out.println( "no filter Match =" + fpath + "   numFolderMatches =" + numFolderMatches );
+//                logger.info( "no filter Match =" + fpath + "   numFolderMatches =" + numFolderMatches );
                 matchedPathsList.add( fpath );
                 }
             return true;
@@ -148,13 +147,13 @@ public class FinderFileVisitor extends SimpleFileVisitor<Path>
         // Prints the total number of
         // matches to standard out.
         public void done() {
-            System.out.println( "Tested:  " + numTested );
-            System.out.println( "Matched Files count: " + numFileMatches );
-            System.out.println( "Matched Folders count: " + numFolderMatches );
+            logger.info( "Tested:  " + numTested );
+            logger.info( "Matched Files count: " + numFileMatches );
+            logger.info( "Matched Folders count: " + numFolderMatches );
 
 //            for ( Path mpath : matchedPathsList )
 //                {
-//                System.out.println( mpath );
+//                logger.info( mpath );
 //                }
         }
 
@@ -167,15 +166,15 @@ public class FinderFileVisitor extends SimpleFileVisitor<Path>
                 {
                 if ( cancelFlag )
                     {
-                    System.out.println( "Search cancelled by user." );
+                    logger.info( "Search cancelled by user." );
                     return FileVisitResult.TERMINATE;
                     }
-                //System.out.println( "test file ? =" + fpath.toString() );
+                //logger.info( "test file ? =" + fpath.toString() );
                 processFile( fpath, attrs );
                 }
             catch( Exception ex )
                 {
-                System.out.println( "Error parsing file =" + fpath + "=" );
+                logger.info( "Error parsing file =" + fpath + "=" );
                 return FileVisitResult.TERMINATE;
                 }
             return FileVisitResult.CONTINUE;
@@ -185,42 +184,42 @@ public class FinderFileVisitor extends SimpleFileVisitor<Path>
         @Override
         public FileVisitResult preVisitDirectory( Path fpath, BasicFileAttributes attrs )
             {
-//            System.out.println( "preVisitDirectory() chainFilterFolderlist.size() =" + chainFilterFolderList.size() + "=" );
-//            System.out.println( "preVisitDirectory() chainFilterPreVisitFolderList.size() =" + chainFilterPreVisitFolderList.size() + "=" );
+//            logger.info( "preVisitDirectory() chainFilterFolderlist.size() =" + chainFilterFolderList.size() + "=" );
+//            logger.info( "preVisitDirectory() chainFilterPreVisitFolderList.size() =" + chainFilterPreVisitFolderList.size() + "=" );
 
             //  First check is do we show this folder?
             try {
                 if ( cancelFlag )
                     {
-                    System.out.println( "Search cancelled by user." );
+                    logger.info( "Search cancelled by user." );
                     return FileVisitResult.TERMINATE;
                     }
                 processFolder( fpath, attrs );
                 }
             catch (Exception ex) 
                 {
-                logger.log(Level.SEVERE, null, ex);
-                System.out.println( "preVisitDirectory Exception: " + ex.toString() );
+                logger.severeExc( ex);
+                logger.info( "preVisitDirectory Exception: " + ex.toString() );
                 }
 
             // Second check is do we go into this folder or skip it?
             if ( chainFilterPreVisitFolderList != null )
                 {
                 try {
-                    //System.out.println( "previsit folder ? =" + fpath.toString() );
+                    //logger.info( "previsit folder ? =" + fpath.toString() );
                     if ( chainFilterPreVisitFolderList.testFilters( fpath, attrs, chainFilterArgs, jFileFinder ) )
                         {
                         return CONTINUE;
                         }
                     else
                         {
-                        System.out.println( "SKIP folder =" + fpath.toString() );
+                        logger.info( "SKIP folder =" + fpath.toString() );
                         return FileVisitResult.SKIP_SUBTREE;
                         }
                     }
                 catch (Exception ex) 
                     {
-                    logger.log(Level.SEVERE, null, ex);
+                    logger.severeExc( ex);
                     }
                 }
             return FileVisitResult.SKIP_SUBTREE;
@@ -236,14 +235,14 @@ public class FinderFileVisitor extends SimpleFileVisitor<Path>
 //                attrs = Files.readAttributes( dir, BasicFileAttributes.class );
 //                if ( cancelFlag )
 //                    {
-//                    System.out.println( "Search cancelled by user." );
+//                    logger.info( "Search cancelled by user." );
 //                    return FileVisitResult.TERMINATE;
 //                    }
 //                processFolder( dir, attrs );
 //                }
 //            catch (Exception ex) 
 //                {
-//                Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+//                logger.severeExc( ex );
 //                }
 //            return CONTINUE;
 //            }
@@ -251,10 +250,10 @@ public class FinderFileVisitor extends SimpleFileVisitor<Path>
         @Override
         public FileVisitResult visitFileFailed( Path file, IOException exc ) 
             {
-            //System.out.println( exc + "  for file =" + file.toString() );
+            //logger.info( exc + "  for file =" + file.toString() );
             if ( new File( file.toString() ).isDirectory() )
                 {
-                System.out.println( "skipping inaccessible folder: " + file.toString() );
+                logger.info( "skipping inaccessible folder: " + file.toString() );
                 if ( exc instanceof java.nio.file.AccessDeniedException )
                     {
                     BasicFileAttributes attrs;
@@ -265,7 +264,7 @@ public class FinderFileVisitor extends SimpleFileVisitor<Path>
             }
                     catch (Exception ex) 
                         {
-                        System.out.println( "Error calling processFolder in visitFileFailed()" );
+                        logger.info( "Error calling processFolder in visitFileFailed()" );
                         ex.printStackTrace();
                         }
                     }

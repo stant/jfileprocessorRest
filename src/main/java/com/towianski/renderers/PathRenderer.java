@@ -6,6 +6,7 @@
 package com.towianski.renderers;
 
 import com.towianski.models.Constants;
+import com.towianski.utils.MyLogger;
 import javax.swing.table.DefaultTableCellRenderer;
 
 /**
@@ -14,6 +15,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  */
 public class PathRenderer extends DefaultTableCellRenderer
 {
+    private static final MyLogger logger = MyLogger.getLogger( PathRenderer.class.getName() );
     int filesysType = -9;
     String delim = "\\";   // default to DOS
     int at = 0;
@@ -25,7 +27,7 @@ public class PathRenderer extends DefaultTableCellRenderer
         {
         delim = "/";
         }
-    System.out.println( "filesysType =" + filesysType + "   delim =\"" + delim + "\"" );
+    logger.info( "filesysType =" + filesysType + "   delim =\"" + delim + "\"" );
     }
   
   @Override public void setValue(Object aValue) 

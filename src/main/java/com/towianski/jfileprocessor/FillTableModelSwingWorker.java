@@ -7,6 +7,7 @@ package com.towianski.jfileprocessor;
 
 import com.towianski.models.Constants;
 import com.towianski.models.ResultsData;
+import com.towianski.utils.MyLogger;
 import java.text.NumberFormat;
 import javax.swing.SwingWorker;
 
@@ -16,6 +17,7 @@ import javax.swing.SwingWorker;
  */
 public class FillTableModelSwingWorker extends SwingWorker<ResultsData, Object> {
 
+    private static final MyLogger logger = MyLogger.getLogger( FillTableModelSwingWorker.class.getName() );
     private JFileFinderWin jFileFinderWin = null;
     private String startingPath = null;
     private String patternType = null;
@@ -30,16 +32,16 @@ public class FillTableModelSwingWorker extends SwingWorker<ResultsData, Object> 
 
     @Override
     public ResultsData doInBackground() {
-        System.out.println( "FillTableModelSwingWorker.doInBackground() before fillInFilesTable.run()" );
+        logger.info( "FillTableModelSwingWorker.doInBackground() before fillInFilesTable.run()" );
         jFileFinderWin.setProcessStatus( Constants.PROCESS_STATUS_FILL_STARTED );
         jFileFinderWin.fillInFilesTable( null );
         
-        System.out.println( "after FillTableModelSwingWorker.doInBackground()" );
-        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+        logger.info( "after FillTableModelSwingWorker.doInBackground()" );
+        logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
 //        SwingUtilities.invokeLater(new Runnable() {
 //            public void run() {
 //                jFileFinderWin.replaceDirWatcher();
-//                System.out.println( "entered FillTableModelSwingWorker.doInBackground() set my own DoneFlag" );
+//                logger.info( "entered FillTableModelSwingWorker.doInBackground() set my own DoneFlag" );
 //            }
 //        });
         return jfilefinder.getResultsData();
@@ -48,10 +50,10 @@ public class FillTableModelSwingWorker extends SwingWorker<ResultsData, Object> 
     @Override
     public void done() {
         try {
-            System.out.println( "entered FillTableModelSwingWorker.done()" );
-            System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+            logger.info( "entered FillTableModelSwingWorker.done()" );
+            logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
             ResultsData resultsData = get();
-            //System.out.println( "SwingWork.done() got ans =" + matchedPathsList + "=" );
+            //logger.info( "SwingWork.done() got ans =" + matchedPathsList + "=" );
             //jFileFinderWin.resetSearchBtn();
             NumberFormat numFormat = NumberFormat.getIntegerInstance();
             if ( resultsData.getFillWasCanceled() )
@@ -70,7 +72,7 @@ public class FillTableModelSwingWorker extends SwingWorker<ResultsData, Object> 
             jFileFinderWin.stopDirWatcher();
             jFileFinderWin.startDirWatcher();
             
-            System.out.println( "FillTableModelSwingWorker() jFileFinderWin.afterFillSwingWorker =" + jFileFinderWin.afterFillSwingWorker+ "=" );
+            logger.info( "FillTableModelSwingWorker() jFileFinderWin.afterFillSwingWorker =" + jFileFinderWin.afterFillSwingWorker+ "=" );
             if ( jFileFinderWin.afterFillSwingWorker != null )
                 {
                 jFileFinderWin.takeAfterFillSwingWorker().execute();    
@@ -81,7 +83,7 @@ public class FillTableModelSwingWorker extends SwingWorker<ResultsData, Object> 
             resultsData = null;
 //            jFileFinderWin.cleanup();
 
-            System.out.println( "exiting FillTableModelSwingWorker.done()" );
+            logger.info( "exiting FillTableModelSwingWorker.done()" );
             } 
         catch (InterruptedException ignore) {}
         catch (java.util.concurrent.ExecutionException e) 
@@ -96,7 +98,7 @@ public class FillTableModelSwingWorker extends SwingWorker<ResultsData, Object> 
                 {
                 why = e.getMessage();
                 }
-            System.out.println("Error FillTableModelSwingWorker() retrieving file. cause: " + why);
+            logger.info( "Error FillTableModelSwingWorker() retrieving file. cause: " + why);
             e.printStackTrace();
             }
         }    

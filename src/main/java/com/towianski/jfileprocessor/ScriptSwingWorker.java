@@ -14,7 +14,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.LinkedHashMap;
-import java.util.logging.Level;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -26,6 +25,8 @@ import javax.swing.KeyStroke;
  */
 public class ScriptSwingWorker extends CodeProcessorPanel {
 
+    private static final MyLogger logger = MyLogger.getLogger( ScriptSwingWorker.class.getName() );
+    
     LinkedHashMap<String,String> savedPathsHm = new LinkedHashMap<String,String>();
     JFileFinderWin jFileFinderWin = null;
     DefaultComboBoxModel listOfFilesPanelModel = null;
@@ -34,8 +35,6 @@ public class ScriptSwingWorker extends CodeProcessorPanel {
         
 /// extra vars
 
-    private final static MyLogger logger = MyLogger.getLogger( ScriptSwingWorker.class.getName() );
-        
     Thread jfinderThread = null;
     ResultsData resultsData = null;
     JRunGroovy jRunGroovy = null;
@@ -107,7 +106,7 @@ public class ScriptSwingWorker extends CodeProcessorPanel {
 
     public void setProcessStatus( String text )
         {
-        System.out.println( "ScriptSwingWorker() coming thru scriptspringwork setProcStatus()" );
+        logger.info( "ScriptSwingWorker() coming thru scriptspringwork setProcStatus()" );
         processStatus.setText(text);
         switch( text )
             {
@@ -151,7 +150,7 @@ public class ScriptSwingWorker extends CodeProcessorPanel {
         {                                         
         if ( doCmdBtn.getText().equalsIgnoreCase( PROCESS_STATUS_CANCEL_COPY ) )
             {
-            System.out.println( "ScriptSwingWorker hit stop button, got rootPaneCheckingEnabled =" + rootPaneCheckingEnabled + "=" );
+            logger.info( "ScriptSwingWorker hit stop button, got rootPaneCheckingEnabled =" + rootPaneCheckingEnabled + "=" );
             setProcessStatus( PROCESS_STATUS_COPY_CANCELED );
             this.stopSearch();
             //JOptionPane.showConfirmDialog( null, "at call stop search" );
@@ -160,14 +159,14 @@ public class ScriptSwingWorker extends CodeProcessorPanel {
             {
             try {
                 DefaultComboBoxModel defaultComboBoxModel = jFileFinderWin.getSelectedItemsAsComboBoxModel();
-                System.out.println( "entered ScriptSwingWorker.run() before call new JRunGroovy()" );
+                logger.info( "entered ScriptSwingWorker.run() before call new JRunGroovy()" );
                 jRunGroovy = new JRunGroovy( jFileFinderWin, this, startingPath, currentDirectory, currentFile, defaultComboBoxModel );
                 GroovySwingWorker groovySwingWorker = new GroovySwingWorker( jFileFinderWin, this, jRunGroovy, currentDirectory, currentFile, defaultComboBoxModel );
                 groovySwingWorker.execute();   //doInBackground();
                 } 
             catch (Exception ex) 
                 {
-                logger.log(Level.SEVERE, null, ex);
+                logger.severeExc( ex);
                 } 
             }
         }
@@ -177,7 +176,7 @@ public class ScriptSwingWorker extends CodeProcessorPanel {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                //System.out.println( "previewImportWin formWindow dispose()" );
+                //logger.info( "previewImportWin formWindow dispose()" );
                 win.dispatchEvent( new WindowEvent( win, WindowEvent.WINDOW_CLOSING )); 
                 win.dispose();
             }

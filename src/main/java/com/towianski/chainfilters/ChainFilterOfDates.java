@@ -27,7 +27,7 @@ public class ChainFilterOfDates implements FilterChainFilter {
     
     public ChainFilterOfDates()
         {
-        //System.out.println( "new ChainFilterOfSizes()" );
+        //logger.info( "new ChainFilterOfSizes()" );
         }
     
     public ChainFilterOfDates( String op1, Date setDate1, String logicOp, String op2, Date setDate2 ) 
@@ -58,7 +58,7 @@ public class ChainFilterOfDates implements FilterChainFilter {
     public Boolean accept( Path fpath, BasicFileAttributes attr, ChainFilterArgs chainFilterArgs, JFileFinder jFileFinder )
         {
         long size = attr.size();
-        //System.out.println( "entered test for FilterOfSizes() - test size: " + size + " compared to setsize:" + setDate1 );
+        //logger.info( "entered test for FilterOfSizes() - test size: " + size + " compared to setsize:" + setDate1 );
         if ( doLogic == '1' )
             {
             return acceptOp1( fpath, attr );
@@ -79,16 +79,16 @@ public class ChainFilterOfDates implements FilterChainFilter {
         {
         Date tdate = new Date( attr.lastModifiedTime().toMillis() );
         long testDate = Long.parseLong( sdf.format( tdate ) );
-        //System.out.println( "entered test for FilterOfDates() - op1 =" + op1 + "   test date 1: " + testDate + " compared to setdate:" + setDate1 );
+        //logger.info( "entered test for FilterOfDates() - op1 =" + op1 + "   test date 1: " + testDate + " compared to setdate:" + setDate1 );
         
         if ( op1.equals( "<" ) && testDate < setDate1 )
             {
-            //System.out.println( "true <" );
+            //logger.info( "true <" );
             return true;
             }
         else if ( op1.equals( "<=" ) && testDate <= setDate1 )
             {
-            //System.out.println( "true >" );
+            //logger.info( "true >" );
             return true;
             }
         else if ( op1.equals( "=" ) && testDate == setDate1 )
@@ -107,7 +107,7 @@ public class ChainFilterOfDates implements FilterChainFilter {
             {
             return true;
             }
-        //System.out.println( "false 1" );
+        //logger.info( "false 1" );
         return false; 
         }
     
@@ -116,16 +116,16 @@ public class ChainFilterOfDates implements FilterChainFilter {
         {
         Date tdate = new Date( attr.lastModifiedTime().toMillis() );
         long testDate = Long.parseLong( sdf.format( tdate ) );
-        //System.out.println( "entered test for FilterOfDates() - test date 2: " + testDate + " compared to setdate:" + setDate2 );
+        //logger.info( "entered test for FilterOfDates() - test date 2: " + testDate + " compared to setdate:" + setDate2 );
         
         if ( op2.equals( "<" ) && testDate < setDate2 )
             {
-            //System.out.println( "true <" );
+            //logger.info( "true <" );
             return true;
             }
         else if ( op2.equals( "<=" ) && testDate <= setDate2 )
             {
-            //System.out.println( "true >" );
+            //logger.info( "true >" );
             return true;
             }
         else if ( op2.equals( "=" ) && testDate == setDate2 )
@@ -144,7 +144,7 @@ public class ChainFilterOfDates implements FilterChainFilter {
             {
             return true;
             }
-        //System.out.println( "false 2" );
+        //logger.info( "false 2" );
         return false; 
         }
 }

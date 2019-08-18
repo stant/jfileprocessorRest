@@ -5,16 +5,19 @@
  */
 package com.towianski.boot;
 
+import com.towianski.utils.MyLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 
 public class ProfileManager {
+    private static final MyLogger logger = MyLogger.getLogger( ProfileManager.class.getName() );
+
     @Autowired
     Environment environment;
  
     public void getActiveProfiles() {
         for (final String profileName : environment.getActiveProfiles()) {
-            System.out.println("Currently active profile - " + profileName);
+            logger.info( "Currently active profile - " + profileName);
         }   
     }
 }

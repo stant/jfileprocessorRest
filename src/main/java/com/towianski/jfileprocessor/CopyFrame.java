@@ -6,6 +6,7 @@
 package com.towianski.jfileprocessor;
 
 import com.towianski.jfileprocess.actions.CloseWinOnTimer;
+import com.towianski.jfileprocess.actions.UpFolderAction;
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.ResultsData;
@@ -37,8 +38,7 @@ import org.springframework.web.client.RestTemplate;
  */
 public class CopyFrame extends javax.swing.JFrame {
 
-//    private final static MyLogger logger = new MyLogger( Logger.getLogger( CopyFrame.class.getName() ) );
-    private final static MyLogger logger = MyLogger.getLogger( CopyFrame.class.getName() );
+    private static final MyLogger logger = MyLogger.getLogger( UpFolderAction.class.getName() );
 
     JFileFinderWin jFileFinderWin = null;
     Thread jfinderThread = null;
@@ -69,7 +69,7 @@ public class CopyFrame extends javax.swing.JFrame {
      */
     public CopyFrame() {
         initComponents();
-        System.out.println( "CopyFrame constructor()" );
+        logger.info( "CopyFrame constructor()" );
 //        MyLogger.init();
         
         this.setLocationRelativeTo( getRootPane() );
@@ -102,7 +102,7 @@ public class CopyFrame extends javax.swing.JFrame {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                //System.out.println( "previewImportWin formWindow dispose()" );
+                //logger.info( "previewImportWin formWindow dispose()" );
                 win.dispatchEvent( new WindowEvent( win, WindowEvent.WINDOW_CLOSING )); 
                 win.dispose();
             }
@@ -199,7 +199,7 @@ public class CopyFrame extends javax.swing.JFrame {
 
     public void copyBtnActionSwing( java.awt.event.ActionEvent evt )
         {
-        System.out.println( "----  entered copyBtnActionSwing()  ----" );
+        logger.info( "----  entered copyBtnActionSwing()  ----" );
         try {
             ArrayList<CopyOption> copyOpts = new ArrayList<CopyOption>();
             EnumSet<FileVisitOption> fileVisitOptions = EnumSet.noneOf( FileVisitOption.class );
@@ -217,9 +217,9 @@ public class CopyFrame extends javax.swing.JFrame {
                 }
 //                CopyOption[] copyOptsAR = copyOpts.toArray( new CopyOption[ copyOpts.size() ] );
 //
-//                System.out.println( "copyOpts length =" + copyOptsAR.length + "=" );
+//                logger.info( "copyOpts length =" + copyOptsAR.length + "=" );
 //                for ( CopyOption cc : copyOptsAR )
-//                    System.out.println( "cc =" + cc + "=" );
+//                    logger.info( "cc =" + cc + "=" );
 
             jfilecopy = new JFileCopy( connUserInfo, isDoingCutFlag, startingPath, copyPaths, toPath, fileVisitOptions, copyOpts );
             CopyFrameSwingWorker copyFrameSwingWorker = new CopyFrameSwingWorker( this, jfilecopy, copyPaths, toPath, showProgressTb.isSelected(), closeWhenDoneTb.isSelected() );
@@ -228,15 +228,15 @@ public class CopyFrame extends javax.swing.JFrame {
             } 
         catch (Exception ex) 
             {
-            logger.log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
             } 
         }
 
     public void copyBtnActionRest( java.awt.event.ActionEvent evt )
         {
-        System.out.println( "----  entered copyBtnActionRest()  ----" );
-//        System.out.println("jfilewin searchBtn() searchBtn.getText() =" + searchBtn.getText() + "=" );
-//        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+        logger.info( "----  entered copyBtnActionRest()  ----" );
+//        logger.info( "jfilewin searchBtn() searchBtn.getText() =" + searchBtn.getText() + "=" );
+//        logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
         stopDirWatcher();
 
         CopyModel copyModel = extractCopyModel();
@@ -247,21 +247,21 @@ public class CopyFrame extends javax.swing.JFrame {
         //object in the list and hence convert it to default JSON object type LinkedHashMap
 //        FilesTblModel filesTblModel = restTemplate.getForObject( SERVER_URI+JfpRestURIConstants.GET_FILES, FilesTblModel.class, CopyModel.class );
 
-        System.out.println( "rest send copyModel =" + copyModel + "=" );
+        logger.info( "rest send copyModel =" + copyModel + "=" );
 
         String response = noHostVerifyRestTemplate.postForEntity( connUserInfo.getToUri() + JfpRestURIConstants.COPY, copyModel, String.class).getBody();
-        System.out.println( "response =" + response + "=" );
+        logger.info( "response =" + response + "=" );
         resultsData = Rest.jsonToObject( response, ResultsData.class );
-        System.out.println( "resultsData.getFilesMatched() =" + resultsData.getFilesMatched() );
-//        System.out.println( "resultsData.getFilesTblModel() =" + resultsData.getFilesTblModel().toString() );
+        logger.info( "resultsData.getFilesMatched() =" + resultsData.getFilesMatched() );
+//        logger.info( "resultsData.getFilesTblModel() =" + resultsData.getFilesTblModel().toString() );
 
         try {
-            System.out.println( "entered CopyFiles.done()" );
+            logger.info( "entered CopyFiles.done()" );
             NumberFormat numFormat = NumberFormat.getIntegerInstance();
             String partialMsg = "";
 //            String msg =  "Copied " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) + " folders out of " + numFormat.format( resultsData.getFilesVisited() );
             String msg =  "Copied " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) + " folders out of " + numFormat.format( resultsData.getFilesTested() ) + " files and " + numFormat.format( resultsData.getFoldersTested() ) + " folders.";
-//            System.out.println( "CopyFrameSwingWorker. got results msg =" + msg + "=" );
+//            logger.info( "CopyFrameSwingWorker. got results msg =" + msg + "=" );
             if ( resultsData.getSearchWasCanceled() )
                 {
                 this.setProcessStatus( this.PROCESS_STATUS_COPY_CANCELED );
@@ -271,7 +271,7 @@ public class CopyFrame extends javax.swing.JFrame {
                 {
                 if ( resultsData.getProcessStatus().equals( this.PROCESS_STATUS_COPY_COMPLETED ) )
                     {
-                    System.out.println( "do new CloseWinOnTimer( copyFrame, 4000 )" );
+                    logger.info( "do new CloseWinOnTimer( copyFrame, 4000 )" );
                     new CloseWinOnTimer( this, closeWhenDoneTb.isSelected()? 4000 : 0 ){{setRepeats(false);}}.start();
                     }
                 }
@@ -296,7 +296,7 @@ public class CopyFrame extends javax.swing.JFrame {
             
 //            copyFrame.callSearchBtnActionPerformed();
             this.callSearchBtnActionPerformed();
-            //System.out.println( "exiting SwingWork.done()" );
+            //logger.info( "exiting SwingWork.done()" );
             }
         catch ( Exception e ) 
             {
@@ -307,7 +307,7 @@ public class CopyFrame extends javax.swing.JFrame {
             } else {
                 why = e.getMessage();
             }
-            System.out.println( "Error in CopyFiles(): " + why);
+            logger.info( "Error in CopyFiles(): " + why);
             e.printStackTrace();
             }
         }
@@ -322,7 +322,7 @@ public class CopyFrame extends javax.swing.JFrame {
     
     public CopyModel extractCopyModel()
         {
-        System.out.println("jfilewin extractCopyModel() " );  //searchBtn.getText() =" + searchBtn.getText() + "=" );
+        logger.info( "jfilewin extractCopyModel() " );  //searchBtn.getText() =" + searchBtn.getText() + "=" );
         CopyModel copyModel = new CopyModel();
 
 //        ArrayList<CopyOption> copyOpts = new ArrayList<CopyOption>();
@@ -545,14 +545,14 @@ public class CopyFrame extends javax.swing.JFrame {
     private void doCmdBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_doCmdBtnActionPerformed
         if ( doCmdBtn.getText().equalsIgnoreCase( PROCESS_STATUS_CANCEL_COPY ) )
             {
-            System.out.println( "hit stop button, got rootPaneCheckingEnabled =" + rootPaneCheckingEnabled + "=" );
+            logger.info( "hit stop button, got rootPaneCheckingEnabled =" + rootPaneCheckingEnabled + "=" );
             setProcessStatus( PROCESS_STATUS_COPY_CANCELED );
             this.stopSearch();
             //JOptionPane.showConfirmDialog( null, "at call stop search" );
             }
         else
             {
-            System.out.println( "copyFrame().doCmdBtnActionPerformed() connUserInfo =" + connUserInfo + "=" );
+            logger.info( "copyFrame().doCmdBtnActionPerformed() connUserInfo =" + connUserInfo + "=" );
             if ( connUserInfo.isConnectedFlag() && connUserInfo.isRunCopyOnRemote() )
                 {
                 copyBtnActionRest( evt );
@@ -568,7 +568,7 @@ public class CopyFrame extends javax.swing.JFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
 
         //  i basically gutted this by taking out logger.getLogString(). if needed, put it back.
-//        System.out.println( "log string =\n" + logger.getLogString() + "\n=" );
+//        logger.info( "log string =\n" + logger.getLogString() + "\n=" );
 
 //        JEditorPane ep = new JEditorPane( "text/text", logger.getLogString() );
 //        ep.setVisible(true);
@@ -592,7 +592,7 @@ public class CopyFrame extends javax.swing.JFrame {
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
          * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
          */
-//        MyLogger logger = MyLogger.getLogger( CopyFrame.class.getName() );
+//        MyLogger logger = Mylogger.severeExc( ex );
 
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -602,13 +602,13 @@ public class CopyFrame extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc( ex);
         } catch (InstantiationException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc( ex);
         } catch (IllegalAccessException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc( ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc( ex);
         }
         //</editor-fold>
 

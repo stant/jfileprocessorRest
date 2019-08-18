@@ -34,15 +34,15 @@ public class MyRowSorterListener implements RowSorterListener {
     
     @Override
     public void sorterChanged(RowSorterEvent evt) {
-//        System.out.println( "\nentered sorterChanged" );
+//        logger.info( "\nentered sorterChanged" );
 //        for ( RowSorter.SortKey key : sorter.getSortKeys() )
 //            {
-//            System.out.println( "sorterChanged sorter.getSortKeys().get(0).getColumn() = " + 
+//            logger.info( "sorterChanged sorter.getSortKeys().get(0).getColumn() = " + 
 //                     key.getColumn() + "   sort order = " + key.getSortOrder() );
 //            }
         RowSorter.SortKey sortKey = new RowSorter.SortKey( FilesTblModel.FILESTBLMODEL_FOLDERTYPE, SortOrder.DESCENDING );
         int sortSize = sorter.getSortKeys().size();
-//        System.out.println( "sorterChanged sortSize = " + sortSize );
+//        logger.info( "sorterChanged sortSize = " + sortSize );
         if ( sortSize > 0 && sortKey.getColumn() != sorter.getSortKeys().get(0).getColumn() )
             {
             sorter.removeRowSorterListener(this);
@@ -53,34 +53,34 @@ public class MyRowSorterListener implements RowSorterListener {
                 {
                 if ( sortOrder == SortOrder.DESCENDING )
                     {
-                    //System.out.println( "same key Column() toggle to ASCENDING" );
+                    //logger.info( "same key Column() toggle to ASCENDING" );
                     newKey = new RowSorter.SortKey( newKey.getColumn(), SortOrder.ASCENDING );
                     }
                 else
                     {
-                    //System.out.println( "same key Column() toggle to DESCENDING" );
+                    //logger.info( "same key Column() toggle to DESCENDING" );
                     newKey = new RowSorter.SortKey( newKey.getColumn(), SortOrder.DESCENDING );
                     }
                 }
             else
                 {
                 newKey = new RowSorter.SortKey( newKey.getColumn(), SortOrder.ASCENDING );
-                //System.out.println( "Add newkey" );
+                //logger.info( "Add newkey" );
                 }
             newList.add( newKey );
-            //System.out.println( "sorterChanged ADD sortKey = " + sortKey );
+            //logger.info( "sorterChanged ADD sortKey = " + sortKey );
             sorter.setSortKeys( newList );
-            //System.out.println( "final sorterChanged" );
+            //logger.info( "final sorterChanged" );
 //            for ( RowSorter.SortKey key : sorter.getSortKeys() )
 //                {
-//                System.out.println( "sorterChanged key Column() = " + key.getColumn() + "   sort order = " + key.getSortOrder() );
+//                logger.info( "sorterChanged key Column() = " + key.getColumn() + "   sort order = " + key.getSortOrder() );
 //                }
             sorter.addRowSorterListener( new MyRowSorterListener( sorter, newKey.getColumn(), newKey.getSortOrder() ) );
             sorter.sort();
             }
 //        else
 //            {
-//            System.out.println( "sorterChanged SKIP add sortKey = " + sortKey );
+//            logger.info( "sorterChanged SKIP add sortKey = " + sortKey );
 //            }
     }
 

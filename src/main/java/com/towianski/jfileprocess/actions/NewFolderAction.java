@@ -6,6 +6,7 @@
 package com.towianski.jfileprocess.actions;
 
 import com.towianski.jfileprocessor.JFileFinderWin;
+import com.towianski.utils.MyLogger;
 import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -16,6 +17,7 @@ import javax.swing.Action;
  */
 public class NewFolderAction extends AbstractAction
     {
+    private static final MyLogger logger = MyLogger.getLogger( NewFolderAction.class.getName() );
     JFileFinderWin win = null;
     
     public NewFolderAction( JFileFinderWin win )
@@ -27,14 +29,14 @@ public class NewFolderAction extends AbstractAction
 
     public void actionPerformed(ActionEvent e)
         {
-        //System.out.println("RenameActionPerformed( null ) do action");
+        //logger.info( "RenameActionPerformed( null ) do action");
         try
             {
             win.callNewFolderActionPerformed( null );
             } 
         catch (Exception ex)
             {
-            System.out.println("callNewFolderActionPerformed( null ) " + ex);
+            logger.info( "callNewFolderActionPerformed( null ) " + ex);
             ex.printStackTrace();
             }
         }

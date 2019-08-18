@@ -6,6 +6,7 @@
 package com.towianski.jfileprocess.actions;
 
 import com.towianski.jfileprocessor.JFileFinderWin;
+import com.towianski.utils.MyLogger;
 import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -16,6 +17,7 @@ import javax.swing.Action;
  */
 public class CopyAction extends AbstractAction
     {
+    private static final MyLogger logger = MyLogger.getLogger( CopyAction.class.getName() );
     JFileFinderWin win = null;
     
     public CopyAction( JFileFinderWin win )
@@ -27,14 +29,14 @@ public class CopyAction extends AbstractAction
 
     public void actionPerformed(ActionEvent e)
         {
-        //System.out.println("RenameActionPerformed( null ) do action");
+        //logger.info( "RenameActionPerformed( null ) do action");
         try
             {
             win.callCopyActionPerformed( null );
             } 
         catch (Exception ex)
             {
-            System.out.println( "callCopyActionPerformed( null ) " + ex );
+            logger.info( "callCopyActionPerformed( null ) " + ex );
             ex.printStackTrace();
             }
         }

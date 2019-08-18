@@ -1,8 +1,7 @@
 package com.towianski.jfileprocess.actions;
 
 import com.towianski.jfileprocessor.JFileFinderWin;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.towianski.utils.MyLogger;
 import javax.swing.SwingUtilities;
 
 /**
@@ -11,6 +10,8 @@ import javax.swing.SwingUtilities;
  */
 public class TomcatAppPost implements Runnable
     {
+    private static final MyLogger logger = MyLogger.getLogger( TomcatAppPost.class.getName() );
+
     JFileFinderWin jFileFinderWin = null;
     Object lockObj = null;
 
@@ -25,7 +26,7 @@ public class TomcatAppPost implements Runnable
     
     public void setTriggerSearchFlag(boolean triggerSearchFlag)
         {
-        System.out.println( "WatchDirPost.setTriggerSearchFlag() set triggerSearchFlag = " + triggerSearchFlag );
+        logger.info( "WatchDirPost.setTriggerSearchFlag() set triggerSearchFlag = " + triggerSearchFlag );
         if ( triggerSearchFlag )
             {
 //            jFileFinderWin.callSearchBtnActionPerformed( null );
@@ -33,21 +34,21 @@ public class TomcatAppPost implements Runnable
             SwingUtilities.invokeLater(new Runnable() 
             {
                 public void run() {
-                    System.out.println( "WatchDirPost   invokeLater() searchButton" );
-                    System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+                    logger.info( "WatchDirPost   invokeLater() searchButton" );
+                    logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
                     //                watchDirSw.setIsDone(true);
                     jFileFinderWin.callSearchBtnActionPerformed( null );
                 }
             });
 
-            System.out.println( "WatchDirPost.setTriggerSearchFlag() - after call jFileFinderWin.callSearchBtnActionPerformed( null )" );
+            logger.info( "WatchDirPost.setTriggerSearchFlag() - after call jFileFinderWin.callSearchBtnActionPerformed( null )" );
             }
         }
     
     public void run()
         {
-        System.out.println("WatchDirPost() wait until notified");
-        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+        logger.info( "WatchDirPost() wait until notified");
+        logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
 
         try {
             synchronized ( lockObj ) {
@@ -56,10 +57,10 @@ public class TomcatAppPost implements Runnable
             }
         catch (InterruptedException ex)
             {
-            System.out.println("WatchDirPost Interrupt !" );
-            Logger.getLogger(TomcatAppPost.class.getName()).log(Level.SEVERE, null, ex);
+            logger.info( "WatchDirPost Interrupt !" );
+            logger.severeExc( ex );
             }
-        System.out.println( "exit WatchDirPost()");
+        logger.info( "exit WatchDirPost()");
         }
 
 }

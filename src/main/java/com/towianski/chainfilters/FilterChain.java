@@ -46,7 +46,7 @@ public class FilterChain {
     public Boolean testFilters( Path fpath, BasicFileAttributes attr, ChainFilterArgs chainFilterArgs, JFileFinder jFileFinder )
         {
         int max = filterList.size();
-        //System.out.println( "entered " + this.toString() + ".incAndTest(" + andOrTests + ")   path =" + fpath );
+        //logger.info( "entered " + this.toString() + ".incAndTest(" + andOrTests + ")   path =" + fpath );
         if ( max < 1 )
             {
             return true;
@@ -54,22 +54,22 @@ public class FilterChain {
         
         for ( int filter = 0; filter < max; filter++ )
             {
-//            System.out.println( "\ntest filter =" + filterList.get( filter ) );
+//            logger.info( "\ntest filter =" + filterList.get( filter ) );
             if ( filterList.get( filter ).accept( fpath, attr, chainFilterArgs, jFileFinder ) )
                 {
-//                System.out.println( "accepted" );
+//                logger.info( "accepted" );
                 if ( andOrTests.equalsIgnoreCase( CHAINFILTERA_OR_TEST ) )
                     {
-//                    System.out.println( "return true because OR test" );
+//                    logger.info( "return true because OR test" );
                     return true;
                     }
                 }
             else   // test failed
                 {
-//                System.out.println( "failed" );
+//                logger.info( "failed" );
                 if ( andOrTests.equalsIgnoreCase( CHAINFILTERA_AND_TEST ) )
                     {
-//                    System.out.println( "return false because AND test" );
+//                    logger.info( "return false because AND test" );
                     return false;
                     }
                 }
@@ -77,12 +77,12 @@ public class FilterChain {
 
         if ( andOrTests.equalsIgnoreCase( CHAINFILTERA_AND_TEST ) )
             {
-//            System.out.println( "return true because no more AND tests" );
+//            logger.info( "return true because no more AND tests" );
             return true;
             }
         else
             {
-//            System.out.println( "return false because no more OR tests" );
+//            logger.info( "return false because no more OR tests" );
             return false;
             }
 

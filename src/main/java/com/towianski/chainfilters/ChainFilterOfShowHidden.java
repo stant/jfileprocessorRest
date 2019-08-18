@@ -20,20 +20,20 @@ public class ChainFilterOfShowHidden implements FilterChainFilter {
     
     public ChainFilterOfShowHidden()
         {
-        //System.out.println( "new ChainFilterOfMaxFileCount()" );
+        //logger.info( "new ChainFilterOfMaxFileCount()" );
         }
     
     public ChainFilterOfShowHidden( boolean showHidden ) 
         {
         this.showHidden = showHidden;
-//        System.out.println( "showHidden =" + this.showHidden );
+//        logger.info( "showHidden =" + this.showHidden );
         }
     
     // These must be the same parms for all filters that get used.
     //  First check is do we show this folder?
     public Boolean accept( Path fpath, BasicFileAttributes attr, ChainFilterArgs chainFilterArgs, JFileFinder jFileFinder )
         {
-//        System.out.println( "for path =" + fpath + "   chainFilterArgs.getNumFileMatches() =" + chainFilterArgs.getNumFileMatches() );
+//        logger.info( "for path =" + fpath + "   chainFilterArgs.getNumFileMatches() =" + chainFilterArgs.getNumFileMatches() );
         try {
             return ! Files.isHidden( fpath );    // ASSUMING ALWAYS SHOWS HIDDEN BY DEFAULT SO ONLY USING THIS TO not SHOW HIDDEN.
             }

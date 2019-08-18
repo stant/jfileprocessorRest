@@ -7,6 +7,7 @@ package com.towianski.jfileprocessor;
 
 import com.towianski.models.Constants;
 import com.towianski.models.ResultsData;
+import com.towianski.utils.MyLogger;
 import java.text.NumberFormat;
 import java.util.List;
 import javax.swing.SwingWorker;
@@ -17,6 +18,7 @@ import javax.swing.SwingWorker;
  */
 public class JFileFinderSwingWorker extends SwingWorker<ResultsData, Long> 
 {
+    private static final MyLogger logger = MyLogger.getLogger( JFileFinderSwingWorker.class.getName() );
     private JFileFinderWin jFileFinderWin = null;
     private String startingPath = null;
     private String patternType = null;
@@ -48,10 +50,10 @@ public class JFileFinderSwingWorker extends SwingWorker<ResultsData, Long>
      */
     @Override
     public ResultsData doInBackground() {
-        System.out.println( "JFileFinderSwingWorker.doInBackground() before jfilefinder.run()" );
+        logger.info( "JFileFinderSwingWorker.doInBackground() before jfilefinder.run()" );
         jFileFinderWin.stopDirWatcher();
         jFileFinderWin.setProcessStatus( Constants.PROCESS_STATUS_SEARCH_STARTED );
-        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+        logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
         jfilefinder.run( this );
         //publish("Listing all text files under the directory: ");
         return jfilefinder.getResultsData();
@@ -75,10 +77,10 @@ public class JFileFinderSwingWorker extends SwingWorker<ResultsData, Long>
     @Override
     public void done() {
         try {
-            System.out.println( "entered JFileFinderSwingWorker.done()" );
-            System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+            logger.info( "entered JFileFinderSwingWorker.done()" );
+            logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
             ResultsData resultsData = get();
-            //System.out.println( "SwingWork.done() got ans =" + matchedPathsList + "=" );
+            //logger.info( "SwingWork.done() got ans =" + matchedPathsList + "=" );
             //jFileFinderWin.resetSearchBtn();
             NumberFormat numFormat = NumberFormat.getIntegerInstance();
             String partialMsg = "";
@@ -103,14 +105,14 @@ public class JFileFinderSwingWorker extends SwingWorker<ResultsData, Long>
             
             if ( ! countOnlyFlag )
                 {
-                System.out.println( "call JFileFinderSwingWorker.fillTableModelSwingWorker.execute()" );
-                System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+                logger.info( "call JFileFinderSwingWorker.fillTableModelSwingWorker.execute()" );
+                logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
                 FillTableModelSwingWorker fillTableModelSwingWorker = new FillTableModelSwingWorker( jFileFinderWin, jfilefinder );
                 fillTableModelSwingWorker.execute();   //doInBackground();
                 }
             
 //            jFileFinderWin.releaseSearchLock();
-            System.out.println( "exiting JFileFinderSwingWorker.done()" );
+            logger.info( "exiting JFileFinderSwingWorker.done()" );
             } 
         catch (InterruptedException ignore) {}
         catch (java.util.concurrent.ExecutionException e) {
@@ -121,7 +123,7 @@ public class JFileFinderSwingWorker extends SwingWorker<ResultsData, Long>
             } else {
                 why = e.getMessage();
             }
-            System.out.println("Error retrieving file: " + why);
+            logger.info( "Error retrieving file: " + why);
             e.printStackTrace();
         }
     }    

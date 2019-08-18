@@ -7,12 +7,11 @@ package com.towianski.jfileprocess.actions;
 
 import com.towianski.boot.JFileProcessorVersion;
 import com.towianski.utils.DesktopUtils;
+import com.towianski.utils.MyLogger;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -20,6 +19,7 @@ import java.util.logging.Logger;
  */
 public class ProcessInThread {
 
+    private static final MyLogger logger = MyLogger.getLogger( ProcessInThread.class.getName() );
     public ProcessInThread() {}        
 
 //    public static int execJava(Class klass, String... passArgs)
@@ -39,7 +39,7 @@ public class ProcessInThread {
 //  
 //        for ( String tmp : allArgs )
 //            {
-//            System.out.println( "(" + tmp + ") " );
+//            logger.info( "(" + tmp + ") " );
 //            }
 //        ProcessBuilder builder = new ProcessBuilder( allArgs );
 //
@@ -71,16 +71,16 @@ public class ProcessInThread {
             tmp = tmp.replace( "$CLASSPATH", classpath );
             tmp = tmp.replace( "$JFPHOMETMP", DesktopUtils.getJfpHomeTmpDir( false ) );
             cmdList.add( tmp );
-            System.out.println( "cmdList tmp = " + tmp + "=" );
+            logger.info( "cmdList tmp = " + tmp + "=" );
             }
         
         String[] runJarList = classpath.split( System.getProperty( "path.separator" ) );
-        //System.out.println( "classpath = " + classpath + "=" );
-        //System.out.println( "runJarList = " + runJarList );
+        //logger.info( "classpath = " + classpath + "=" );
+        //logger.info( "runJarList = " + runJarList );
         String runJar = null;
         for ( String tmp : runJarList )
             {
-            //System.out.println( "runJar tmp = " + tmp + "=" );
+            //logger.info( "runJar tmp = " + tmp + "=" );
             if ( tmp.indexOf( "JFileProcessor" ) >= 0 )
                 {   
                 runJar = tmp;
@@ -123,16 +123,16 @@ public class ProcessInThread {
 //            tmp = tmp.replace( "$JAVA", javaBin );
 //            tmp = tmp.replace( "$CLASSPATH", classpath );
 //            cmdList.add( tmp );
-//            System.out.println( "cmdList tmp = " + tmp + "=" );
+//            logger.info( "cmdList tmp = " + tmp + "=" );
 //            }
         
 //        String[] runJarList = classpath.split( System.getProperty( "path.separator" ) );
-//        //System.out.println( "classpath = " + classpath + "=" );
-//        //System.out.println( "runJarList = " + runJarList );
+//        //logger.info( "classpath = " + classpath + "=" );
+//        //logger.info( "runJarList = " + runJarList );
 //        String runJar = null;
 //        for ( String tmp : runJarList )
 //            {
-//            //System.out.println( "runJar tmp = " + tmp + "=" );
+//            //logger.info( "runJar tmp = " + tmp + "=" );
 //            if ( tmp.indexOf( "JFileProcessor" ) >= 0 )
 //                {   
 //                runJar = tmp;
@@ -162,12 +162,12 @@ public class ProcessInThread {
             }
         String classpath = System.getProperty("java.class.path");
         String[] runJarList = classpath.split( System.getProperty( "path.separator" ) );
-        //System.out.println( "classpath = " + classpath + "=" );
-        //System.out.println( "runJarList = " + runJarList );
+        //logger.info( "classpath = " + classpath + "=" );
+        //logger.info( "runJarList = " + runJarList );
         String runJar = null;
         for ( String tmp : runJarList )
             {
-            //System.out.println( "runJar tmp = " + tmp + "=" );
+            //logger.info( "runJar tmp = " + tmp + "=" );
             if ( tmp.indexOf( "JFileProcessor" ) >= 0 )
                 {   
                 runJar = tmp;
@@ -217,7 +217,7 @@ public class ProcessInThread {
 //
 //            for ( String tmp : allArgs )
 //                {
-//                System.out.println( "(" + tmp + ") " );
+//                logger.info( "(" + tmp + ") " );
 //                }
 //            builder = new ProcessBuilder( allArgs );
 //            }
@@ -225,7 +225,7 @@ public class ProcessInThread {
 //            {
 //            for ( String str : myargs )
 //                {
-//                System.out.println( "run cmd: (" + str + ") " );
+//                logger.info( "run cmd: (" + str + ") " );
 //    //            cmd.add( str );
 //                }
 //            builder = new ProcessBuilder( myargs );
@@ -237,7 +237,7 @@ public class ProcessInThread {
 ////        IOThreadHandler outputHandler = new IOThreadHandler( process.getInputStream() );
 ////        outputHandler.start();
 ////        process.waitFor();
-////        System.out.println(outputHandler.getOutput());
+////        logger.info( outputHandler.getOutput());
 //        return process.exitValue();
 //	}
 
@@ -265,7 +265,7 @@ public class ProcessInThread {
 
             for ( String tmp : allArgs )
                 {
-                System.out.println( "(" + tmp + ") " );
+                logger.info( "(" + tmp + ") " );
                 }
 //            builder = new ProcessBuilder( allArgs );
             proc = new ProcessRunnable( null, allArgs );
@@ -274,7 +274,7 @@ public class ProcessInThread {
             {
             for ( String str : myargs )
                 {
-                System.out.println( "run cmd: (" + str + ") " );
+                logger.info( "run cmd: (" + str + ") " );
     //            cmd.add( str );
                 }
 //            builder = new ProcessBuilder( myargs );
@@ -284,7 +284,7 @@ public class ProcessInThread {
             {
             for ( String str : myargs )
                 {
-                System.out.println( "run cmd: (" + str + ") " );
+                logger.info( "run cmd: (" + str + ") " );
     //            cmd.add( str );
                 }
 //            builder = new ProcessBuilder( myargs );
@@ -295,14 +295,14 @@ public class ProcessInThread {
         bgThread.start();
         if ( waitFlag )
             {
-            System.out.println( "WAIT FOR thread command to join" );
+            logger.info( "WAIT FOR thread command to join" );
             bgThread.join();
             }
         
 //        IOThreadHandler outputHandler = new IOThreadHandler( process.getInputStream() );
 //        outputHandler.start();
 //        process.waitFor();
-//        System.out.println(outputHandler.getOutput());
+//        logger.info( outputHandler.getOutput());
         return proc.getExitValue();
 	}
 
@@ -319,7 +319,7 @@ public class ProcessInThread {
         if ( thd != null )
             {
             thd.interrupt();
-            System.out.println( "stopThread(" + thd.getName() + ") - before join()" );
+            logger.info( "stopThread(" + thd.getName() + ") - before join()" );
             if ( thd.isAlive() )
                 {
                 try
@@ -328,10 +328,10 @@ public class ProcessInThread {
                     } 
                 catch (InterruptedException ex)
                     {
-                    Logger.getLogger(ProcessInThread.class.getName()).log(Level.SEVERE, null, ex);
+                    logger.severeExc( ex );
                     }
                 }
-            System.out.println( "stopThread(" + thd.getName() + ") - after join()" );
+            logger.info( "stopThread(" + thd.getName() + ") - after join()" );
             }
         }
 

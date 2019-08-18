@@ -7,6 +7,7 @@ package com.towianski.listeners;
 
 import com.towianski.jfileprocessor.JFileFinderWin;
 import com.towianski.jfileprocessor.ScriptSwingWorker;
+import com.towianski.utils.MyLogger;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JFrame;
@@ -17,6 +18,7 @@ import javax.swing.JFrame;
  */
 public class ScriptMenuItemListener implements ActionListener {
 
+    private static final MyLogger logger = MyLogger.getLogger( ScriptMenuItemListener.class.getName() );
     JFileFinderWin jFileFinderWin = null;
     String filePath = null;
     
@@ -29,7 +31,7 @@ public class ScriptMenuItemListener implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e)
         {
-        //System.out.println("RenameActionPerformed( null ) do action");
+        //logger.info( "RenameActionPerformed( null ) do action");
         try
             {
 //            jFileFinderWin.callEnterActionPerformed( null );
@@ -44,7 +46,7 @@ public class ScriptMenuItemListener implements ActionListener {
             } 
         catch (Exception ex)
             {
-            System.out.println("ScriptMenuItemListener.ActionPerformed( null ) " + ex);
+            logger.info( "ScriptMenuItemListener.ActionPerformed( null ) " + ex);
             ex.printStackTrace();
             }
         }

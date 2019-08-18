@@ -7,6 +7,7 @@ package com.towianski.jfileprocessor;
 
 import com.towianski.jfileprocess.actions.CloseWinOnTimer;
 import com.towianski.models.ResultsData;
+import com.towianski.utils.MyLogger;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,7 @@ import javax.swing.SwingWorker;
  */
 public class DeleteFrameSwingWorker extends SwingWorker<ResultsData, Long> {
 
+    private static final MyLogger logger = MyLogger.getLogger( DeleteFrameSwingWorker.class.getName() );
     DeleteFrame deleteFrame = null;
     ArrayList<String> deletePaths = new ArrayList<String>();
     JFileDelete jfiledelete = null;
@@ -59,11 +61,11 @@ public class DeleteFrameSwingWorker extends SwingWorker<ResultsData, Long> {
     @Override
     public void done() {
         try {
-            //System.out.println( "entered SwingWork.done()" );
+            //logger.info( "entered SwingWork.done()" );
             ResultsData resultsData = get();
             //Integer ii = get();
-            //System.out.println( "SwingWork.done() at 2  ii = " + ii );
-            //System.out.println( "SwingWork.done() got ans =" + matchedPathsList + "=" );
+            //logger.info( "SwingWork.done() at 2  ii = " + ii );
+            //logger.info( "SwingWork.done() got ans =" + matchedPathsList + "=" );
             NumberFormat numFormat = NumberFormat.getIntegerInstance();
             String partialMsg = "";
             String msg = "Deleted " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) + " folders out of " + numFormat.format( resultsData.getFilesVisited() );
@@ -103,7 +105,7 @@ public class DeleteFrameSwingWorker extends SwingWorker<ResultsData, Long> {
             deletePaths = null;            
             
             deleteFrame.callSearchBtnActionPerformed();
-            //System.out.println( "exiting SwingWork.done()" );
+            //logger.info( "exiting SwingWork.done()" );
             }
         catch (InterruptedException ignore) 
             {}
@@ -116,7 +118,7 @@ public class DeleteFrameSwingWorker extends SwingWorker<ResultsData, Long> {
             } else {
                 why = e.getMessage();
             }
-            System.out.println( "Error in DeleteFrameSwingWorker(): " + why);
+            logger.info( "Error in DeleteFrameSwingWorker(): " + why);
             }
     }    
 }

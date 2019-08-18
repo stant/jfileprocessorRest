@@ -6,10 +6,9 @@
 package com.towianski.models;
 
 import static com.towianski.models.Constants.FILESYSTEM_POSIX;
+import com.towianski.utils.MyLogger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -17,6 +16,7 @@ import java.util.logging.Logger;
  */
 public class ConnUserInfo
     {
+    private static final MyLogger logger = MyLogger.getLogger( ConnUserInfo.class.getName() );
     String fromUri = "";
     String fromProtocol = "file://";
     String fromUser = "";
@@ -109,12 +109,12 @@ public class ConnUserInfo
             InetAddress inetAddress;
             try {
                 inetAddress = InetAddress.getLocalHost();
-                System.out.println("IP Address:- " + inetAddress.getHostAddress());
-                System.out.println("Host Name:- " + inetAddress.getHostName());
+                logger.info( "IP Address:- " + inetAddress.getHostAddress());
+                logger.info( "Host Name:- " + inetAddress.getHostName());
                 host = inetAddress.getHostAddress();
                 }
             catch (UnknownHostException ex) {
-                Logger.getLogger(ConnUserInfo.class.getName()).log(Level.SEVERE, null, ex);
+                logger.severeExc( ex );
                 host = "?";
                 }
             }
@@ -181,7 +181,7 @@ public class ConnUserInfo
 
     public void setState(int state) {
         state = state;
-        System.out.println( "connUserInfo set state = " + state );
+        logger.info( "connUserInfo set state = " + state );
     }
 
     public String getFromUri() {
@@ -359,7 +359,7 @@ public class ConnUserInfo
     public void setToUsingHttpsPort(String tmp)
         {
         this.toUsingHttpsPort = tmp;
-        System.out.println( "connUserInfo set toUsingHttpsPort = " + this.toUsingHttpsPort );
+        logger.info( "connUserInfo set toUsingHttpsPort = " + this.toUsingHttpsPort );
         }
 
     public String toString()

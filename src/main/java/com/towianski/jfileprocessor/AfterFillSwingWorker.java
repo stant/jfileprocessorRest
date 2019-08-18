@@ -5,6 +5,7 @@
  */
 package com.towianski.jfileprocessor;
 
+import com.towianski.utils.MyLogger;
 import javax.swing.SwingWorker;
 
 /**
@@ -13,6 +14,7 @@ import javax.swing.SwingWorker;
  */
 public class AfterFillSwingWorker extends SwingWorker<String, Object> {
 
+    private static final MyLogger logger = MyLogger.getLogger( AfterFillSwingWorker.class.getName() );
     private JFileFinderWin jFileFinderWin = null;
     private CodeProcessorPanel codeProcessorPanel = null;
     private String startingPath = null;
@@ -22,7 +24,7 @@ public class AfterFillSwingWorker extends SwingWorker<String, Object> {
 
     public AfterFillSwingWorker( JFileFinderWin jFileFinderWinArg, JFileFinder jfilefinderArg )
         {
-        System.out.println( "AfterFillSwingWorker constructor() with 2 args" );
+        logger.info( "AfterFillSwingWorker constructor() with 2 args" );
         jFileFinderWin = jFileFinderWinArg;
         jfilefinder = jfilefinderArg;
         }
@@ -30,37 +32,37 @@ public class AfterFillSwingWorker extends SwingWorker<String, Object> {
     
     public AfterFillSwingWorker( CodeProcessorPanel codeProcessorPanelArg )
         {
-        System.out.println( "AfterFillSwingWorker constructor() with args" );
+        logger.info( "AfterFillSwingWorker constructor() with args" );
         codeProcessorPanel = codeProcessorPanelArg;
         }
 
     public AfterFillSwingWorker( JFileFinderWin jFileFinderWinArg )
         {
-        System.out.println( "AfterFillSwingWorker constructor() with args" );
+        logger.info( "AfterFillSwingWorker constructor() with args" );
         jFileFinderWin = jFileFinderWinArg;
         }
 
     public AfterFillSwingWorker()
         {
-        System.out.println( "AfterFillSwingWorker constructor()" );
+        logger.info( "AfterFillSwingWorker constructor()" );
         }
 
     @Override
     public String doInBackground() {
-        System.out.println( "entered AfterFillSwingWorker.doInBackground()" );
+        logger.info( "entered AfterFillSwingWorker.doInBackground()" );
         return "";  //JFileFinder.getResultsData();
     }
 
     @Override
     public void done() {
         try {
-            System.out.println( "entered AfterFillSwingWorker.done()" );
+            logger.info( "entered AfterFillSwingWorker.done()" );
 //            ResultsData resultsData = get();
             String ans = get();
-            //System.out.println( "SwingWork.done() got ans =" + matchedPathsList + "=" );
+            //logger.info( "SwingWork.done() got ans =" + matchedPathsList + "=" );
             //jFileFinderWin.resetSearchBtn();
 
-            System.out.println( "exiting AfterFillSwingWorker.done()" );
+            logger.info( "exiting AfterFillSwingWorker.done()" );
             } 
         catch (InterruptedException ignore) {}
         catch (java.util.concurrent.ExecutionException e) 
@@ -75,7 +77,7 @@ public class AfterFillSwingWorker extends SwingWorker<String, Object> {
                 {
                 why = e.getMessage();
                 }
-            System.out.println("Error AfterFillSwingWorker() retrieving file: " + why);
+            logger.info( "Error AfterFillSwingWorker() retrieving file: " + why);
             e.printStackTrace();
             }
         }    

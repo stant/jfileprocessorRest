@@ -21,6 +21,7 @@ import java.util.List;
  * @author Stan Towianski
  */
 public class ClipboardUtils {
+    private static final MyLogger logger = MyLogger.getLogger( ClipboardUtils.class.getName() );
  
     public static ArrayList<Path> getClipboardFilesList()
         {
@@ -30,18 +31,18 @@ public class ClipboardUtils {
             DataFlavor[] dataFlavors = transferable.getTransferDataFlavors();
 
             int max = dataFlavors.length;
-            System.out.println( "clipboard Size :" + max );
+            logger.info( "clipboard Size :" + max );
 
             for (int count = 0; count < max; count++) 
                 {
-                //System.out.println(" : " + dataFlavors[count]);
+                //logger.info( " : " + dataFlavors[count]);
 
                 if ( DataFlavor.stringFlavor != dataFlavors[count] ) 
                     {
                     Object object = transferable.getTransferData( dataFlavors[count] );
                     if (object instanceof List) 
                         {
-                        System.out.println("found list on clipboard" );
+                        logger.info( "found list on clipboard" );
                         List selectedFileList = (List) object;
                         int size = selectedFileList.size();
 
@@ -49,7 +50,7 @@ public class ClipboardUtils {
                             {
                             File file = (File) selectedFileList.get(index);
                             copyPaths.add( file.toPath() );
-                            //System.out.println( "clipboard got file =" + file.toPath().toString() + "=" );
+                            //logger.info( "clipboard got file =" + file.toPath().toString() + "=" );
                             }
                         }
                     }
@@ -95,7 +96,7 @@ public class ClipboardUtils {
             }
         catch ( Exception ex )
             {
-            System.out.println(ex);
+            logger.severeExc( ex);
             ex.printStackTrace();
             }
         return StringsList;
@@ -105,12 +106,12 @@ public class ClipboardUtils {
 //            /* Map to XML and reverse */
 //        String mapToString = objectToString(hashMap);
 //        Map parsedMap = (Map) stringToObject(mapToString);
-//        System.out.println("Map to XML: \n" + mapToString + "\nXML to map:\n" + parsedMap);
+//        logger.info( "Map to XML: \n" + mapToString + "\nXML to map:\n" + parsedMap);
 //
 //        /* List to XML and reverse */
 //        String listToString = objectToString(list);
 //        List parsedList = (List) stringToObject(listToString);
-//        System.out.println("List to XML: \n" + listToString + "\nXML to list:\n" + parsedList);
+//        logger.info( "List to XML: \n" + listToString + "\nXML to list:\n" + parsedList);
 //    }
 //
 //    public static String objectToString(Object hashMap) {

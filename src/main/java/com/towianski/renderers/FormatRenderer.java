@@ -5,6 +5,7 @@
  */
 package com.towianski.renderers;
 
+import com.towianski.utils.MyLogger;
 import java.text.Format;
 import java.text.DateFormat;
 import java.util.Date;
@@ -15,6 +16,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  */
 public class FormatRenderer extends DefaultTableCellRenderer
 {
+    private static final MyLogger logger = MyLogger.getLogger( FormatRenderer.class.getName() );
     private Format formatter;
 
     /*
@@ -45,8 +47,8 @@ public class FormatRenderer extends DefaultTableCellRenderer
                 value = formatter.format(value);
                 }
             }
-        catch(IllegalArgumentException e) { System.out.println( "FormatRenderer() setValue() caught error." ); }
-        catch(Exception e) { System.out.println( "FormatRenderer() setValue() caught error." ); }
+        catch(IllegalArgumentException e) { logger.info( "FormatRenderer() setValue() caught error." ); }
+        catch(Exception e) { logger.info( "FormatRenderer() setValue() caught error." ); }
 
         super.setValue(value);
         }

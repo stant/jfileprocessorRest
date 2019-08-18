@@ -12,6 +12,7 @@ import com.towianski.models.ConnUserInfo;
 import com.towianski.models.Constants;
 import com.towianski.sshutils.JschSftpUtils;
 import com.towianski.utils.DesktopUtils;
+import com.towianski.utils.MyLogger;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -24,8 +25,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 /**
@@ -34,6 +33,7 @@ import javax.swing.JOptionPane;
  */
 public class DeleterNonWalker extends SimpleFileVisitor<Path> 
 {
+    private static final MyLogger logger = MyLogger.getLogger( DeleterNonWalker.class.getName() );
     private Path fromPath;
     private long numFilesDeleted = 0;
     private long numFoldersDeleted = 0;
@@ -69,7 +69,7 @@ public class DeleterNonWalker extends SimpleFileVisitor<Path>
         this.deleteReadonlyFlag = deleteReadonlyFlag;
         this.fsType = fsType;
         this.swingWorker = swingWorker;
-        System.out.println( "Deleter this.fromPath =" + this.fromPath + "=" );
+        logger.info( "Deleter this.fromPath =" + this.fromPath + "=" );
         cancelFlag = false;        
         }
 
@@ -84,7 +84,7 @@ public class DeleterNonWalker extends SimpleFileVisitor<Path>
         {
         if ( cancelFlag )
             {
-            System.out.println( "Delete cancelled by user." );
+            logger.info( "Delete cancelled by user." );
             return FileVisitResult.TERMINATE;
             }
         numTested++;
@@ -101,7 +101,7 @@ public class DeleterNonWalker extends SimpleFileVisitor<Path>
                 {
                 Path trashFpath = trashFolder.resolve( fromPath.relativize( fpath ) );
                 Path trashparent = trashFolder.resolve( fromPath.relativize( fpath ) ).getParent();
-                //System.out.println( "trashparent =" + trashparent );
+                //logger.info( "trashparent =" + trashparent );
                 trashparent.toFile().mkdirs();
                 if ( trashFpath.toFile().exists() )
                     {
@@ -111,10 +111,10 @@ public class DeleterNonWalker extends SimpleFileVisitor<Path>
                         Files.setAttribute( trashFpath, "dos:readonly", false );
                         }        
                     }
-                //System.out.println( "visitFile() Files.copy trashFpath =" + trashFpath + "=" );
+                //logger.info( "visitFile() Files.copy trashFpath =" + trashFpath + "=" );
                 Files.copy( fpath, trashFpath, StandardCopyOption.REPLACE_EXISTING, LinkOption.NOFOLLOW_LINKS );
                 }
-            //System.out.println( "del fpath =" + fpath );
+            //logger.info( "del fpath =" + fpath );
             Files.delete( fpath );
             }
         catch ( java.nio.file.AccessDeniedException exAccessDenied ) 
@@ -142,11 +142,11 @@ public class DeleterNonWalker extends SimpleFileVisitor<Path>
                 {
                 message = exAccessDenied.getClass().getSimpleName() + ": " + fpath;
                 }
-            Logger.getLogger(DeleterNonWalker.class.getName()).log(Level.SEVERE, null, exAccessDenied );
-            System.out.println( "visitFile() AccessDeniedException: " + "  " + exAccessDenied.getClass().getSimpleName() + ": " + fpath );
+            logger.severeExc( exAccessDenied );
+            logger.info( "visitFile() AccessDeniedException: " + "  " + exAccessDenied.getClass().getSimpleName() + ": " + fpath );
             if ( deleteToTrashFlag )
                 {
-                System.out.println( "visitFile() copy toPath =" + trashFolder.resolve( fromPath.relativize( fpath ) ) + "=" );
+                logger.info( "visitFile() copy toPath =" + trashFolder.resolve( fromPath.relativize( fpath ) ) + "=" );
                 }
             // I tried to catch accessDenied from an error trying to delete a readOnly file
             // and then do file.setwritable(true) and delete it again, but it did not work and 
@@ -157,12 +157,12 @@ public class DeleterNonWalker extends SimpleFileVisitor<Path>
             {
             processStatus = "Error";
             message = ex.getClass().getSimpleName() + ": " + fpath;
-            Logger.getLogger(DeleterNonWalker.class.getName()).log(Level.SEVERE, null, ex );
-            System.out.println( "visitFile() CAUGHT ERROR  " + "  " + ex.getClass().getSimpleName() + ": " + fpath );
+            logger.severeExc( ex );
+            logger.info( "visitFile() CAUGHT ERROR  " + "  " + ex.getClass().getSimpleName() + ": " + fpath );
             ex.printStackTrace();
             return FileVisitResult.TERMINATE;
             }
-        //System.out.println( "would delete file =" + file );
+        //logger.info( "would delete file =" + file );
         numFilesDeleted++;
         return FileVisitResult.CONTINUE;
         }
@@ -173,8 +173,8 @@ public class DeleterNonWalker extends SimpleFileVisitor<Path>
 
     public void deleteRecursiveRemote( String filename ) throws IOException
         {
-        System.out.println( "entered deleteRecursive()" );
-        System.out.println( "ck to delete =" + filename + "=" );
+        logger.info( "entered deleteRecursive()" );
+        logger.info( "ck to delete =" + filename + "=" );
         if ( filename.endsWith( "." ) || filename.endsWith( ".." ) )
             {
             return;
@@ -186,8 +186,8 @@ public class DeleterNonWalker extends SimpleFileVisitor<Path>
             { } // continue if not error meaning exists
            } 
         catch (SftpException ex) {
-            System.out.println( "delete Done" );
-            Logger.getLogger(DeleterNonWalker.class.getName()).log(Level.SEVERE, null, ex);
+            logger.info( "delete Done" );
+            logger.severeExc( ex );
             ex.printStackTrace();
             return;   // done
         }
@@ -199,7 +199,7 @@ public class DeleterNonWalker extends SimpleFileVisitor<Path>
 //            if ( sourceFolder.isDirectory() )
             if ( chanSftp.stat( filename ).isDir() )
                 {
-                System.out.println( "Is Directory" );
+                logger.info( "Is Directory" );
                 isDirFlag = true;
              
                 //Get all files from source directory
@@ -213,53 +213,53 @@ public class DeleterNonWalker extends SimpleFileVisitor<Path>
                         }
                     }
                 
-                System.out.println( "at 1" );
+                logger.info( "at 1" );
 
                 //Iterate over all files and copy them to destinationFolder one by one
                 for ( ChannelSftp.LsEntry lsEntry : files )
                     {
                     File srcFile = new File( filename, lsEntry.getFilename() );
-                    System.out.println( "SftpRm filename =" + filename + "=" );
-                    System.out.println( "SftpRm lsEntry.getFilename() =" + lsEntry.getFilename() + "=" );
+                    logger.info( "SftpRm filename =" + filename + "=" );
+                    logger.info( "SftpRm lsEntry.getFilename() =" + lsEntry.getFilename() + "=" );
 
                     //Recursive function call
                     deleteRecursiveRemote( srcFile.toString() );
                     }
-                System.out.println( "at 2" );
+                logger.info( "at 2" );
                 }
             }
         catch (Exception exc)
             {
-            System.out.println( "Exception" );
+            logger.info( "Exception" );
             exc.printStackTrace();
             }
 
         
-        System.out.println( "SftpRm rmtFile =" + filename + "=" );
+        logger.info( "SftpRm rmtFile =" + filename + "=" );
         try
             {
-            System.out.println( "at 3" );
+            logger.info( "at 3" );
             if ( isDirFlag )
                 {
-                System.out.println( "Is Directory" );
+                logger.info( "Is Directory" );
                 numFolderTests ++;
                 if ( 1 == 1 )   chanSftp.rmdir( filename );
-                System.out.println( "Folder deleted :: " + filename );
+                logger.info( "Folder deleted :: " + filename );
                 numFoldersDeleted ++;
                 }
             else
                 {
-                System.out.println( "Is File" );
+                logger.info( "Is File" );
                 numFileTests ++;
                 if ( 1 == 1 )   chanSftp.rm( filename );
-                System.out.println( "File deleted :: " + filename );
+                logger.info( "File deleted :: " + filename );
                 numFilesDeleted ++;
                 }
             } 
         catch (SftpException ex)
             {
-            System.out.println( "File delete Failed :: " + filename );
-            Logger.getLogger(DeleterNonWalker.class.getName()).log(Level.SEVERE, null, ex);
+            logger.info( "File delete Failed :: " + filename );
+            logger.severeExc( ex );
             }
 //            jschSftpUtils.copyTo( jschSession, filename, destinationFolder.toString() );
         
@@ -286,23 +286,23 @@ public class DeleterNonWalker extends SimpleFileVisitor<Path>
 //                if ( deleteToTrashFlag )
 //                    {
 //                    Path trashparent = trashFolder.resolve( fromPath.relativize( fpath ) ).getParent();
-//                    //System.out.println( "trashparent =" + trashparent );
+//                    //logger.info( "trashparent =" + trashparent );
 //                    trashparent.toFile().mkdirs();
 //                    Files.copy( fpath, trashFolder.resolve( fromPath.relativize( fpath ) ), StandardCopyOption.REPLACE_EXISTING, LinkOption.NOFOLLOW_LINKS );
 //                    }
-                System.out.println( "del fpath folder =" + fpath );
+                logger.info( "del fpath folder =" + fpath );
                 Files.delete( fpath );
                 numFoldersDeleted++;
                 }
-            //System.out.println( "would delete folder =" + dir );
+            //logger.info( "would delete folder =" + dir );
             return FileVisitResult.CONTINUE;
             }
         catch (Exception ex2) 
             {
             processStatus = "Error";
             message = ex2.getClass().getSimpleName() + ": " + fpath;
-            Logger.getLogger(DeleterNonWalker.class.getName()).log(Level.SEVERE, null, ex2 );
-            System.out.println( "postVisitDirectory() delete folder ERROR  " + "  " + ex2.getClass().getSimpleName() + ": " + fpath );
+            logger.severeExc( ex );
+            logger.info( "postVisitDirectory() delete folder ERROR  " + "  " + ex2.getClass().getSimpleName() + ": " + fpath );
             ex2.printStackTrace();
             return FileVisitResult.TERMINATE;
             }
@@ -314,13 +314,13 @@ public class DeleterNonWalker extends SimpleFileVisitor<Path>
     // matches to standard out.
     void done() 
         {
-        System.out.println( "Tested:  " + numTested );
-        System.out.println( "Deleted Files count: " + numFilesDeleted );
-        System.out.println( "Deleted Folders count: " + numFoldersDeleted );
+        logger.info( "Tested:  " + numTested );
+        logger.info( "Deleted Files count: " + numFilesDeleted );
+        logger.info( "Deleted Folders count: " + numFoldersDeleted );
 
 //            for ( Path mpath : matchedPathsList )
 //                {
-//                System.out.println( mpath );
+//                logger.info( mpath );
 //                }
         }
     

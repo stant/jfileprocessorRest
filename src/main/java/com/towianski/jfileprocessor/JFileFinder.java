@@ -35,7 +35,7 @@ import java.util.logging.Level;
 
 public class JFileFinder //  implements Runnable 
 {
-    private final static MyLogger logger = MyLogger.getLogger( JFileFinder.class.getName() );
+    private static final MyLogger logger = MyLogger.getLogger( JFileFinder.class.getName() );
 
     static Boolean dataSyncLock = false;
 //    private JFileFinderWin jFileFinderWin = null;
@@ -84,9 +84,9 @@ public class JFileFinder //  implements Runnable
         this.chainFilterFolderList = chainFilterFolderList;
         this.chainFilterPreVisitFolderList = chainFilterPreVisitFolderList;
         
-        System.out.println( "JFIleFinder constructor() with chainFilterList.size()               =" + chainFilterList.size() + "=" );
-        System.out.println( "JFIleFinder constructor() with chainFilterFolderList.size()         =" + chainFilterFolderList.size() + "=" );
-        System.out.println( "JFIleFinder constructor() with chainFilterPreVisitFolderList.size() =" + chainFilterPreVisitFolderList.size() + "=" );
+        logger.info( "JFIleFinder constructor() with chainFilterList.size()               =" + chainFilterList.size() + "=" );
+        logger.info( "JFIleFinder constructor() with chainFilterFolderList.size()         =" + chainFilterFolderList.size() + "=" );
+        logger.info( "JFIleFinder constructor() with chainFilterPreVisitFolderList.size() =" + chainFilterPreVisitFolderList.size() + "=" );
         
         logger.setLevel( Level.SEVERE );
     }
@@ -119,7 +119,7 @@ public class JFileFinder //  implements Runnable
                 getDosFileInfo( PathsInfoList );
                 }
 
-//            System.out.println( "getFilesTableModel PathsInfoList.size() =" + PathsInfoList.size() + "=" );
+//            logger.info( "getFilesTableModel PathsInfoList.size() =" + PathsInfoList.size() + "=" );
 //            System.err.println( "getFilesTableModel PathsInfoList.size() =" + PathsInfoList.size() + "=" );
             if ( PathsInfoList.size() < 1 )
                 {
@@ -182,8 +182,8 @@ public class JFileFinder //  implements Runnable
             try {
                 attr = Files.readAttributes( fpath, BasicFileAttributes.class );
                 PosixFileAttributes fsattr = Files.readAttributes( fpath, PosixFileAttributes.class );
-//                System.out.println("lookin at file          = " + fpath.toString() );
-//                System.out.println("isDirectory      = " + attr.isDirectory());
+//                logger.info( "lookin at file          = " + fpath.toString() );
+//                logger.info( "isDirectory      = " + attr.isDirectory());
 
                 int ftype = FilesTblModel.FILETYPE_NORMAL;
                 if ( Files.isSymbolicLink( fpath ) )
@@ -221,7 +221,7 @@ public class JFileFinder //  implements Runnable
 //                    if ( jFileFinderWin.isShowOwnerFlag() )
                     {
                     rowList.add( fsattr.owner().toString() );
-//                    System.out.println( "JFIleFinder set owner =" + fsattr.owner() + "=" );
+//                    logger.info( "JFIleFinder set owner =" + fsattr.owner() + "=" );
                     }
 //                    if ( jFileFinderWin.isShowGroupFlag() )
                     {
@@ -251,21 +251,21 @@ public class JFileFinder //  implements Runnable
                 rowList.add( "" );
                 rowList.add( "---" );
                 PathsInfoList.add( rowList );
-                logger.log(Level.SEVERE, nsf.toString());
+                logger.severe( nsf.toString());
                 }
             catch (Exception ex) 
                 {
-                logger.log(Level.SEVERE, ex.toString());
+                logger.severe( ex.toString());
                 }
-//        System.out.println("creationTime     = " + attr.creationTime());
-//        System.out.println("lastAccessTime   = " + attr.lastAccessTime());
-//        System.out.println("lastModifiedTime = " + attr.lastModifiedTime());
+//        logger.info( "creationTime     = " + attr.creationTime());
+//        logger.info( "lastAccessTime   = " + attr.lastAccessTime());
+//        logger.info( "lastModifiedTime = " + attr.lastModifiedTime());
 // 
-//        System.out.println("isDirectory      = " + attr.isDirectory());
-//        System.out.println("isOther          = " + attr.isOther());
-//        System.out.println("isRegularFile    = " + attr.isRegularFile());
-//        System.out.println("isSymbolicLink   = " + attr.isSymbolicLink());
-//        System.out.println("size             = " + attr.size());
+//        logger.info( "isDirectory      = " + attr.isDirectory());
+//        logger.info( "isOther          = " + attr.isOther());
+//        logger.info( "isRegularFile    = " + attr.isRegularFile());
+//        logger.info( "isSymbolicLink   = " + attr.isSymbolicLink());
+//        logger.info( "size             = " + attr.size());
             }
         }
 
@@ -328,7 +328,7 @@ public class JFileFinder //  implements Runnable
                                 {
                                 rowList.set( FilesTblModel.FILESTBLMODEL_FOLDERTYPE, FilesTblModel.FOLDERTYPE_FILE_NOACCESS );
                                 }
-                            logger.log(Level.SEVERE, ": dos owner line " + Thread.currentThread().getStackTrace()[1].getLineNumber() + ": " + ex.toString());
+                            logger.severe( ": dos owner line " + Thread.currentThread().getStackTrace()[1].getLineNumber() + ": " + ex.toString());
                             ex.printStackTrace();
                             }
                         }
@@ -348,24 +348,24 @@ public class JFileFinder //  implements Runnable
                                 {
                                 rowList.set( FilesTblModel.FILESTBLMODEL_FOLDERTYPE, FilesTblModel.FOLDERTYPE_FILE_NOACCESS );
                                 }
-                            logger.log(Level.SEVERE, ": dos rights line " + Thread.currentThread().getStackTrace()[2].getLineNumber() + ": " + ex.toString());
+                            logger.severe( ": dos rights line " + Thread.currentThread().getStackTrace()[2].getLineNumber() + ": " + ex.toString());
                             }
                         }
                     
                     PathsInfoList.add( rowList );
                 } catch (Exception ex) {
-                    logger.log(Level.SEVERE, ": line " + Thread.currentThread().getStackTrace()[2].getLineNumber() + ": " + ex.toString());
+                    logger.severe( ": line " + Thread.currentThread().getStackTrace()[2].getLineNumber() + ": " + ex.toString());
                     ex.printStackTrace();
                 }
-    //        System.out.println("creationTime     = " + attr.creationTime());
-    //        System.out.println("lastAccessTime   = " + attr.lastAccessTime());
-    //        System.out.println("lastModifiedTime = " + attr.lastModifiedTime());
+    //        logger.info( "creationTime     = " + attr.creationTime());
+    //        logger.info( "lastAccessTime   = " + attr.lastAccessTime());
+    //        logger.info( "lastModifiedTime = " + attr.lastModifiedTime());
     // 
-    //        System.out.println("isDirectory      = " + attr.isDirectory());
-    //        System.out.println("isOther          = " + attr.isOther());
-    //        System.out.println("isRegularFile    = " + attr.isRegularFile());
-    //        System.out.println("isSymbolicLink   = " + attr.isSymbolicLink());
-    //        System.out.println("size             = " + attr.size());
+    //        logger.info( "isDirectory      = " + attr.isDirectory());
+    //        logger.info( "isOther          = " + attr.isOther());
+    //        logger.info( "isRegularFile    = " + attr.isRegularFile());
+    //        logger.info( "isSymbolicLink   = " + attr.isSymbolicLink());
+    //        logger.info( "size             = " + attr.size());
                 }
         }
 
@@ -373,7 +373,7 @@ public class JFileFinder //  implements Runnable
         {
         synchronized( dataSyncLock ) 
             {
-            System.out.println( "entered JFileFinder.emptyFilesTableModel()" );
+            logger.info( "entered JFileFinder.emptyFilesTableModel()" );
             ArrayList<String> HeaderList = new ArrayList<String>();
             ArrayList<ArrayList> PathsInfoList = new ArrayList<ArrayList>();
 
@@ -398,7 +398,7 @@ public class JFileFinder //  implements Runnable
         {
         synchronized( dataSyncLock ) 
             {
-            System.out.println( "entered JFileFinder.newfolderOnlyFilesTableModel()" );
+            logger.info( "entered JFileFinder.newfolderOnlyFilesTableModel()" );
             ArrayList<String> HeaderList = new ArrayList<String>();
             ArrayList<ArrayList> PathsInfoList = new ArrayList<ArrayList>();
 
@@ -427,12 +427,12 @@ public class JFileFinder //  implements Runnable
     }
     
     public ResultsData getResultsData() {
-        //System.out.println( "finderFileVisitor =" + finderFileVisitor + "=" );
+        //logger.info( "finderFileVisitor =" + finderFileVisitor + "=" );
         return this.resultsData;
     }
     
     static void usage() {
-        System.out.println("java Find <path>" + " -name \"<glob_pattern>\"");
+        logger.info( "java Find <path>" + " -name \"<glob_pattern>\"");
         System.exit(-1);
     }
 
@@ -444,13 +444,13 @@ public class JFileFinder //  implements Runnable
         //basePathCount = startingDir.getNameCount();
         basePathLen = startingDir.toString().length();
         
-        System.out.println( "startingPath =" + startingPath + "=" );
-        System.out.println( "startingDir =" + startingDir + "=" );
-        System.out.println( "patternType =" + patternType + "=" );
-        System.out.println( "filePattern =" + filePattern + "=" );
-        System.out.println( "matching filePattern =" + (startingPath + filePattern).replace( "\\", "\\\\" ) + "=" );
-        System.out.println( "basePathLen =" + basePathLen + "=" );
-        System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+        logger.info( "startingPath =" + startingPath + "=" );
+        logger.info( "startingDir =" + startingDir + "=" );
+        logger.info( "patternType =" + patternType + "=" );
+        logger.info( "filePattern =" + filePattern + "=" );
+        logger.info( "matching filePattern =" + (startingPath + filePattern).replace( "\\", "\\\\" ) + "=" );
+        logger.info( "basePathLen =" + basePathLen + "=" );
+        logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
     
         finderFileVisitor = new FinderFileVisitor( (startingPath + filePattern).replace( "\\", "\\\\" ), this, matchedPathsList
                                                    , chainFilterList, chainFilterFolderList, chainFilterPreVisitFolderList, noAccessFolder, jFileFinderSwingWorker );
@@ -470,14 +470,14 @@ public class JFileFinder //  implements Runnable
                     , finderFileVisitor.getNumFileMatches(), finderFileVisitor.getNumFolderMatches() , finderFileVisitor.getNumFileTests(), finderFileVisitor.getNumFolderTests() );
                 resultsData.setFilesysType(filesysType);
                 
-                System.out.println( "BEG: " + sdf.format( begDate ) );
-                System.out.println( "END: " + sdf.format( endDate ) );
-                System.out.println( "matchedPathsList size =" + matchedPathsList.size() + "=" );
+                logger.info( "BEG: " + sdf.format( begDate ) );
+                logger.info( "END: " + sdf.format( endDate ) );
+                logger.info( "matchedPathsList size =" + matchedPathsList.size() + "=" );
                 }
             } 
         catch (IOException ex)
             {
-            System.out.println( "walkFileTree Error: " );
+            logger.info( "walkFileTree Error: " );
             ex.printStackTrace();
             }
         finderFileVisitor.done();
@@ -497,7 +497,7 @@ public class JFileFinder //  implements Runnable
 //        filePattern = "*.xml";
 //        startingPath = args[0];
 //        filePattern = args[1];
-        System.out.println("java Find args[0] =" + args[0] +  "=  args[1] =" + args[1] + "=  args[2] =" + args[2] + "=");
+        logger.info( "java Find args[0] =" + args[0] +  "=  args[1] =" + args[1] + "=  args[2] =" + args[2] + "=");
 
         JFileFinder jfilefinder = new JFileFinder( args[0], args[1], args[2], null, null, null );
 
@@ -506,7 +506,7 @@ public class JFileFinder //  implements Runnable
 //        try {
 //            jfinderThread.join();
 //        } catch (InterruptedException ex) {
-//            Logger.getLogger(JFileFinder.class.getName()).log(Level.SEVERE, null, ex);
+//            logger.severeExc( ex );
 //        }
         }
 }    

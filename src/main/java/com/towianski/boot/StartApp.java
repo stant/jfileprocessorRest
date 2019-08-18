@@ -4,8 +4,6 @@ import com.towianski.boot.server.TomcatApp;
 import com.towianski.boot.server.WarRun;
 import com.towianski.jfileprocessor.JFileFinderWin;
 import com.towianski.utils.MyLogger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -14,7 +12,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 //@SpringBootApplication
 public class StartApp //implements CommandLineRunner
 {
-    private final static MyLogger logger = MyLogger.getLogger( StartApp.class.getName() );
+    private static final MyLogger logger = MyLogger.getLogger( StartApp.class.getName() );
     
 //    @Autowired
 //     JFileFinderWin jFileFinderWin;
@@ -35,13 +33,13 @@ public class StartApp //implements CommandLineRunner
 //            {
 //            //System.setProperty( "sun.java2d.uiScale", "2" );
 //            adjustScale = true;
-//            System.out.println( "Looks like a hi resolution screen so set uiScale = 2, which can still be overriden with passed arg." );
+//            logger.info( "Looks like a hi resolution screen so set uiScale = 2, which can still be overriden with passed arg." );
 //            }
         
         for ( int i = 0; i < args.length; i++ )
             {
 //            logger.info( "** args [" + i + "] =" + args[i] + "=" );
-            System.out.println( "** args [" + i + "] =" + args[i] + "=" );
+            logger.info( "** args [" + i + "] =" + args[i] + "=" );
             if ( args[i].equalsIgnoreCase( "--server" ) )
                 {
                 startServer = true;
@@ -58,7 +56,7 @@ public class StartApp //implements CommandLineRunner
         
         if ( startServer )
             {
-            System.out.println( "*** START SERVER ***" );
+            logger.info( "*** START SERVER ***" );
             TomcatApp.main(args);
 //            context = new SpringApplicationBuilder(TomcatApp.class).profiles("server").web(true).run(args);
 //            app.setAdditionalProfiles("server");
@@ -67,20 +65,20 @@ public class StartApp //implements CommandLineRunner
             } 
         else if ( startWebServer )
             {
-            System.out.println( "*** START WEB SERVER ***" );
+            logger.info( "*** START WEB SERVER ***" );
             }
         else if ( startWarServer )
             {
-            System.out.println( "*** START WAR SERVER ***" );
+            logger.info( "*** START WAR SERVER ***" );
             try {
                 WarRun.main(args);
             } catch (Exception ex) {
-                Logger.getLogger(StartApp.class.getName()).log(Level.SEVERE, null, ex);
+                logger.severeExc( ex );
             }
             }
         else
             {
-            System.out.println( "*** START CLIENT ***" );
+            logger.info( "*** START CLIENT ***" );
             
 //            String[] allArgs = Arrays.copyOf( args, args.length + 2 );
 //            String[] extraArgs = { "sun.java2d.uiScale", "2" };
@@ -124,7 +122,7 @@ public class StartApp //implements CommandLineRunner
 
 //    @PreDestroy
 //    public void destroy() {
-//        System.out.println( "Inside destroy method - " );
+//        logger.info( "Inside destroy method - " );
 //        }
 }
 

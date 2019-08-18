@@ -5,14 +5,13 @@ import com.towianski.jfileprocessor.JFileFinderWin;
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.sshutils.JschSftpUtils;
+import com.towianski.utils.MyLogger;
 import com.towianski.utils.Rest;
 import java.awt.Color;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import org.springframework.web.client.RestTemplate;
@@ -23,6 +22,8 @@ import org.springframework.web.client.RestTemplate;
  */
 public class TomcatAppThread implements Runnable
     {
+    private static final MyLogger logger = MyLogger.getLogger( TomcatAppThread.class.getName() );
+
     ConnUserInfo connUserInfo = null;
     String user = null;
     String passwd = null;
@@ -47,12 +48,12 @@ public class TomcatAppThread implements Runnable
     
     public void cancelTomcatAppThread( boolean forceStop ) 
         {
-        System.out.println("TomcatAppThread set cancelFlag to true - forceStop =" + forceStop + "   StartedServer =" + startedServer );
+        logger.info( "TomcatAppThread set cancelFlag to true - forceStop =" + forceStop + "   StartedServer =" + startedServer );
         cancelFlag = true;
 //        if ( isStartedServer() || forceStop )
         if ( iStartedServer || forceStop )
             {
-            System.out.println( "TomcatAppThread.cancelTomcatAppThread() thread not null to make rest /jfp/sys/stop call" );
+            logger.info( "TomcatAppThread.cancelTomcatAppThread() thread not null to make rest /jfp/sys/stop call" );
             try
                 {
                 RestTemplate restTemplate = Rest.createNoHostVerifyRestTemplate();
@@ -60,12 +61,12 @@ public class TomcatAppThread implements Runnable
                 } 
             catch (Exception ex)
                 {
-                Logger.getLogger(TomcatAppThread.class.getName()).log(Level.SEVERE, null, ex);
+                logger.severeExc( ex );
                 }
             }
         else
             {
-            System.out.println( "TomcatAppThread.cancelTomcatAppThread() - I did Not start server so just stop myself" );
+            logger.info( "TomcatAppThread.cancelTomcatAppThread() - I did Not start server so just stop myself" );
             // Start a msgBox
             {
                 java.awt.EventQueue.invokeLater(new Runnable() {
@@ -78,13 +79,13 @@ public class TomcatAppThread implements Runnable
             }
 //        else
 //            {
-//            System.out.println("TomcatAppThread.cancelRestServer() - stop prev running thread");
+//            logger.info( "TomcatAppThread.cancelRestServer() - stop prev running thread");
 ////            Thread.currentThread().interrupt();
 //            notify();
 //            }
 //        Thread.currentThread().interrupt();   maybe did not work?
         connUserInfo.setState( ConnUserInfo.STATE_CANCEL );
-        System.out.println("TomcatAppThread exit cancelTomcatAppThread()");
+        logger.info( "TomcatAppThread exit cancelTomcatAppThread()");
         }
 
     // Now this runs once and exits. It does not loop
@@ -92,22 +93,22 @@ public class TomcatAppThread implements Runnable
     public void run() {
         try
             {
-            System.out.println( "entered TomcatAppThread run()" );
-            System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+            logger.info( "entered TomcatAppThread run()" );
+            logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
             RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
 
             cancelFlag = false;
             JschSftpUtils jschSftpUtils = new JschSftpUtils();
             String response = null;
 
-            System.out.println( "TomcatAppThread.run() make rest /jfp/sys/ping call" );
+            logger.info( "TomcatAppThread.run() make rest /jfp/sys/ping call" );
             try
                 {
                 response = noHostVerifyRestTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.SYS_PING, String.class );
                 }
             catch( Exception exc )
                 {
-                System.out.println( "TomcatAppThread.run() ping threw Exception !!" );
+                logger.info( "TomcatAppThread.run() ping threw Exception !!" );
                 response = null;
                 SwingUtilities.invokeLater(new Runnable() 
                     {
@@ -117,21 +118,21 @@ public class TomcatAppThread implements Runnable
                     });
                 exc.printStackTrace();
                 }
-            System.out.println( "TomcatAppThread.run() ping response =" + response + "=" );
+            logger.info( "TomcatAppThread.run() ping response =" + response + "=" );
 
             if ( ! cancelFlag && 
                 ( response == null || ! response.equalsIgnoreCase( "RUNNING" ) ) )
                 {
 //                    String[] mainCommand = System.getProperty("sun.java.command").split(" ");
 //                    String jfpFilename = mainCommand[0];
-//                    System.out.println( "jfpFilename =" + jfpFilename + "=" );
+//                    logger.info( "jfpFilename =" + jfpFilename + "=" );
 //                        String fpath = System.getProperty( "user.dir" ) + System.getProperty( "file.separator" ) + "build" + System.getProperty( "file.separator" ) + "libs" + System.getProperty( "file.separator" );
                 String fpath = System.getProperty( "user.dir" ) + System.getProperty( "file.separator" );
 //                    fpath = fpath.replace( "-Gui", "-Server" );
-//                    System.out.println( "jfpFilename =" + jfpFilename + "=" );
+//                    logger.info( "jfpFilename =" + jfpFilename + "=" );
                 String jfpFilename = JFileProcessorVersion.getFileName();
-                System.out.println( "set jfpFilename =" + jfpFilename + "=" );
-                System.out.println( "try jschSftpUtils   file =" + fpath + jfpFilename + "=   to remote =" + user + "@" + rmtHost + ":" + jfpFilename + "=" );
+                logger.info( "set jfpFilename =" + jfpFilename + "=" );
+                logger.info( "try jschSftpUtils   file =" + fpath + jfpFilename + "=   to remote =" + user + "@" + rmtHost + ":" + jfpFilename + "=" );
 
                 jFileFinderWin.setMessage( "copy server to remote" );
                 //jschSftpUtils.copyIfMissing( fpath + jfpFilename, user, passwd, rmtHost, jfpFilename );
@@ -160,13 +161,13 @@ public class TomcatAppThread implements Runnable
                         runCmd = "powershell.exe Start-Process -NoNewWindow -FilePath java -ArgumentList '-Dserver.port=" + connUserInfo.getToAskHttpsPort() + " -jar " + jfpFilename + " --server --logging.file=.JFileProcessor\\" + serverLogFileName + " " + "' -Wait";
                         }
 
-                    System.out.println( "start remote server with runCmd =" + runCmd + "=" );
+                    logger.info( "start remote server with runCmd =" + runCmd + "=" );
                     iStartedServer = true;
                     setStartedServer( true );
                     jschSftpUtils.exec( user, passwd, rmtHost, connUserInfo, runCmd );
                     //java -jar your-spring.jar --security.require-ssl=true --server.port=8443 --server.ssl.key-store=keystore --server.ssl.key-store-password=changeit --server.ssl.key-password=changeit
                     }
-                System.out.println( "after exec remote jfp server" );
+                logger.info( "after exec remote jfp server" );
 //                    if ( ! cancelFlag )    // If I can get windows -Wait to work I do not want this wait here.
 //                        {
 //                        waitUntilNotified();
@@ -174,19 +175,19 @@ public class TomcatAppThread implements Runnable
                 }
             else
                 {
-                System.out.println( "using prev running remote jfp server" );
+                logger.info( "using prev running remote jfp server" );
 //                    waitUntilNotified();
                 synchronized (this) 
                     {
                     this.wait();
                     }
-                System.out.println( "after wait using remote jfp server" );
+                logger.info( "after wait using remote jfp server" );
                 }
             }
         catch (InterruptedException ex) 
             {
-            System.out.println( "TomcatAppThread.run() Interrupted" );
-            Logger.getLogger(TomcatAppThread.class.getName()).log(Level.SEVERE, null, ex);
+            logger.info( "TomcatAppThread.run() Interrupted" );
+            logger.severeExc( ex );
             setStartedServer( false );
             }
         catch( Exception exc )
@@ -207,19 +208,19 @@ public class TomcatAppThread implements Runnable
 //                }
 //            });
         connUserInfo.setState( ConnUserInfo.STATE_CANCEL );
-        System.out.println( "Exiting TomcatAppThread run() - Done" );
+        logger.info( "Exiting TomcatAppThread run() - Done" );
         }
 
     public synchronized void waitUntilNotified()
         {
-        System.out.println( "entered waitUntilNotified()" );
+        logger.info( "entered waitUntilNotified()" );
         try {
             wait();
             } 
         catch (InterruptedException ex) 
             {
-            System.out.println( "Interrupted in waitUntilNotified()" );
-            Logger.getLogger(TomcatAppThread.class.getName()).log(Level.SEVERE, null, ex);
+            logger.info( "Interrupted in waitUntilNotified()" );
+            logger.severeExc( ex );
             }
         cancelFlag = true;
         setStartedServer( false );
@@ -229,7 +230,7 @@ public class TomcatAppThread implements Runnable
                 jFileFinderWin.setRmtConnectBtnBackgroundReset();
                 }
             });
-        System.out.println( "exit waitUntilNotified()" );
+        logger.info( "exit waitUntilNotified()" );
         }
     
     public boolean isStartedServer() {

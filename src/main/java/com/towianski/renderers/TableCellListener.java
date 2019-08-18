@@ -6,6 +6,7 @@
 package com.towianski.renderers;
 
 import com.towianski.models.FilesTblModel;
+import com.towianski.utils.MyLogger;
 import java.awt.event.*;
 import javax.swing.*;
 import java.beans.*;
@@ -20,18 +21,19 @@ import java.beans.*;
  */
 public class TableCellListener implements PropertyChangeListener, Runnable
 {
-	private JTable table;
-	private Action action;
+    private static final MyLogger logger = MyLogger.getLogger( TableCellListener.class.getName() );
+    private JTable table;
+    private Action action;
 
-	private int row;
-	private int column;
-	private Object oldValue;
-	private Object newValue;
-        private Boolean onOffFlag = true;
-        private String skipFirstPath = "";
-        private Boolean doingCancel = false;
-        private int filesTblModelType = -1;
-        
+    private int row;
+    private int column;
+    private Object oldValue;
+    private Object newValue;
+    private Boolean onOffFlag = true;
+    private String skipFirstPath = "";
+    private Boolean doingCancel = false;
+    private int filesTblModelType = -1;
+
 	/**
 	 *  Create a TableCellListener.
 	 *
@@ -70,7 +72,7 @@ public class TableCellListener implements PropertyChangeListener, Runnable
 
     public void setOnOffFlag(Boolean onOffFlag) {
         this.onOffFlag = onOffFlag;
-        System.out.println( "tbl cell editor SET flag() onOffFlag = " + this.onOffFlag );
+        logger.info( "tbl cell editor SET flag() onOffFlag = " + this.onOffFlag );
     }
 
     public void skipFirstEditOn( int filesTblModelType, String skipFirstPath )
@@ -146,12 +148,12 @@ public class TableCellListener implements PropertyChangeListener, Runnable
                     {
                     if (table.isEditing())
                         {
-                        //System.out.println( "propertyChange()  goto processEditingStarted()" );
+                        //logger.info( "propertyChange()  goto processEditingStarted()" );
                         processEditingStarted();
                         }
                     else
                         {
-                        //System.out.println( "propertyChange()  goto processEditingStopped()" );
+                        //logger.info( "propertyChange()  goto processEditingStopped()" );
                         processEditingStopped();
                         }
 		}
@@ -164,14 +166,14 @@ public class TableCellListener implements PropertyChangeListener, Runnable
             {
             if (table.isEditing())
                 {
-                System.out.println( "processEditingCanceled()" );
+                logger.info( "processEditingCanceled()" );
                 doingCancel = true;
-//                //System.out.println( "tbl cell editor stopping() table.getEditingRow() = " + table.getEditingRow() );
+//                //logger.info( "tbl cell editor stopping() table.getEditingRow() = " + table.getEditingRow() );
 //                row = table.convertRowIndexToModel( table.getEditingRow() );
-//                //System.out.println( "tbl cell editor stopping() row = " + row );
-//                //System.out.println( "tbl cell editor stopping() table.getEditingColumn() = " + table.getEditingColumn() );
+//                //logger.info( "tbl cell editor stopping() row = " + row );
+//                //logger.info( "tbl cell editor stopping() table.getEditingColumn() = " + table.getEditingColumn() );
 //                column = table.convertColumnIndexToModel( table.getEditingColumn() );
-//                //System.out.println( "tbl cell editor stopping() column = " + column );
+//                //logger.info( "tbl cell editor stopping() column = " + column );
 //
 //                FilesTblModel filesTblModel = (FilesTblModel) table.getModel();
 //                filesTblModel.setCellEditable( row, column, false );
@@ -188,7 +190,7 @@ public class TableCellListener implements PropertyChangeListener, Runnable
             //  PropertyChangeEvent is fired.
             //  This results in the "run" method being invoked
 
-            //System.out.println( "processEditingStarted()" );
+            //logger.info( "processEditingStarted()" );
             SwingUtilities.invokeLater( this );
 	}
 	/*
@@ -197,18 +199,18 @@ public class TableCellListener implements PropertyChangeListener, Runnable
 	@Override
 	public void run()
 	{
-            System.out.println( "tbl cell editor run()" );
+            logger.info( "tbl cell editor run()" );
             if ( table.getEditingRow() < 0 )
                 {
-                System.out.println( "tbl cell editor run() SKIP" );
+                logger.info( "tbl cell editor run() SKIP" );
                 return;
                 }
-            //System.out.println( "tbl cell editor run() table.getEditingRow() = " + table.getEditingRow() );
+            //logger.info( "tbl cell editor run() table.getEditingRow() = " + table.getEditingRow() );
             row = table.convertRowIndexToModel( table.getEditingRow() );
-            //System.out.println( "tbl cell editor run() row = " + row );
-            //System.out.println( "tbl cell editor run() table.getEditingColumn() = " + table.getEditingColumn() );
+            //logger.info( "tbl cell editor run() row = " + row );
+            //logger.info( "tbl cell editor run() table.getEditingColumn() = " + table.getEditingColumn() );
             column = table.convertColumnIndexToModel( table.getEditingColumn() );
-            //System.out.println( "tbl cell editor run() column = " + column );
+            //logger.info( "tbl cell editor run() column = " + column );
 
             FilesTblModel filesTblModel = (FilesTblModel) table.getModel();
             //oldValue = table.getModel().getValueAt(row, column);
@@ -222,61 +224,61 @@ public class TableCellListener implements PropertyChangeListener, Runnable
 	 */
 	private void processEditingStopped()
 	{
-            System.out.println( "processEditingStopped()" );
-            //System.out.println( "tbl cell editor stopping() table.getEditingRow() = " + table.getEditingRow() );
+            logger.info( "processEditingStopped()" );
+            //logger.info( "tbl cell editor stopping() table.getEditingRow() = " + table.getEditingRow() );
             row = table.convertRowIndexToModel( table.getEditingRow() );
-            //System.out.println( "tbl cell editor stopping() row = " + row );
-            //System.out.println( "tbl cell editor stopping() table.getEditingColumn() = " + table.getEditingColumn() );
+            //logger.info( "tbl cell editor stopping() row = " + row );
+            //logger.info( "tbl cell editor stopping() table.getEditingColumn() = " + table.getEditingColumn() );
             column = table.convertColumnIndexToModel( table.getEditingColumn() );
-            //System.out.println( "tbl cell editor stopping() column = " + column );
+            //logger.info( "tbl cell editor stopping() column = " + column );
 
             //newValue = table.getModel().getValueAt(row, column);
             FilesTblModel filesTblModel = (FilesTblModel) table.getModel();
             newValue = filesTblModel.getValueAt(row, column);
 
-//            System.out.println( "tbl cell editor stopping() oldValue = " + oldValue + "=   newValue =" + newValue + "=" );
+//            logger.info( "tbl cell editor stopping() oldValue = " + oldValue + "=   newValue =" + newValue + "=" );
 //            if ( ! onOffFlag && oldValue == null && newValue.equals( skipFirstPath ) )
 //                {
-//                System.out.println( "tbl cell editor stopping() SKIP insert New Folder path" );
+//                logger.info( "tbl cell editor stopping() SKIP insert New Folder path" );
 //                onOffFlag = true;
 //                table.changeSelection( 0, FilesTblModel.FILESTBLMODEL_PATH, false, false );
 //                return;
 //                }
-//            System.out.println( "tbl cell editor stopping() onOffFlag = " + onOffFlag );
+//            logger.info( "tbl cell editor stopping() onOffFlag = " + onOffFlag );
 //            if ( ! onOffFlag || ! filesTblModel.isCellEditable( row, column ) )
 //                {
-//                System.out.println( "tbl cell editor stopping() SKIP not edittable cell or is OFF" );
+//                logger.info( "tbl cell editor stopping() SKIP not edittable cell or is OFF" );
 //                return;
 //                }
 
 		//  The data has changed, invoke the supplied Action
 
-            System.out.println("stopping() Old   : " + getOldValue());
-            System.out.println("stopping() New   : " + getNewValue());
+            logger.info( "stopping() Old   : " + getOldValue());
+            logger.info( "stopping() New   : " + getNewValue());
 
             if ( oldValue.equals( skipFirstPath ) )  // New Folder
                 {
-                //System.out.println( "oldValue.equals( skipFirstPath )" );
+                //logger.info( "oldValue.equals( skipFirstPath )" );
                 oldValue = null;
                 }
             
             if ( newValue.equals( oldValue ) )
                 {
-                //System.out.println( "newValue.equals( oldValue )" );
+                //logger.info( "newValue.equals( oldValue )" );
                 filesTblModel.setCellEditable( row, column, false );
                 }
             
             if ( ! newValue.equals( oldValue ) )
                    //   || newValue.equals( skipFirstPath )  // old and new == new file path
                 {
-                //System.out.println( "oldValue.NOT equals( oldValue )   row =" + row + "   column =" + column );
+                //logger.info( "oldValue.NOT equals( oldValue )   row =" + row + "   column =" + column );
                 filesTblModel.setCellEditable( row, column, false );
                 // i added but it is not right    oldValue = null;
 
                 //  Make a copy of the data in case another cell starts editing
                 //  while processing this change
 
-                //System.out.println( "doingCancel =" + doingCancel );
+                //logger.info( "doingCancel =" + doingCancel );
                 if ( doingCancel )
                     {
                     filesTblModel.setValueAt( oldValue, getRow(), getColumn() );
@@ -285,7 +287,7 @@ public class TableCellListener implements PropertyChangeListener, Runnable
                     {
                     TableCellListener tcl = new TableCellListener(
                             getTable(), this.filesTblModelType, getRow(), getColumn(), getOldValue(), getNewValue());
-                    //System.out.println( "processEditingStopped() tcl tbl col count =" + filesTblModel.getColumnCount() );
+                    //logger.info( "processEditingStopped() tcl tbl col count =" + filesTblModel.getColumnCount() );
 
                     ActionEvent event = new ActionEvent(
                             tcl,

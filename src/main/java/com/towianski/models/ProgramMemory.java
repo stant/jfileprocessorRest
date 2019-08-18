@@ -8,6 +8,7 @@ package com.towianski.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.towianski.jfileprocessor.JFileFinderWin;
+import com.towianski.utils.MyLogger;
 import java.util.HashMap;
 import javax.swing.table.TableColumnModel;
 
@@ -17,6 +18,7 @@ import javax.swing.table.TableColumnModel;
  */
 public class ProgramMemory {
     
+    private static final MyLogger logger = MyLogger.getLogger( ProgramMemory.class.getName() );
     JFileFinderWin jFileFinderWin = null;
     boolean showHiddenFilesFlag = false;
     boolean showOwnerFlag = false;
@@ -38,7 +40,7 @@ public class ProgramMemory {
     
     public ProgramMemory()
         {
-        System.out.println( "ProgramMemory constructor()" );
+        logger.info( "ProgramMemory constructor()" );
             
         setTblColModelWidth( TBLCOLMODEL_WIDTH_FILETYPE, 16 );
         setTblColModelWidth( TBLCOLMODEL_WIDTH_FOLDERTYPE, 16 );
@@ -58,7 +60,7 @@ public class ProgramMemory {
 
 //    public ProgramMemory( JFileFinderWin jFileFinderWin )
 //        {
-//        System.out.println( "ProgramMemory constructor()" );
+//        logger.info( "ProgramMemory constructor()" );
 //        }
 
     public boolean isShowHiddenFilesFlag() {
@@ -126,7 +128,7 @@ public class ProgramMemory {
     @JsonIgnore
     public void infuseSavedValues()
         {
-        System.out.println( "ProgramMemory infuseSavedValues()" );
+        logger.info( "ProgramMemory infuseSavedValues()" );
         jFileFinderWin.setShowHiddenFilesFlag(showHiddenFilesFlag);
         jFileFinderWin.setShowOwnerFlag(showOwnerFlag);
         jFileFinderWin.setShowGroupFlag(showGroupFlag);
@@ -142,7 +144,7 @@ public class ProgramMemory {
     @JsonIgnore
     public void extractCurrentValues()
         {
-        System.out.println( "ProgramMemory ExtractCurrentValues()" );
+        logger.info( "ProgramMemory ExtractCurrentValues()" );
         try {
             this.showHiddenFilesFlag = jFileFinderWin.getShowHiddenFilesFlag();
             this.showOwnerFlag = jFileFinderWin.isShowOwnerFlag();
@@ -166,8 +168,8 @@ public class ProgramMemory {
             {
             exc.printStackTrace();
             }
-        System.out.println( "ProgramMemory showHiddenFilesFlag =" + showHiddenFilesFlag );
-        System.out.println( "ProgramMemory showOwnerFlag =" + showOwnerFlag );
+        logger.info( "ProgramMemory showHiddenFilesFlag =" + showHiddenFilesFlag );
+        logger.info( "ProgramMemory showOwnerFlag =" + showOwnerFlag );
         }
 
         public HashMap<Integer,Integer> getTblColModelWidths()

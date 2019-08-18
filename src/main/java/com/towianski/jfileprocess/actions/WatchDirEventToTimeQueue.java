@@ -6,6 +6,7 @@
 package com.towianski.jfileprocess.actions;
 
 import com.towianski.models.FileTimeEvent;
+import com.towianski.utils.MyLogger;
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
@@ -13,8 +14,6 @@ import java.nio.file.WatchService;
 import java.time.Instant;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -22,6 +21,7 @@ import java.util.logging.Logger;
  */
 public class WatchDirEventToTimeQueue implements Runnable
 {
+    private static final MyLogger logger = MyLogger.getLogger( WatchDirEventToTimeQueue.class.getName() );
     private WatchService watchService = null;
     BlockingQueue<FileTimeEvent> fileEventTimeQueue = null;
     private ConcurrentHashMap watchKeyToPathAndQueueMap = null;
@@ -38,21 +38,21 @@ public class WatchDirEventToTimeQueue implements Runnable
 //        }
 
     public WatchDirEventToTimeQueue( WatchService watchService, BlockingQueue<FileTimeEvent> fileEventTimeQueue, ConcurrentHashMap watchKeyToPathAndQueueMap ) {
-        System.out.println( "WatchDirEventToTimeQueue() Constructor()" );
+        logger.info( "WatchDirEventToTimeQueue() Constructor()" );
         this.watchService = watchService;
         this.fileEventTimeQueue = fileEventTimeQueue;
         this.watchKeyToPathAndQueueMap = watchKeyToPathAndQueueMap;
     }
     
     public WatchDirEventToTimeQueue( WatchService watchService, BlockingQueue<FileTimeEvent> fileEventTimeQueue ) {
-        System.out.println( "WatchDirEventToTimeQueue() Constructor()" );
+        logger.info( "WatchDirEventToTimeQueue() Constructor()" );
         this.watchService = watchService;
         this.fileEventTimeQueue = fileEventTimeQueue;
     }
     
     public void cancelWatch()
         {
-        System.out.println( "WatchDirEventToTimeQueue() set cancelFlag to true" );
+        logger.info( "WatchDirEventToTimeQueue() set cancelFlag to true" );
 
         try {
             runFlag = false;
@@ -60,24 +60,24 @@ public class WatchDirEventToTimeQueue implements Runnable
             }
         catch (Exception ex)
             {
-            System.out.println("WatchDirEventToTimeQueue() set cancelFlag caught error !");
-            Logger.getLogger(WatchDirEventToTimeQueue.class.getName()).log(Level.SEVERE, null, ex);
+            logger.info( "WatchDirEventToTimeQueue() set cancelFlag caught error !");
+            logger.severeExc( ex );
             }
-        System.out.println("WatchDirEventToTimeQueue() exit cancelSearch()");
+        logger.info( "WatchDirEventToTimeQueue() exit cancelSearch()");
         }
     
     @Override
     public void run() 
         {
-        System.out.println( "entered WatchDirEventToTimeQueue() run()" );
-        //System.out.println( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
+        logger.info( "entered WatchDirEventToTimeQueue() run()" );
+        //logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
         try {
             WatchKey watchKey;
             while ( runFlag && (watchKey = watchService.take()) != null) 
                 {
                 for (WatchEvent<?> event : watchKey.pollEvents()) 
                     {
-                    //System.out.println( "Event kind:" + event.kind() + ". File affected =" + event.context() + "=");
+                    //logger.info( "Event kind:" + event.kind() + ". File affected =" + event.context() + "=");
                     Instant instant = Instant.now();
                     
                     Path dir = (Path) watchKey.watchable();
@@ -91,9 +91,9 @@ public class WatchDirEventToTimeQueue implements Runnable
                 }
             } 
         catch (InterruptedException ex) {
-            System.out.println( "WatchDirEventToTimeQueue() run() Interrupt" );
+            logger.info( "WatchDirEventToTimeQueue() run() Interrupt" );
             cancelWatch();
             }
-        System.out.println( "exit WatchDirEventToTimeQueue() run()" );
+        logger.info( "exit WatchDirEventToTimeQueue() run()" );
         }
 }    

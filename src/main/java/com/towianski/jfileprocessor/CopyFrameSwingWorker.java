@@ -7,6 +7,7 @@ package com.towianski.jfileprocessor;
 
 import com.towianski.jfileprocess.actions.CloseWinOnTimer;
 import com.towianski.models.ResultsData;
+import com.towianski.utils.MyLogger;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,7 @@ import javax.swing.SwingWorker;
  */
 public class CopyFrameSwingWorker extends SwingWorker<ResultsData, Long> {
 
+    private static final MyLogger logger = MyLogger.getLogger( CopyFrameSwingWorker.class.getName() );
 //    JFileFinderWin jFileFinderWin = null;
     CopyFrame copyFrame = null;
     ArrayList<String> copyPaths = new ArrayList<String>();
@@ -67,16 +69,16 @@ public class CopyFrameSwingWorker extends SwingWorker<ResultsData, Long> {
     @Override
     public void done() {
         try {
-            System.out.println( "entered CopyFrameSwingWorker.done()" );
+            logger.info( "entered CopyFrameSwingWorker.done()" );
             ResultsData resultsData = get();
             //Integer ii = get();
-            //System.out.println( "SwingWork.done() at 2  ii = " + ii );
-            //System.out.println( "SwingWork.done() got ans =" + matchedPathsList + "=" );
+            //logger.info( "SwingWork.done() at 2  ii = " + ii );
+            //logger.info( "SwingWork.done() got ans =" + matchedPathsList + "=" );
             NumberFormat numFormat = NumberFormat.getIntegerInstance();
             String partialMsg = "";
 //            String msg =  "Copied " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) + " folders out of " + numFormat.format( resultsData.getFilesVisited() );
             String msg =  "Copied " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) + " folders out of " + numFormat.format( resultsData.getFilesTested() ) + " files and " + numFormat.format( resultsData.getFoldersTested() ) + " folders.";
-//            System.out.println( "CopyFrameSwingWorker. got results msg =" + msg + "=" );
+//            logger.info( "CopyFrameSwingWorker. got results msg =" + msg + "=" );
             if ( resultsData.getSearchWasCanceled() )
                 {
                 copyFrame.setProcessStatus( copyFrame.PROCESS_STATUS_COPY_CANCELED );
@@ -86,7 +88,7 @@ public class CopyFrameSwingWorker extends SwingWorker<ResultsData, Long> {
                 {
                 if ( resultsData.getProcessStatus().equals( copyFrame.PROCESS_STATUS_COPY_COMPLETED ) )
                     {
-                    System.out.println( "do new CloseWinOnTimer( copyFrame, 4000 )" );
+                    logger.info( "do new CloseWinOnTimer( copyFrame, 4000 )" );
                     new CloseWinOnTimer( copyFrame, closeWhenDoneFlag ? 4000 : 0 ){{setRepeats(false);}}.start();
                     }
                 }
@@ -110,7 +112,7 @@ public class CopyFrameSwingWorker extends SwingWorker<ResultsData, Long> {
             copyPaths = null;            
             
             copyFrame.callSearchBtnActionPerformed();
-            //System.out.println( "exiting SwingWork.done()" );
+            //logger.info( "exiting SwingWork.done()" );
             }
         catch (InterruptedException ignore) 
             {}
@@ -123,7 +125,7 @@ public class CopyFrameSwingWorker extends SwingWorker<ResultsData, Long> {
             } else {
                 why = e.getMessage();
             }
-            System.out.println( "Error in CopyFrameSwingWorker(): " + why);
+            logger.info( "Error in CopyFrameSwingWorker(): " + why);
             e.printStackTrace();
             }
     }    

@@ -5,7 +5,9 @@
  */
 package com.towianski.jfileprocessor;
 
+import com.towianski.jfileprocess.actions.UpFolderAction;
 import com.towianski.models.Constants;
+import com.towianski.utils.MyLogger;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -37,14 +39,15 @@ import javax.swing.ListSelectionModel;
  */
 public class ListOfFilesPanel extends javax.swing.JFrame {
 
-        LinkedHashMap<String,String> savedPathsHm = new LinkedHashMap<String,String>();
-        JFileFinderWin jFileFinderWin = null;
-        String name = "";
-        DefaultComboBoxModel listOfFilesPanelModel = null;
-        int filesysType = -1;
-        String currentDirectory = "";
-        String currentFile = "";
-        int selectedPathPiece = 0;
+    private static final MyLogger logger = MyLogger.getLogger( UpFolderAction.class.getName() );
+    LinkedHashMap<String,String> savedPathsHm = new LinkedHashMap<String,String>();
+    JFileFinderWin jFileFinderWin = null;
+    String name = "";
+    DefaultComboBoxModel listOfFilesPanelModel = null;
+    int filesysType = -1;
+    String currentDirectory = "";
+    String currentFile = "";
+    int selectedPathPiece = 0;
         
     /**
      * Creates new form SavedPathsPanel
@@ -118,7 +121,7 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
     
     public void readFile( File selectedFile )
     {
-        System.out.println( "File to read =" + selectedFile + "=" );
+        logger.info( "File to read =" + selectedFile + "=" );
         currentDirectory = selectedFile.getParent();
         currentFile = selectedFile.getAbsolutePath();
         //Settings.set( "last.directory", dialog.getCurrentDirectory().getAbsolutePath() );
@@ -138,12 +141,12 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
             DefaultComboBoxModel thisListModel = (DefaultComboBoxModel) PathsList.getModel();
             thisListModel.removeAllElements();
             int numItems = thisListModel.getSize();
-            System.out.println( "thisListModel.getSize() num of items =" + numItems + "=" );
+            logger.info( "thisListModel.getSize() num of items =" + numItems + "=" );
             
             String line = "";
             while ( ( line = br.readLine() ) != null )
                 {
-                System.out.println( "read line =" + line + "=" );
+                logger.info( "read line =" + line + "=" );
                 thisListModel.addElement( line );
                 }
             //close BufferedWriter
@@ -188,7 +191,7 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                //System.out.println( "previewImportWin formWindow dispose()" );
+                //logger.info( "previewImportWin formWindow dispose()" );
                 win.dispatchEvent( new WindowEvent( win, WindowEvent.WINDOW_CLOSING )); 
                 win.dispose();
             }
@@ -370,7 +373,7 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         DefaultComboBoxModel thisListModel = (DefaultComboBoxModel) PathsList.getModel();
-        System.out.println( "selected item =" + listOfLists.getSelectedItem() + "=" );
+        logger.info( "selected item =" + listOfLists.getSelectedItem() + "=" );
         List<String> selected = PathsList.getSelectedValuesList();
         for ( String str : selected )
             {
@@ -384,7 +387,7 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
         String otherFileSepar = jFileFinderWin.getListPanel( (String) listOfLists.getSelectedItem() ).getFilesysType() == Constants.FILESYSTEM_DOS ? "\\" : "/";
         DefaultComboBoxModel thisListModel = (DefaultComboBoxModel) PathsList.getModel();
         String thisFileSepar = filesysType == Constants.FILESYSTEM_DOS ? "\\" : "/";
-        System.out.println( "selected item =" + listOfLists.getSelectedItem() + "=" );
+        logger.info( "selected item =" + listOfLists.getSelectedItem() + "=" );
         if ( listOfLists.getSelectedItem().equals( this.getTitle() ) )
             {
             JOptionPane.showMessageDialog( null, "You cannot work on the same list!", "Error", JOptionPane.ERROR_MESSAGE );
@@ -392,19 +395,19 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
             }
         int numItems = otherListModel.getSize();
         int numChanged = 0;
-        System.out.println( "otherListModel.getSize() num of items =" + numItems + "=" );
-        System.out.println( "cmdCb.getSelectedItem() =" + cmdCb.getSelectedItem() + "=" );
+        logger.info( "otherListModel.getSize() num of items =" + numItems + "=" );
+        logger.info( "cmdCb.getSelectedItem() =" + cmdCb.getSelectedItem() + "=" );
         if ( cmdCb.getSelectedItem().equals( "Subtract from List" ) )
             {
             String str = "";
             for( int i = 0; i < numItems; i++ )
                 {
                 str = otherListModel.getElementAt( i ).toString();
-//                System.out.println( "check for other list index =" + i + "   str =" + str + "=" );
+//                logger.info( "check for other list index =" + i + "   str =" + str + "=" );
                 int foundAt = thisListModel.getIndexOf( str );
                 if ( foundAt >= 0 )
                     {
-//                    System.out.println( "FOUND str =" + str + "=" );
+//                    logger.info( "FOUND str =" + str + "=" );
                     thisListModel.removeElementAt( foundAt );
                     numChanged ++;
                     }
@@ -417,11 +420,11 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
             for( int i = 0; i < numItems; i++ )
                 {
                 str = otherListModel.getElementAt( i ).toString();
-//                System.out.println( "check for other list index =" + i + "   str =" + str + "=" );
+//                logger.info( "check for other list index =" + i + "   str =" + str + "=" );
                 int foundAt = thisListModel.getIndexOf( str );
                 if ( foundAt < 0 )
                     {
-//                    System.out.println( "not FOUND str =" + str + "= so ADD" );
+//                    logger.info( "not FOUND str =" + str + "= so ADD" );
                     thisListModel.addElement( otherListModel.getElementAt( i ) );
                     numChanged ++;
                     }
@@ -475,7 +478,7 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
                 {
                 thisPathIdx = (filepathArr.length - n - 1);
                 }
-            System.out.println( "got selected n = " + n + "  to become thisPathIdx =" + thisPathIdx + "=" );
+            logger.info( "got selected n = " + n + "  to become thisPathIdx =" + thisPathIdx + "=" );
             String thisBasePath = filepathArr[0];
             for ( int i = 1; i <= thisPathIdx; i++ )
                 {
@@ -520,7 +523,7 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
                 {
                 otherPathIdx = (filepathArr.length - n - 1);
                 }
-            System.out.println( "got selected n = " + n + "  to become otherPathIdx =" + otherPathIdx + "=" );
+            logger.info( "got selected n = " + n + "  to become otherPathIdx =" + otherPathIdx + "=" );
             String otherBasePath = filepathArr[0];
             for ( int i = 1; i <= otherPathIdx; i++ )
                 {
@@ -530,9 +533,9 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
 //            otherBasePath = otherBasePath.replace( "\\", "/" );
 
 
-            System.out.println( "got thisBasePath =" + thisBasePath + "=" );
-            System.out.println( "got otherBasePath =" + otherBasePath + "=" );
-            System.out.println( "==================================" );
+            logger.info( "got thisBasePath =" + thisBasePath + "=" );
+            logger.info( "got otherBasePath =" + otherBasePath + "=" );
+            logger.info( "==================================" );
 
             //---- Do List Matching ---
             HashMap<String,Integer> otherHm = new HashMap<String,Integer>();
@@ -545,9 +548,9 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
                 tmp = tmp.startsWith( "/" ) ? tmp : "/" + tmp;
                 tmp = tmp.replace( "\\", "/" );
                 otherHm.put( tmp.substring( otherBaseLen ), i );
-                System.out.println( "cut otherBasePath =" + tmp.substring( otherBaseLen ) + "=" );
+                logger.info( "cut otherBasePath =" + tmp.substring( otherBaseLen ) + "=" );
                 }
-            System.out.println( "===========  cut otherBasePath done  =======================" );
+            logger.info( "===========  cut otherBasePath done  =======================" );
 
             ArrayList<String> newCbList = new ArrayList<String>();
 
@@ -558,20 +561,20 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
                 String tmp = thisListModel.getElementAt( i ).toString();
                 tmp = tmp.startsWith( "/" ) ? tmp : "/" + tmp;
                 tmp = tmp.replace( "\\", "/" );
-                System.out.println( "cut thisListModel =" + tmp.substring( thisBaseLen ) + "=" );
+                logger.info( "cut thisListModel =" + tmp.substring( thisBaseLen ) + "=" );
 //                if ( ! otherFileSepar.equals( thisFileSepar ) )
 //                    {
 //                    String cutAndChgFileSeparStr = tmp.substring( thisBaseLen ).replace( thisFileSepar, otherFileSepar );
-//                    System.out.println( "   cut thisListModel =" + cutAndChgFileSeparStr + "=" );
+//                    logger.info( "   cut thisListModel =" + cutAndChgFileSeparStr + "=" );
 //                    if ( ! negateMatching && otherHm.containsKey( cutAndChgFileSeparStr ) )
 //                        {
 //                        int idx = otherHm.get( cutAndChgFileSeparStr );
 //                        newCbList.add( tmp + " " + otherListModel.getElementAt( idx ).toString() );
-//                        System.out.println( "      Match: " + tmp + " " + otherHm.get( cutAndChgFileSeparStr ) + "=" );
+//                        logger.info( "      Match: " + tmp + " " + otherHm.get( cutAndChgFileSeparStr ) + "=" );
 //                        }
 //                    else if ( negateMatching && ! otherHm.containsKey( cutAndChgFileSeparStr ) )
 //                        {
-//                        System.out.println( "      Missing: " + tmp + "=" );
+//                        logger.info( "      Missing: " + tmp + "=" );
 //                        newCbList.add( tmp );
 //                        }
 //                    }
@@ -581,18 +584,18 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
                         {
                         int idx = otherHm.get( tmp.substring( thisBaseLen ) );
                         newCbList.add( thisListModel.getElementAt( i ).toString() + " " + otherListModel.getElementAt( idx ).toString() );
-                        System.out.println( "      Match: " + tmp + " " + otherHm.get( tmp.substring( thisBaseLen ) ) + "=" );
+                        logger.info( "      Match: " + tmp + " " + otherHm.get( tmp.substring( thisBaseLen ) ) + "=" );
                         }
                     else if ( negateMatching && ! otherHm.containsKey( tmp.substring( thisBaseLen ) )  )
                         {
-                        System.out.println( "      Missing: " + thisListModel.getElementAt( i ).toString() + "=" );
+                        logger.info( "      Missing: " + thisListModel.getElementAt( i ).toString() + "=" );
                         newCbList.add( thisListModel.getElementAt( i ).toString() );
                         }
 //                    }
-                System.out.println( "---------------------------------------------" );
+                logger.info( "---------------------------------------------" );
                 }
 
-            System.out.println( "newCbList.size() =" + newCbList.size() + "=" );
+            logger.info( "newCbList.size() =" + newCbList.size() + "=" );
             DefaultComboBoxModel newModel = new DefaultComboBoxModel( newCbList.toArray() );
             // actually replace the JList model with a new one of the modified strings !
             ListOfFilesPanel npan = null;
@@ -627,10 +630,10 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
     if ( chooser.showDialog( this, "Select" ) == JFileChooser.APPROVE_OPTION )
         {
         File selectedFile = chooser.getSelectedFile();
-        System.out.println( "File to save to =" + selectedFile + "=" );
+        logger.info( "File to save to =" + selectedFile + "=" );
         currentDirectory = selectedFile.getParent();
         currentFile = selectedFile.getAbsolutePath();
-        System.out.println( "File to save to =" + selectedFile + "=" );
+        logger.info( "File to save to =" + selectedFile + "=" );
         //Settings.set( "last.directory", dialog.getCurrentDirectory().getAbsolutePath() );
         //String[] tt = { selectedFile.getPath() };
         //startingFolder.setText( selectedFile.getPath() );
@@ -647,7 +650,7 @@ public class ListOfFilesPanel extends javax.swing.JFrame {
 
             DefaultComboBoxModel thisListModel = (DefaultComboBoxModel) PathsList.getModel();
             int numItems = thisListModel.getSize();
-            System.out.println( "thisListModel.getSize() num of items =" + numItems + "=" );
+            logger.info( "thisListModel.getSize() num of items =" + numItems + "=" );
             
             //loop for jtable rows
             for( int i = 0; i < numItems; i++ )

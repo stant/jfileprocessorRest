@@ -19,13 +19,14 @@ import java.util.logging.Logger;
  */
 public class MyLogger extends java.util.logging.Logger
 {
-//private final static Logger logger = Logger.getLogger( MyLogger.class.getName() );
+//private final static Logger logger = logger.severeExc( ex );
 //    private static MyLogger logger2 = null;
 
 static MyLogger mylogger = null;
 
 //    final java.util.logging.Logger logger = null;
-    static SimpleDateFormat sdf = new SimpleDateFormat( "yyyyMMdd.HHmmss");
+    static SimpleDateFormat logfileSdf = new SimpleDateFormat( "yyyyMMdd.HHmmss");
+    static SimpleDateFormat sdf = new SimpleDateFormat( "yyyy/MM/dd.HH:mm:ss");
     protected static LogStringHandler loghand = new LogStringHandler();
   
     protected MyLogger(String name) {
@@ -59,8 +60,8 @@ static MyLogger mylogger = null;
 //        outBuf.append( ": " );
 //        outBuf.append( logRecord.getMessage() );
 //        outBuf.append( "\n");
-//        //System.out.println( "logRecord.getLevel() =" + logRecord.getLevel() + "=" );
-//        //System.out.println( "logRecord.getMessage() =" + logRecord.getMessage() + "=" );
+//        //logger.info( "logRecord.getLevel() =" + logRecord.getLevel() + "=" );
+//        //logger.info( "logRecord.getMessage() =" + logRecord.getMessage() + "=" );
 //        }
 //
 //    public void flush() {
@@ -81,7 +82,7 @@ static MyLogger mylogger = null;
     
 // public  void init()
 //    {
-//    //Logger logger = Logger.getLogger( Logger.GLOBAL_LOGGER_NAME );    
+//    //Logger logger = logger.severeExc( ex );    
 //    //logger2 = logger;
 //    
 ////    // suppress the logging output to the console
@@ -100,8 +101,8 @@ static MyLogger mylogger = null;
 //        outBuf.append( logRecord.getSourceMethodName() + ": ");
 //        outBuf.append( logRecord.getMessage() );
 //        outBuf.append( "\n");
-//        //System.out.println( "logRecord.getLevel() =" + logRecord.getLevel() + "=" );
-//        //System.out.println( "logRecord.getMessage() =" + logRecord.getMessage() + "=" );
+//        //logger.info( "logRecord.getLevel() =" + logRecord.getLevel() + "=" );
+//        //logger.info( "logRecord.getMessage() =" + logRecord.getMessage() + "=" );
 //        }
 //
 //    public void flush() {
@@ -128,11 +129,16 @@ static MyLogger mylogger = null;
 //  
 //public void clearLog()
 //    {
-////    System.out.println( "log outBuf before clear =\n" + outBuf.toString() + "\n=" );
+////    logger.info( "log outBuf before clear =\n" + outBuf.toString() + "\n=" );
 ////    outBuf.setLength( 0 );
-////    System.out.println( "log outBuf after  clear =\n" + outBuf.toString() + "\n=" );
+////    logger.info( "log outBuf after  clear =\n" + outBuf.toString() + "\n=" );
 //    loghand.clearLog();
 //    }
+
+public static String getFilenameLogDate() 
+    {
+    return logfileSdf.format( Calendar.getInstance().getTime() );
+    }
 
 public static String getNewLogDate() 
     {
@@ -147,6 +153,14 @@ public String getExceptionAsString( Exception exc )
     return sw.toString();
     }
 
+public void severeExc( Exception exc ) 
+    {
+    StringWriter sw = new StringWriter();
+    PrintWriter pw = new PrintWriter(sw);
+    exc.printStackTrace(pw);
+    System.err.println( sw.toString() );
+    }
+
  public static void main(String[] args) 
     {
     MyLogger logger2 = MyLogger.getLogger("test");
@@ -157,7 +171,7 @@ public String getExceptionAsString( Exception exc )
     logger2.log(Level.SEVERE, "message 2");
     logger2.log(Level.FINE, "message 3");
             
-//    System.out.println( "log string =\n" + logger2.getLogString() + "\n=" );
+//    logger.info( "log string =\n" + logger2.getLogString() + "\n=" );
     }    
 
 }

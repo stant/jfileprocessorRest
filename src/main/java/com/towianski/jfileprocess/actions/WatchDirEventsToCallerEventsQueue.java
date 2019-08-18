@@ -6,6 +6,7 @@
 package com.towianski.jfileprocess.actions;
 
 import com.towianski.models.FileTimeEvent;
+import com.towianski.utils.MyLogger;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
@@ -19,8 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -28,6 +27,7 @@ import java.util.logging.Logger;
  */
 public class WatchDirEventsToCallerEventsQueue implements Runnable, Player
 {
+    private static final MyLogger logger = MyLogger.getLogger( WatchDirEventsToCallerEventsQueue.class.getName() );
 //    @Autowired
 //    WatchFileEventsSw watchFileEventsSw;
     String qName = "WatchDirToCallerEventQueue";
@@ -129,24 +129,24 @@ public class WatchDirEventsToCallerEventsQueue implements Runnable, Player
     
     public void stop()
         {
-        System.out.println("WatchDirToCallerEventQueue.stop() set runFlag to false");
+        logger.info( "WatchDirToCallerEventQueue.stop() set runFlag to false");
         runFlag = false;
         removeWatchPaths();
         }
 
     public void addWatchPaths()
         {
-        System.out.println( "entered WatchDirToCallerEventQueue (" + qName + ").addWatchPaths() using previous pathList" );
+        logger.info( "entered WatchDirToCallerEventQueue (" + qName + ").addWatchPaths() using previous pathList" );
         }
     
     public void addWatchPaths( ArrayList<Path> pathList )
         {
-        System.out.println( "entered WatchDirToCallerEventQueue (" + qName + ").addWatchPaths()" );
+        logger.info( "entered WatchDirToCallerEventQueue (" + qName + ").addWatchPaths()" );
 
         try {
             for ( Path watchDir : pathList )
                 {
-                System.out.println( "addWatchPaths() path =" + watchDir + "=" );
+                logger.info( "addWatchPaths() path =" + watchDir + "=" );
                 WatchKey watchKey = watchDir.register(
                                             watchService, (createEventTypesList( this.eventTypes )).toArray(new WatchEvent.Kind<?>[0]) );
 //                                            StandardWatchEventKinds.ENTRY_CREATE,
@@ -154,32 +154,32 @@ public class WatchDirEventsToCallerEventsQueue implements Runnable, Player
 //                                            StandardWatchEventKinds.ENTRY_MODIFY);
 
                 //watchFileEventsSw.getWatchKeyToPathAndQueueMap().put(watchKey, new WatchKeyToPathAndQueue( watchDir, fileEventInputQueue ) );
-                System.out.println("addWatchPaths() fileEventCallerQueue =" + System.identityHashCode(fileEventInputQueue ) + "=   watchKey =" + System.identityHashCode( watchKey ) );
+                logger.info( "addWatchPaths() fileEventCallerQueue =" + System.identityHashCode(fileEventInputQueue ) + "=   watchKey =" + System.identityHashCode( watchKey ) );
                 watchKeyList.add( watchKey );
                 }
             }
         catch (Exception ex)
             {
-            System.out.println("WatchDirToCallerEventQueue (" + qName + ") set cancelFlag caught error !");
-            Logger.getLogger(WatchDirEventToTimeQueue.class.getName()).log(Level.SEVERE, null, ex);
+            logger.info( "WatchDirToCallerEventQueue (" + qName + ") set cancelFlag caught error !");
+            logger.severeExc( ex );
             }
-        System.out.println("exit WatchDirToCallerEventQueue (" + qName + ") addWatchPaths()");
+        logger.info( "exit WatchDirToCallerEventQueue (" + qName + ") addWatchPaths()");
         }
 
     public void removeWatchPaths()
         {
-        System.out.println( "entered WatchDirToCallerEventQueue.removeWatchPaths() (" + qName + ")" );
+        logger.info( "entered WatchDirToCallerEventQueue.removeWatchPaths() (" + qName + ")" );
 
         try {
             for ( WatchKey watchKey : watchKeyList )
                 {
-                System.out.println( "removeWatchPaths() watchKey =" + System.identityHashCode( watchKey ) + "=" );
+                logger.info( "removeWatchPaths() watchKey =" + System.identityHashCode( watchKey ) + "=" );
                 //watchFileEventsSw.getWatchKeyToPathAndQueueMap().remove( watchKey );
                 watchKey.cancel();
                 
                 for (WatchEvent<?> event : watchKey.pollEvents()) 
                     {
-                    System.out.println(
+                    logger.info( 
                             "Throw away since canceled: Event kind:" + event.kind()
                                     + ". File affected =" + event.context() + "=");
                     }
@@ -188,10 +188,10 @@ public class WatchDirEventsToCallerEventsQueue implements Runnable, Player
             }
         catch (Exception ex)
             {
-            System.out.println( "WatchDirToCallerEventQueue.removeWatchPaths() caught error !");
-            Logger.getLogger(WatchDirEventToTimeQueue.class.getName()).log(Level.SEVERE, null, ex);
+            logger.info( "WatchDirToCallerEventQueue.removeWatchPaths() caught error !");
+            logger.severeExc( ex );
             }
-        System.out.println("exit WatchDirToCallerEventQueue removeWatchPaths() (" + qName + ")");
+        logger.info( "exit WatchDirToCallerEventQueue removeWatchPaths() (" + qName + ")");
         }
 
     @Override
@@ -200,19 +200,19 @@ public class WatchDirEventsToCallerEventsQueue implements Runnable, Player
         Instant baseTime = Instant.now();
 
         try {
-            System.out.println("Read from caller's queue getFileEventCallerQueue() (" + qName + ") =" + System.identityHashCode(fileEventInputQueue ) + "=" );
+            logger.info( "Read from caller's queue getFileEventCallerQueue() (" + qName + ") =" + System.identityHashCode(fileEventInputQueue ) + "=" );
             while ( runFlag ) {
                 
                 FileTimeEvent newFte = fileEventInputQueue.poll( millisGap, TimeUnit.MILLISECONDS );
 
                 if ( newFte == null )
                     {
-                    //System.out.println("\n=== millisGap (" + qName + ") (" + millisGap + ") Poll finished so add ALL using iterator() ===");
+                    //logger.info( "\n=== millisGap (" + qName + ") (" + millisGap + ") Poll finished so add ALL using iterator() ===");
                     Iterator<Map.Entry<String, FileTimeEvent>> fteLhmIter = fteLhm.entrySet().iterator();
                     while (fteLhmIter.hasNext()) 
                         {
                         Map.Entry<String, FileTimeEvent> entry = fteLhmIter.next();
-                        System.out.println(entry.getKey() + " move to final Q 1 => " + entry.getValue());
+                        logger.info( entry.getKey() + " move to final Q 1 => " + entry.getValue());
                         fileEventOutputQueue.put( entry.getValue() );
                         }
                     fteLhm = new LinkedHashMap<>();
@@ -224,7 +224,7 @@ public class WatchDirEventsToCallerEventsQueue implements Runnable, Player
                 // with the same name one would overwrite the other anyways and who knows what order they would come so I am
                 // not caring for now.  Also, fteLhm is per this class and not global so I don't think will have an issue like that either.
                 // if needed we can probably just use the fullfilepath instead in the future.
-//                System.out.println( "===== process caller queue (" + qName + ") =======  newFte: " + newFte.getFilename() + "   event =" + newFte.getEvent() + "========================" );
+//                logger.info( "===== process caller queue (" + qName + ") =======  newFte: " + newFte.getFilename() + "   event =" + newFte.getEvent() + "========================" );
                 if ( fteLhm.containsKey( newFte.getFilename() ) )
                     {
                     oldFte = fteLhm.get( newFte.getFilename() );
@@ -232,11 +232,11 @@ public class WatchDirEventsToCallerEventsQueue implements Runnable, Player
                          oldFte.getEvent() == StandardWatchEventKinds.ENTRY_CREATE )
                         {
                         oldFte.setInstant( newFte.getInstant() );
-                        //System.out.println( "UPDATE LtmQueue fte: " + oldFte.getFilename() + "   event =" + oldFte.getEvent() );
+                        //logger.info( "UPDATE LtmQueue fte: " + oldFte.getFilename() + "   event =" + oldFte.getEvent() );
                         }
                     else
                         {
-                        //System.out.println( "IGNORE UPDATE fte: " + newFte.getFilename() + "   event =" + newFte.getEvent() );
+                        //logger.info( "IGNORE UPDATE fte: " + newFte.getFilename() + "   event =" + newFte.getEvent() );
                         }
                     }
                 else
@@ -244,48 +244,48 @@ public class WatchDirEventsToCallerEventsQueue implements Runnable, Player
                     if ( newFte.getEvent() == StandardWatchEventKinds.ENTRY_CREATE && queueCreateEvents )
                         {
                         fteLhm.put( newFte.getFilename(), newFte );
-                        //System.out.println( "ADD to LtmQueue fte: " + newFte.getFilename() + "   event =" + newFte.getEvent() );
+                        //logger.info( "ADD to LtmQueue fte: " + newFte.getFilename() + "   event =" + newFte.getEvent() );
                         }
                     else if ( newFte.getEvent() == StandardWatchEventKinds.ENTRY_DELETE && queueDeletesEvents )
                         {
                         fteLhm.put( newFte.getFilename(), newFte );
-                        //System.out.println( "DELETE to LtmQueue fte: " + newFte.getFilename() + "   event =" + newFte.getEvent() );
+                        //logger.info( "DELETE to LtmQueue fte: " + newFte.getFilename() + "   event =" + newFte.getEvent() );
                         }
                     else if ( newFte.getEvent() == StandardWatchEventKinds.ENTRY_MODIFY && queueModifyEvents )
                         {
                         fteLhm.put( newFte.getFilename(), newFte );
-                        //System.out.println( "ADD for Preexisting File to LtmQueue fte: " + newFte.getFilename() + "   event =" + newFte.getEvent() );
+                        //logger.info( "ADD for Preexisting File to LtmQueue fte: " + newFte.getFilename() + "   event =" + newFte.getEvent() );
                         }
                     else
                         {
-                        //System.out.println( "IGNORE ADD fte: " + newFte.getFilename() + "   event =" + newFte.getEvent() );
+                        //logger.info( "IGNORE ADD fte: " + newFte.getFilename() + "   event =" + newFte.getEvent() );
                         }
                     }
 
                 // Check times on all now and move to final queue if old enough
                 if ( Instant.now().minusMillis(millisGap).isAfter(baseTime) )
                     {
-                    //System.out.println("\n=== Iterating (" + qName + ") over found and Check old times to final Q ===");
+                    //logger.info( "\n=== Iterating (" + qName + ") over found and Check old times to final Q ===");
                     Iterator<Map.Entry<String, FileTimeEvent>> fteLhmIter = fteLhm.entrySet().iterator();
                     while (fteLhmIter.hasNext()) 
                         {
                         Map.Entry<String, FileTimeEvent> entry = fteLhmIter.next();
-                        //System.out.println(entry.getKey() + " look at time for => " + entry.getValue());
+                        //logger.info( entry.getKey() + " look at time for => " + entry.getValue());
                         oldFte = entry.getValue();
                         if ( Instant.now().minusMillis(millisGap).isAfter( oldFte.getInstant() ) )
                             {
-                            System.out.println(entry.getKey() + " MOVE to final Q 2 => " + entry.getValue());
+                            logger.info( entry.getKey() + " MOVE to final Q 2 => " + entry.getValue());
                             fileEventOutputQueue.put( entry.getValue() );                                
                             fteLhmIter.remove();
-                            //System.out.println( "removed from key hash" );
+                            //logger.info( "removed from key hash" );
                             }
                         }
-                    System.out.println("<====");
+                    logger.info( "<====");
                     baseTime = Instant.now();
                     }
             } // while
         } catch (InterruptedException e) {
-            System.out.println("WatchDirEventsToCallerEventsQueue (" + qName + ") run() Interrupt");
+            logger.info( "WatchDirEventsToCallerEventsQueue (" + qName + ") run() Interrupt");
             }
         finally
             {
@@ -293,11 +293,11 @@ public class WatchDirEventsToCallerEventsQueue implements Runnable, Player
                 fileEventOutputQueue.put( new FileTimeEvent( null, null, null, null, null ) );   // to tell groovy script that we are stopping !
                 } 
             catch (InterruptedException ex) {
-                Logger.getLogger(WatchDirEventsToCallerEventsQueue.class.getName()).log(Level.SEVERE, null, ex);
+                logger.severeExc( ex );
                 }
             removeWatchPaths();
             }
-    System.out.println("exit WatchDirToCallerEventQueue (" + qName + ") run()");
+    logger.info( "exit WatchDirToCallerEventQueue (" + qName + ") run()");
     }
 
 }    

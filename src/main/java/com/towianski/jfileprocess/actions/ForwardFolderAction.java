@@ -6,6 +6,7 @@
 package com.towianski.jfileprocess.actions;
 
 import com.towianski.jfileprocessor.JFileFinderWin;
+import com.towianski.utils.MyLogger;
 import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -16,6 +17,7 @@ import javax.swing.Action;
  */
 public class ForwardFolderAction extends AbstractAction
     {
+    private static final MyLogger logger = MyLogger.getLogger( ForwardFolderAction.class.getName() );
     JFileFinderWin win = null;
     
     public ForwardFolderAction( JFileFinderWin win )
@@ -23,20 +25,20 @@ public class ForwardFolderAction extends AbstractAction
         this.win = win;
         setEnabled( true );
         putValue(Action.NAME, "ForwardFolder    Alt-Right Arrow");
-//        System.out.println("constructor ForwardFolderAction()" );
+//        logger.info( "constructor ForwardFolderAction()" );
         }
 
     public void actionPerformed(ActionEvent e)
         {
-        //System.out.println("RenameActionPerformed( null ) do action");
+        //logger.info( "RenameActionPerformed( null ) do action");
         try
             {
-//            System.out.println("callForwardFolderActionPerformed( null ) " );
+//            logger.info( "callForwardFolderActionPerformed( null ) " );
             win.callForwardFolderActionPerformed( null );
             } 
         catch (Exception ex)
             {
-            System.out.println("callForwardFolderActionPerformed( null ) " + ex);
+            logger.info( "callForwardFolderActionPerformed( null ) " + ex);
             ex.printStackTrace();
             }
         }

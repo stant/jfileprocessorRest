@@ -19,7 +19,7 @@ public class ChainFilterOfBoolean implements FilterChainFilter {
     
     public ChainFilterOfBoolean()
         {
-        //System.out.println( "new ChainFilterOfSizes()" );
+        //logger.info( "new ChainFilterOfSizes()" );
         }
     
     public ChainFilterOfBoolean( Boolean flag ) 
@@ -30,7 +30,7 @@ public class ChainFilterOfBoolean implements FilterChainFilter {
     // These must be the same parms for all filters that get used.
     public Boolean accept( Path fpath, BasicFileAttributes attr, ChainFilterArgs chainFilterArgs, JFileFinder jFileFinder )
         {
-        //System.out.println( "\ntest chainfilterofNames =" + fpath + "=" );
+        //logger.info( "\ntest chainfilterofNames =" + fpath + "=" );
         return flag; 
         }
 }

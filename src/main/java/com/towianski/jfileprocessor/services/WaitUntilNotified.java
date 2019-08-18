@@ -5,11 +5,14 @@
  */
 package com.towianski.jfileprocessor.services;
 
+import com.towianski.utils.MyLogger;
+
 /**
  *
  * @author stan
  */
 public class WaitUntilNotified implements Runnable {
+    private static final MyLogger logger = MyLogger.getLogger( WaitUntilNotified.class.getName() );
     // Message sent from producer
     // to consumer.
     private String message;
@@ -23,13 +26,13 @@ public class WaitUntilNotified implements Runnable {
     public  String waitUntilDone() {
         // Wait until message is
         // available.
-        System.out.println( "call waitUntilDone() empty =" + empty );
+        logger.info( "call waitUntilDone() empty =" + empty );
         synchronized ( myLock ) {
 //        while (empty) {
             try {
-                System.out.println( "waitUntilDone() go to wait()" );
+                logger.info( "waitUntilDone() go to wait()" );
                 myLock.wait();
-                System.out.println( "waitUntilDone() AFTER wait()" );
+                logger.info( "waitUntilDone() AFTER wait()" );
             } catch (Exception e) {}
 //        }
         }
@@ -47,20 +50,20 @@ public class WaitUntilNotified implements Runnable {
         this.message = message;
         // Notify consumer that status
         // has changed.
-        System.out.println( "call waitUntilDone() call notifyAll()" );
+        logger.info( "call waitUntilDone() call notifyAll()" );
         myLock.notifyAll();
         }
     }
 
     public void run() {
-        System.out.println( "RUN waitUntilDone() empty =" + empty );
+        logger.info( "RUN waitUntilDone() empty =" + empty );
         synchronized ( myLock ) {
             try {
-                System.out.println( "waitUntilDone() go to wait()" );
+                logger.info( "waitUntilDone() go to wait()" );
                 while (empty) {
                     myLock.wait();
                 }
-                System.out.println( "waitUntilDone() AFTER wait()" );
+                logger.info( "waitUntilDone() AFTER wait()" );
             } catch (Exception e) {}
         }
     }

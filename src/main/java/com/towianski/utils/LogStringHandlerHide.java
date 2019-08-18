@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
-import java.util.logging.Logger;
 
 /**
  *
@@ -18,7 +17,7 @@ import java.util.logging.Logger;
  */
 public class LogStringHandlerHide 
 {
-  private static Logger logger = Logger.getLogger("LogStringHandler");
+    private static final MyLogger logger = MyLogger.getLogger( LogStringHandlerHide.class.getName() );
 
   private static List strHolder = new ArrayList();
 
@@ -44,9 +43,9 @@ public class LogStringHandlerHide
 
     logger.warning("Logging Warning");
     logger.info("Logging Info");
-    logger.log(Level.INFO, "message 1");
-    logger.log(Level.SEVERE, "message 2");
-    logger.log(Level.FINE, "message 3");
-    System.out.println(strHolder);
+    logger.info( "message 1");
+    logger.severe( "message 2");
+    logger.fine( "message 3");
+    //logger.info( strHolder );
   }
 }

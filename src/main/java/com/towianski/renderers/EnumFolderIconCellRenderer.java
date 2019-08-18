@@ -6,11 +6,10 @@
 package com.towianski.renderers;
 
 import com.towianski.models.FilesTblModel;
+import com.towianski.utils.MyLogger;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -22,6 +21,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  */
 public class EnumFolderIconCellRenderer extends DefaultTableCellRenderer {
  
+private static final MyLogger logger = MyLogger.getLogger( EnumFolderIconCellRenderer.class.getName() );
 private final Map<Integer, ImageIcon> icons = new HashMap<Integer, ImageIcon>();
  
 public EnumFolderIconCellRenderer() {
@@ -47,7 +47,7 @@ public EnumFolderIconCellRenderer() {
         } 
     catch (IOException ex) 
         {
-        Logger.getLogger(EnumFolderIconCellRenderer.class.getName()).log(Level.SEVERE, null, ex);
+        logger.severeExc( ex );
         }
   }
  
@@ -55,10 +55,10 @@ public EnumFolderIconCellRenderer() {
   protected void setValue(Object value) {
     // Set properties that change on individual cells.
 //    if ( value instanceof Boolean )
-//        System.out.println( "EnumFolderIconCellRenderer is boolean =" + (Boolean) value );
+//        logger.info( "EnumFolderIconCellRenderer is boolean =" + (Boolean) value );
     if ( value instanceof Integer )
         {
-        //System.out.println( "EnumFolderIconCellRenderer is Integer =" + (Integer) value );
+        //logger.info( "EnumFolderIconCellRenderer is Integer =" + (Integer) value );
         this.setIcon( icons.get( (Integer) value ) );
         }
     }

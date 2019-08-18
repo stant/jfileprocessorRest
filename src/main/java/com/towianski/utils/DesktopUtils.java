@@ -17,8 +17,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
@@ -28,7 +26,8 @@ import javax.swing.JOptionPane;
  */
 public class DesktopUtils 
 {
-   
+    private static final MyLogger logger = MyLogger.getLogger( DesktopUtils.class.getName() );
+
    public static File getBookmarks()
    {
       return getJfpConfigHome( "Bookmarks.txt", "file", true );
@@ -55,7 +54,7 @@ public class DesktopUtils
    {
        try {
             File jfpHome = new File( getJfpHome( false ), specificFolder );
-            System.out.println( "jfpHome from specificFolder(" + specificFolder + ") =" + jfpHome.toString() + "=" );
+            logger.info( "jfpHome from specificFolder(" + specificFolder + ") =" + jfpHome.toString() + "=" );
       
         if ( ! jfpHome.exists() )
             {
@@ -66,7 +65,7 @@ public class DesktopUtils
             }
         return jfpHome.toString();
        } catch (IOException ex) {
-           Logger.getLogger(DesktopUtils.class.getName()).log(Level.SEVERE, null, ex);
+           logger.severeExc( ex );
        }
     return null;
    }
@@ -75,17 +74,17 @@ public class DesktopUtils
    public static File getJfpHome( boolean addEndingSlash )
     {
        try {
-//            System.out.println( "toURI() =" + JFileFinderWin.class.getProtectionDomain().getCodeSource().getLocation().toURI() + "=" );
+//            logger.info( "toURI() =" + JFileFinderWin.class.getProtectionDomain().getCodeSource().getLocation().toURI() + "=" );
 //           File jfpHome = new File( JFileFinderWin.class.getProtectionDomain().getCodeSource().getLocation().toURI() ).getParentFile();
 //            URL url = getLocation( JFileFinderWin.class );
-//            System.out.println( "URL =" + url.toString() + "=" );
+//            logger.info( "URL =" + url.toString() + "=" );
 //            String urlStr = (new File( url.toString() )).getParent();
 //            File jfpHome = urlToFile( new URL( urlStr ) );
             String JfpHomeDir = addEndingSlash ? System.getProperty( "user.dir" ) + System.getProperty( "file.separator" ) : System.getProperty( "user.dir" );
-            System.out.println( "jfpHome =" + JfpHomeDir + "=" );
+            logger.info( "jfpHome =" + JfpHomeDir + "=" );
             return new File( JfpHomeDir );
        } catch (Exception ex) {
-           Logger.getLogger(DesktopUtils.class.getName()).log(Level.SEVERE, null, ex);
+           logger.severeExc( ex );
        }
     return null;
    }
@@ -97,7 +96,7 @@ public class DesktopUtils
    
    public static File getJfpConfigHome( String specificFolder, String fType, boolean doNotifyIfCreate )
    {
-      System.out.println( "os.name =" + System.getProperty( "os.name" ) + "=" );
+      logger.info( "os.name =" + System.getProperty( "os.name" ) + "=" );
       File jfpHome = null;
       File jfpHome1 = null;
       File jfpHome2 = null;
@@ -108,7 +107,7 @@ public class DesktopUtils
       if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "mac" ) )
         {
         jfpHome1 = new File( System.getProperty( "user.home" ) + "/Library/Application Support", "JFileProcessor" );
-        System.out.println( "try jfpHome folder =" + jfpHome1 + "=" );
+        logger.info( "try jfpHome folder =" + jfpHome1 + "=" );
         if ( jfpHome1.exists() )
             {
             jfpHome = jfpHome1;
@@ -116,7 +115,7 @@ public class DesktopUtils
         else
             {
             jfpHome2 = new File( System.getProperty( "user.home" ) + "/Library/Preferences", "JFileProcessor" );
-            System.out.println( "try jfpHome folder =" + jfpHome2 + "=" );
+            logger.info( "try jfpHome folder =" + jfpHome2 + "=" );
             if ( jfpHome2.exists() )
                 {
                 jfpHome = jfpHome2;
@@ -124,7 +123,7 @@ public class DesktopUtils
             else
                 {
                 jfpHome3 = new File( "/Library/Preferences", "JFileProcessor" );
-                System.out.println( "try jfpHome folder =" + jfpHome3 + "=" );
+                logger.info( "try jfpHome folder =" + jfpHome3 + "=" );
                 if ( jfpHome3.exists() )
                     {
                     jfpHome = jfpHome3;
@@ -132,7 +131,7 @@ public class DesktopUtils
                 else
                     {
                     jfpHome4 = new File( System.getProperty( "user.home" ) + "/Library", "JFileProcessor" );
-                    System.out.println( "try jfpHome folder =" + jfpHome4 + "=" );
+                    logger.info( "try jfpHome folder =" + jfpHome4 + "=" );
                     if ( jfpHome4.exists() )
                         jfpHome = jfpHome4;
                     } // 3
@@ -143,7 +142,7 @@ public class DesktopUtils
         
         if ( jfpHome == null )
             {
-            System.out.println( "Could not find so assuming jfpHome folder =" + jfpHome1 + "=" );
+            logger.info( "Could not find so assuming jfpHome folder =" + jfpHome1 + "=" );
             jfpHome = jfpHome1;
             missingHomeErrMsg = "\n\nI looked in these 4 places in this order: \n\n"
                         + jfpHome1 + "\n"
@@ -155,13 +154,13 @@ public class DesktopUtils
       else  // windows + Linux : test for .JFileProcessor folder
         {
         jfpHome1 = new File( System.getProperty( "user.home" ), ".JFileProcessor" );
-        System.out.println( "try jfpHome folder =" + jfpHome1 + "=" );
+        logger.info( "try jfpHome folder =" + jfpHome1 + "=" );
         if ( jfpHome1.exists() )
             jfpHome = jfpHome1;
 
         if ( jfpHome == null )
             {
-            System.out.println( "Could not find so assuming jfpHome folder =" + jfpHome1 + "=" );
+            logger.info( "Could not find so assuming jfpHome folder =" + jfpHome1 + "=" );
             jfpHome = jfpHome1;
             missingHomeErrMsg = "";   //\n\nI looked in this place: \n\n"
                                       //+ jfpHome + "\n";
@@ -195,7 +194,7 @@ public class DesktopUtils
         }
       catch (Exception ex) 
         {
-        Logger.getLogger( DesktopUtils.class.getName()).log(Level.SEVERE, null, ex);
+        logger.severeExc( ex );
         }
 
       return jfpHome;
