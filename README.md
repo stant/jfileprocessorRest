@@ -108,8 +108,53 @@ Here is an example to call konsole to run a shell script:
       "stop" : ""
     },
 
+* for Https File Server
+
+```java
+Edit file: user home/.JFileProcessor/ServerUserFileRightsList.json
+You define in here a user login with password. You define which folders (or maybe a file) it controls
+You set the rights the user has for that folder. It can be a combo of "r", "w", "x"
+If you give them w:   they can write, delete, read to that remote folder.
+If you give them r:   they can read that remote folder.
+
+then run server.sh or server.bat
+
+In the file manager you select a Connection: https
+   and use the user/pass in the rights file on the server to login
+
+cat ServerUserFileRightsList.json 
+{
+  "serverUserFileRightsList" : [ {
+    "user" : "stan",
+    "password" : "test",
+    "path" : "/tmp",
+    "rights" : "rwx"
+  }, {
+    "user" : "stan",
+    "password" : "test",
+    "path" : "/net3",
+    "rights" : "rwx"
+  }, {
+    "user" : "admin",
+    "password" : "test",
+    "path" : "/tmp",
+    "rights" : "rwx"
+  } ]
+}
+
+Notes: It is simple still for the overall rights on the server system still apply.
+when you run server.sh you are running it as a user on that system.
+if you run server.sh as linux or windows or mac user stan
+all files uploaded to it are created by user stan since that is what the server is running under.
+so jfp might have 50 users defined with different folder rights, but on the server they are all user stan.
+so if jfp user mike and stan have w rights to c:\Downloads, they can both remotely upload and delete files in that folder.
+
+if you only gave mike w rights for c:\mike  and gave stan w rights for c:\stan  then they cannot see or delete each others files.
+```
+
 * Jfp App Config Files
 
+```bash
 [ .JFileProcessor]$ ls -l
 total 28
 -rw-r--r-- 1 stan stan 1245 Dec  2 09:08 Bookmarks.txt
@@ -118,8 +163,7 @@ drwxr-xr-x 2 stan stan 4096 Nov 30 18:05 groovy-scripts
 -rw-r--r-- 1 stan stan  366 Dec  2 09:08 ProgramMemory.json
 -rw-r--r-- 1 stan stan  325 Nov  1 23:27 ServerUserFileRightsList.json      for https file server: you define user, password, path, rights (r,w,x,rw...)
 drwxr-xr-x 6 stan stan 4096 Nov  9 00:42 TrashFolder
-[stan@stan-pc .JFileProcessor]$ 
-
+```
 
 * Where is uses Groovy script files from:
 
