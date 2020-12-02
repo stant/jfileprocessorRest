@@ -108,10 +108,25 @@ Here is an example to call konsole to run a shell script:
       "stop" : ""
     },
 
+* Jfp App Config Files
 
-* Install-Folder/   groovy   or   menu-scripts
+[ .JFileProcessor]$ ls -l
+total 28
+-rw-r--r-- 1 stan stan 1245 Dec  2 09:08 Bookmarks.txt
+-rw-r--r-- 1 stan stan 5502 Dec  2 09:08 FileAssocList.json
+drwxr-xr-x 2 stan stan 4096 Nov 30 18:05 groovy-scripts
+-rw-r--r-- 1 stan stan  366 Dec  2 09:08 ProgramMemory.json
+-rw-r--r-- 1 stan stan  325 Nov  1 23:27 ServerUserFileRightsList.json      for https file server: you define user, password, path, rights (r,w,x,rw...)
+drwxr-xr-x 6 stan stan 4096 Nov  9 00:42 TrashFolder
+[stan@stan-pc .JFileProcessor]$ 
 
-groovy: folder for groovy scripts. 
+
+* Where is uses Groovy script files from:
+
+Jfp Install-Folder/   groovy   or   menu-scripts
+user home/.JFileProcessor/groovy-scripts
+
+groovy: folders for groovy scripts. 
 
 menu-scripts: special groovy scripts folder. Place scripts in here to make them show up in the right-click "Scripts" menu.
 This is a short cut. It will run the script without a code window on the files you have selected.
