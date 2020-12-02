@@ -8,3 +8,4 @@ dist/
 nbdist/
 .nb-gradle/
 /.project
+/menu-scripts/serverWebFromFolder.groovy

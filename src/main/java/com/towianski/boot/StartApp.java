@@ -2,7 +2,6 @@ package com.towianski.boot;
 
 import com.towianski.boot.server.TomcatApp;
 import com.towianski.boot.server.WarRun;
-import com.towianski.jfileprocessor.JFileFinderWin;
 import com.towianski.utils.MyLogger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;

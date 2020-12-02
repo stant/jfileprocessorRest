@@ -183,9 +183,9 @@ public class JFileFinder //  implements Runnable
             ArrayList<Object> rowList = new ArrayList<Object>();
             BasicFileAttributes attr;
             try {
+                logger.finer( "lookin at file = " + fpath.toString() );
                 attr = Files.readAttributes( fpath, BasicFileAttributes.class );
                 PosixFileAttributes fsattr = Files.readAttributes( fpath, PosixFileAttributes.class );
-//                logger.info( "lookin at file          = " + fpath.toString() );
 //                logger.info( "isDirectory      = " + attr.isDirectory());
 
                 int ftype = FilesTblModel.FILETYPE_NORMAL;
@@ -255,6 +255,7 @@ public class JFileFinder //  implements Runnable
                 rowList.add( "---" );
                 PathsInfoList.add( rowList );
                 logger.severe( nsf.toString());
+                nsf.printStackTrace();
                 }
             catch (Exception ex) 
                 {
@@ -437,6 +438,14 @@ public class JFileFinder //  implements Runnable
     static void usage() {
         logger.info( "java Find <path>" + " -name \"<glob_pattern>\"");
         System.exit(-1);
+    }
+
+    public ArrayList<Path> getMatchedPathsList() {
+        return matchedPathsList;
+    }
+
+    public void setMatchedPathsList(ArrayList<Path> matchedPathsList) {
+        this.matchedPathsList = matchedPathsList;
     }
 
     public void run( JFileFinderSwingWorker jFileFinderSwingWorker ) 

@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Properties;
+import java.util.logging.Level;
 import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
 import org.springframework.boot.SpringApplication;
@@ -49,6 +50,8 @@ public class WarRun extends SpringBootServletInitializer {
         return application.sources(WarRun.class).web(  WebApplicationType.SERVLET );
     }
 
+    public WarRun() { };
+    
     public static void main(String[] args) {
 
         SpringApplication app = new SpringApplication(WarRun.class);
@@ -102,6 +105,8 @@ public class WarRun extends SpringBootServletInitializer {
         app.setDefaultProperties(properties);
         logger.info( "Entered WarRun.main after call set props. before app.run");
         
+        //logger.setAllLoggerLevels( Level.ALL );  // for debugging
+
         app.run(args);
         logger.info( "Entered WarRun.main after app.run()");
     }
@@ -133,6 +138,14 @@ public class WarRun extends SpringBootServletInitializer {
                 return super.getTomcatWebServer(tomcat);
             }
         };
+        
+//            factory.addConnectorCustomizers(new TomcatConnectorCustomizer() {
+//        @Override
+//        public void customize(Connector connector) {
+//            ((AbstractHttp11Protocol<?>) connector.getProtocolHandler()).setMaxSwallowSize(-1);
+//        }
+//    });
+            
     }
 
 //@Bean

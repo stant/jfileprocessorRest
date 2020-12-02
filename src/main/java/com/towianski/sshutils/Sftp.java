@@ -92,7 +92,7 @@ public Sftp( String user, String password, String rhost, int sshPort )
     catch(Exception ex)
         {
         isConnected = false;
-        message = "Sftp(): " + ex;
+        message = "Sftp(): " + ex;   // GET ERROR FROM HERE
         logger.info( "Sftp(): " + ex );
         }
     }

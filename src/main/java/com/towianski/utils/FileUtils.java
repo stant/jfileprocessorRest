@@ -5,22 +5,26 @@
  */
 package com.towianski.utils;
 
+import com.towianski.httpsutils.HttpsUtils;
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.sshutils.Sftp;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
-import java.util.Arrays;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -34,19 +38,57 @@ public class FileUtils
     public static boolean exists( ConnUserInfo connUserInfo, String targetPath )
         {
         logger.info( "jfilewin Exists()" );
-        logger.info( "jfilewin Exists()  connUserInfo.isConnectedFlag() =" + connUserInfo.isConnectedFlag() + "=" );
+        logger.info( "connUserInfo.isConnectedFlag() =" + connUserInfo.isConnectedFlag() + "=" );
 
         if ( connUserInfo.isConnectedFlag() )
             {
-            Sftp sftp = null;
-            sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), connUserInfo.getToSshPortInt() );
-            return sftp.exists( targetPath.toString() );
+            if ( connUserInfo.isUsingSftp() )
+                {
+                Sftp sftp = null;
+                sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), connUserInfo.getToSshPortInt() );
+                return sftp.exists( targetPath.toString() );
+                }
+            else if ( connUserInfo.isUsingHttps() )
+                {
+                Boolean response = null;
+                
+                try
+                    {
+                    RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
+
+                    MultiValueMap<String, String> params = new LinkedMultiValueMap();
+                    //String rmtFilePath = URLEncoder.encode( targetPath, "UTF-8" );
+                    //params.add( "fileName", URLEncoder.encode( targetPath, "UTF-8" ) );
+                    HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity( params, Rest.getHeaders( connUserInfo.getToUser(), connUserInfo.getToPassword() ) );
+
+//                    response = noHostVerifyRestTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.DOES_FILE_EXIST, Boolean.class );
+//                    HttpEntity request = new HttpEntity( Rest.getHeaders( connUserInfo.getToUser(), connUserInfo.getToPassword() ) );
+
+                    // make an HTTP GET request with headers
+                    ResponseEntity<Boolean> responseEntity = noHostVerifyRestTemplate.exchange(
+                            connUserInfo.getToUri() + JfpRestURIConstants.DOES_FILE_EXIST + "?fileName=" + URLEncoder.encode( targetPath, "UTF-8" ),
+                            HttpMethod.GET,
+                            requestEntity,
+                            Boolean.class
+                    );
+                    response = responseEntity.getBody();
+                    }
+                catch( Exception exc )
+                    {
+                    logger.info( "FileUtils.exists() DOES_FILE_EXIST threw Exception !!" );
+                    logger.severeExc( exc );
+                    return false;
+                    }
+                logger.info( "jfilewin exists()  response =" + response + "=" );
+                return response;
+                }
             }
         else
             {
             logger.info( "local Exists()" );
             return Files.exists( Paths.get( targetPath ) );
             }
+        return false;
         }
 
     public static void createDirectory( ConnUserInfo connUserInfo, String targetPath )
@@ -56,9 +98,29 @@ public class FileUtils
 
         if ( connUserInfo.isConnectedFlag() )
             {
-            Sftp sftp = null;
-            sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), connUserInfo.getToSshPortInt() );
-            sftp.mkDir( targetPath.toString() );
+            if ( connUserInfo.isUsingSftp() )
+                {
+                Sftp sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), connUserInfo.getToSshPortInt() );
+                sftp.mkDir( targetPath.toString() );
+                }
+            else if ( connUserInfo.isUsingHttps() )
+                {
+                try
+                    {
+                    logger.info( "mkdir =" + targetPath.toString() + "=" );
+                    HttpsUtils httpsUtilsTar = new HttpsUtils( "TO", connUserInfo );
+                    httpsUtilsTar.mkDir( targetPath );
+                    logger.finer( "Directory created :: " + targetPath.toString() );
+                    } 
+                catch (Exception ex)
+                    {
+                    logger.severeExc( ex );
+//                    processStatus = "Error";
+//                    message = ex + ": " + destinationFolderStr;
+//                    errorList.add( destinationFolderStr + " -> create remote Directory - ERROR " + ex );
+                    return;
+                    }
+                }
             }
         else
             {
@@ -66,7 +128,8 @@ public class FileUtils
             try
                 {
                 Files.createDirectory( Paths.get( targetPath ) );
-                } catch (IOException ex)
+                } 
+            catch (IOException ex)
                 {
                 logger.severeExc( ex );
                 }
@@ -74,6 +137,7 @@ public class FileUtils
         }
 
     public static void fileMove( ConnUserInfo connUserInfo, String sourcePath, String targetPath )
+            throws HttpClientErrorException
         {
         logger.info( "jfilewin FileMove()" );
         logger.info( "jfilewin FileMove()  connUserInfo.isConnectedFlag() =" + connUserInfo.isConnectedFlag() + "=" );
@@ -84,24 +148,30 @@ public class FileUtils
             RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
             
             try {
-//                 restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
-                HttpHeaders headers = new HttpHeaders();
-//                headers.setContentType(MediaType.APPLICATION_JSON);
+                HttpHeaders headers = Rest.getHeaders( connUserInfo.getToUser(), connUserInfo.getToPassword() );
                 headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-                headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
                 
                 MultiValueMap<String, String> params = new LinkedMultiValueMap();
 //                String oldFile = URLEncoder.encode( sourcePath.toString(), "UTF-8" ); //.replace( "/", "|" );
 //                String newFile = URLEncoder.encode( targetPath.toString(), "UTF-8" ); //.replace( "/", "|" );
-//                param.put( "newname", newFile );
-//                param.put( "oldname", oldFile );
                 params.add( "newname", targetPath.toString() );
                 params.add( "oldname", sourcePath.toString() );
 //                HttpEntity<Object> requestEntity = new HttpEntity<Object>( params, headers );
                 HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity( params, headers );
-                HttpEntity<String> response = noHostVerifyRestTemplate.exchange( connUserInfo.getToUri() + JfpRestURIConstants.RENAME_FILE 
-                                    , HttpMethod.PUT, requestEntity, String.class );  //, params );
+                HttpEntity<String> response = noHostVerifyRestTemplate.exchange( 
+                            connUserInfo.getToUri() + JfpRestURIConstants.RENAME_FILE 
+                            , HttpMethod.PUT, requestEntity, String.class );
+                if ( response.getBody().matches( ".*\"status\".*401.*\"Unauthorized\".*" ) )
+                    {
+                    logger.info( "caught 401 Response !" );
+                    throw new HttpClientErrorException( HttpStatus.UNAUTHORIZED );
+                    }
                 logger.info( "jfilewin FileMove()  response =" + response + "=" );
+                }
+            catch (HttpClientErrorException.Unauthorized httpExc )
+                {
+                logger.info( "caught 401" + httpExc.getLocalizedMessage() );
+                throw httpExc;
                 }
             catch( Exception exc )
                 {
@@ -135,9 +205,16 @@ public class FileUtils
 
         if ( connUserInfo.isConnectedFlag() )
             {
-            Sftp sftp = null;
-            sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), connUserInfo.getToSshPortInt() );
-            sftp.touch( targetPath.toString() );
+            if ( connUserInfo.isUsingSftp() )
+                {
+                Sftp sftp = null;
+                sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), connUserInfo.getToSshPortInt() );
+                sftp.touch( targetPath.toString() );
+                }
+            else if ( connUserInfo.isUsingHttps() )
+                {
+                    // FIXXX
+                }
             }
         else
             {
@@ -150,6 +227,30 @@ public class FileUtils
                 Files.createFile( targetPath );
                 }
             }
+        }
+    
+    public static String getFolderFromPath( String path ) 
+            throws IOException 
+        {
+        logger.info( "path =" + path + "=" );
+        String pathOrig = path;
+        path = path.replace( "\\", "/" );
+        Path targetPath = Paths.get( path );
+        logger.finest( "targetPath =" + targetPath + "=" );
+        logger.finest( "targetPath.getParent() =" + targetPath.getParent() + "=" );
+        if ( pathOrig.indexOf( "\\" ) >= 0 )
+            {
+            return targetPath.getParent().toString().replace( "/", "\\"  );
+            }
+        return targetPath.getParent().toString();
+        }
+    
+    public static String getFilenameFromPath( String path ) 
+            throws IOException 
+        {
+        path = path.replace( "\\", "/" );
+        Path targetPath = Paths.get( path );
+        return targetPath.getFileName().toString();
         }
 
     }

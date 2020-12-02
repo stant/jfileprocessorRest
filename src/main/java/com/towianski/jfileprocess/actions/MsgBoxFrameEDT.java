@@ -6,8 +6,6 @@
 package com.towianski.jfileprocess.actions;
 
 import com.towianski.utils.MyLogger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -94,7 +92,7 @@ public class MsgBoxFrameEDT extends javax.swing.JFrame {
 
             new CloseWinOnTimer( this, "noMove", 3000 ){{setRepeats(false);}}.start();
         } catch (Exception ex) {
-            Logger.getLogger(MsgBoxFrameEDT.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         }
 
     }//GEN-LAST:event_formWindowOpened
@@ -116,13 +114,13 @@ public class MsgBoxFrameEDT extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(MsgBoxFrameEDT.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(MsgBoxFrameEDT.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(MsgBoxFrameEDT.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(MsgBoxFrameEDT.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         }
 
 

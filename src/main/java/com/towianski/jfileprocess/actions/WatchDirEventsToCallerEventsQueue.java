@@ -225,20 +225,20 @@ public class WatchDirEventsToCallerEventsQueue implements Runnable, Player
         Instant baseTime = Instant.now();
 
         try {
-            logger.info("Read from caller's queue getFileEventCallerQueue() (" + qName + ") =" + System.identityHashCode(fileEventInputQueue ) + "=" );
+            logger.fine("Read from caller's queue getFileEventCallerQueue() (" + qName + ") =" + System.identityHashCode( fileEventInputQueue ) + "=" );
             while ( runFlag ) 
                 {
                 FileTimeEvent newFte = fileEventInputQueue.poll( millisGap, TimeUnit.MILLISECONDS );
                         
                 if ( newFte == null )
                     {
-                    //logger.info("\n=== millisGap (" + qName + ") (" + millisGap + ") Poll finished so add ALL using iterator() ===");
+                    logger.finer("\n=== millisGap (" + qName + ") (" + millisGap + ") Poll finished so add ALL using iterator() ===");
                     // iterate thru watchKeyList
                     Iterator<Map.Entry<WatchKey,LinkedHashMap<String, FileTimeEvent>>> iter = watchKeyList.entrySet().iterator();
                     while (iter.hasNext()) 
                         {
                         Map.Entry<WatchKey,LinkedHashMap<String, FileTimeEvent>> entry = iter.next();
-                        logger.info( "WatchKeyList Key = " + System.identityHashCode( entry.getKey() ) + ",  Value.SIZE() = " + entry.getValue().size() ); 
+                        logger.fine( "WatchKeyList Key = " + System.identityHashCode( entry.getKey() ) + ",  Value.SIZE() = " + entry.getValue().size() ); 
                         WatchKey watchKey = entry.getKey();
                         fteLhm = watchKeyList.get( watchKey );
 
@@ -259,10 +259,10 @@ public class WatchDirEventsToCallerEventsQueue implements Runnable, Player
                 if ( fteLhm == null )
                     {
                     System.err.println( "ERROR got ftelhm is NULL for newFte.getWatchKey() =" + System.identityHashCode( newFte.getWatchKey() ) + "=" );
-                    logger.info( "ERROR got ftelhm is NULL for newFte.getWatchKey() =" + System.identityHashCode( newFte.getWatchKey() ) + "=" );
-                    logger.info( "queue (" + qName + ") =======  newFte: getFullFilePath =" + newFte.getFullFilePath() + "=" );
-                    logger.info( "queue (" + qName + ") " + newFte.getFilename() + "   event =" + newFte.getEventKind() + "=" );
-                    logger.info( "queue (" + qName + ") " + newFte.getInstant()+ "=" );
+                    logger.warning("ERROR got ftelhm is NULL for newFte.getWatchKey() =" + System.identityHashCode( newFte.getWatchKey() ) + "=" );
+                    logger.warning( "queue (" + qName + ") =======  newFte: getFullFilePath =" + newFte.getFullFilePath() + "=" );
+                    logger.warning( "queue (" + qName + ") " + newFte.getFilename() + "   event =" + newFte.getEventKind() + "=" );
+                    logger.warning( "queue (" + qName + ") " + newFte.getInstant()+ "=" );
                     continue;
                     }
 
@@ -332,7 +332,7 @@ public class WatchDirEventsToCallerEventsQueue implements Runnable, Player
             } // while
         } catch (InterruptedException e) {
             // This will happen on xxx.pause() so lets now print them into log
-            //logger.info("WatchDirEventsToCallerEventsQueue (" + qName + ") run() Interrupt");
+            logger.info("WatchDirEventsToCallerEventsQueue (" + qName + ") run() Interrupt");
             e.printStackTrace();
             }
         finally

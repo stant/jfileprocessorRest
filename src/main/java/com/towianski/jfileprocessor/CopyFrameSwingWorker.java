@@ -17,6 +17,7 @@ import javax.swing.SwingWorker;
  *
  * @author Stan Towianski - June 2015
  */
+
 public class CopyFrameSwingWorker extends SwingWorker<ResultsData, Long> {
 
     private static final MyLogger logger = MyLogger.getLogger( CopyFrameSwingWorker.class.getName() );

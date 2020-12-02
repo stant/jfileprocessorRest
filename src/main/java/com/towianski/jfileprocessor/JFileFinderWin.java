@@ -73,6 +73,7 @@ import com.towianski.renderers.TableCellListener;
 import com.towianski.sshutils.JschSftpUtils;
 import static com.towianski.utils.ClipboardUtils.getClipboardStringsList;
 import static com.towianski.utils.ClipboardUtils.setClipboardContents;
+import com.towianski.utils.ConnectionWin;
 import com.towianski.utils.DesktopUtils;
 import com.towianski.utils.FileAssocWin;
 import com.towianski.utils.FileUtils;
@@ -133,6 +134,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.PreDestroy;
 import javax.net.ssl.SSLContext;
 import javax.swing.AbstractAction;
@@ -148,6 +152,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.KeyStroke;
 import javax.swing.RowSorter;
@@ -172,7 +177,11 @@ import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -210,6 +219,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
     String JfpHomeTempDir = System.getProperty( "user.dir" ) + System.getProperty( "file.separator" ) + "temp" + System.getProperty( "file.separator" );
     File scriptsFile = new File( JfpHomeDir + "menu-scripts" );
     File scriptsOsFile = null;
+    File scriptsHomeGrooyFile = null;
     String hostAddress = findHostAddress( "?" );
 
     int tblColModelSizeLast = -1;
@@ -245,6 +255,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
         initComponents();
 
         start();
+        //logger.setAllLoggerLevels( Level.ALL );  // for debugging
     }
 
     public JFileFinderWin( String startPath ) {
@@ -254,6 +265,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
         startingFolder.setText( startPath );
 
         start();
+        //logger.setAllLoggerLevels( Level.ALL );  // for debugging
         searchBtn.doClick();
     }
 
@@ -394,7 +406,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         {
 //        logger.info( "enter start()" );
 //        System.err.println( "enter start()" );
-        this.setTitle( JFileProcessorVersion.getName() + " " + JFileProcessorVersion.getVersion() + " - Stan Towianski (c) 2015-2019 - Java " + System.getProperty("java.version") );
+        this.setTitle( JFileProcessorVersion.getName() + " " + JFileProcessorVersion.getVersion() + " - (c) 2015-2021    - Java " + System.getProperty("java.version") );
         logger.info( "java.version =" + System.getProperty("java.version") + "=" );
 
         // Adding JfpLib.jar here instead of in each groovy script just make groovy scripts simpler.
@@ -482,15 +494,21 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             {
             scriptsOsFile = new File( JfpHomeDir + "menu-scripts" + System.getProperty( "file.separator" ) + "linux" );
             }
+        scriptsHomeGrooyFile = new File( DesktopUtils.getHomeGrooyFolder().toString() );
         logger.info( "read scriptsFile/menu-scripts from  =" + scriptsFile + "=" );
         logger.info( "read OS scriptsOsFile/menu-scripts from  =" + scriptsOsFile + "=" );
+        logger.info( "read Home scriptsHomeGrooyFile from  =" + scriptsHomeGrooyFile + "=" );
 
         (new File( JfpHomeTempDir )).mkdirs();
         
 //        globalMemory = StartJfileFinderWin.context.getBean( GlobalMemory.class );
         logger.info( "JFileFinderWin.start()  globalMemory = " + globalMemory );
 
+        connectionType.setText( "" );
+        showHideConnectionFields();
+
         setLookAndFeel();
+        this.pack();
         this.setVisible(true);
 //        logger.info( "leaving start()" );
 //        System.err.println( "leaving start()" );
@@ -1003,6 +1021,59 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         return logLevelsLhm.get( logLevel.getSelectedItem() );
     }
 
+    public void showHideConnectionFields()
+        {
+        if ( connectionType.getText() == null || connectionType.getText().equalsIgnoreCase( "" ) )
+            {
+            rmtConnectBtn.setVisible( false );
+            rmtDisconnectBtn.setVisible( false );
+            rmtForceDisconnectBtn.setVisible( false );
+            rmtHost.setVisible( false );
+            rmtHostLbl.setVisible( false );
+            rmtUserLbl.setVisible( false );
+            rmtUser.setVisible( false );
+            rmtPasswdLbl.setVisible( false );
+            rmtPasswd.setVisible( false );
+            rmtAskHttpsPortLbl.setVisible( false );
+            rmtAskHttpsPort.setVisible( false );
+            rmtSshPortLbl.setVisible( false );
+            rmtSshPort.setVisible( false );
+            }
+        else if ( connectionType.getText().equalsIgnoreCase( "https" ) )
+            {
+            rmtConnectBtn.setVisible( true );
+            rmtDisconnectBtn.setVisible( true );
+            rmtForceDisconnectBtn.setVisible( true );
+            rmtHostLbl.setVisible( true );
+            rmtHost.setVisible( true );
+            rmtUserLbl.setVisible( true );
+            rmtUser.setVisible( true );
+            rmtPasswdLbl.setVisible( true );
+            rmtPasswd.setVisible( true );
+            rmtAskHttpsPortLbl.setVisible( true );
+            rmtAskHttpsPort.setVisible( true );
+            rmtSshPortLbl.setVisible( false );
+            rmtSshPort.setVisible( false );
+            }
+        else if ( connectionType.getText().equalsIgnoreCase( "sftp + https" ) )
+            {
+            rmtConnectBtn.setVisible( true );
+            rmtDisconnectBtn.setVisible( true );
+            rmtForceDisconnectBtn.setVisible( true );
+            rmtHostLbl.setVisible( true );
+            rmtHost.setVisible( true );
+            rmtUserLbl.setVisible( true );
+            rmtUser.setVisible( true );
+            rmtPasswdLbl.setVisible( true );
+            rmtPasswd.setVisible( true );
+            rmtAskHttpsPortLbl.setVisible( true );
+            rmtAskHttpsPort.setVisible( true );
+            rmtSshPortLbl.setVisible( true );
+            rmtSshPort.setVisible( true );
+            }
+        this.pack();
+        }
+
     public void callSearchBtnActionPerformed(java.awt.event.ActionEvent evt)
         {   // FIXXX  I can get rid of this method !
 //        searchBtnAction( evt );
@@ -1174,7 +1245,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                 break;
             case PROCESS_STATUS_ERROR:
                 //processStatus.setBackground( Color.RED );
-            logger.info( "process status error !" );
+                logger.info( "process status error !" );
                 break;
             default:
                 //processStatus.setBackground( saveColor );
@@ -1245,6 +1316,14 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         {
         this.rmtPasswd.setText(str);
         }
+
+    public String getConnectionType() {
+        return connectionType.getText();
+    }
+
+    public void setConnectionType(String connectionType) {
+        this.connectionType.setText( connectionType );
+    }
 
     public String getRmtUser()
         {
@@ -1392,6 +1471,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                         {
                         String sourcePath = tcl.getOldValue().toString().trim();
                         FileUtils.fileMove( connUserInfo, sourcePath, targetPathStr );
+                        logger.info( "After  FileUtils.fileMove()" );
                         fileAssocList.moveFileAssoc( sourcePath, targetPathStr );
                         Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
                                     
@@ -1409,14 +1489,33 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
 //                    message.setText( "Access Denied Exception" );
 //                    filesTblModel.deleteRowAt( 0 );
 //                    }
+            
+                catch( HttpClientErrorException httpExc )
+                    {
+                    logger.severe( "Caught HttpClientErrorException() in rename" );
+                    setProcessStatus( PROCESS_STATUS_ERROR );
+                    if ( httpExc.getRootCause() != null )
+                    processStatus.setText( "Error" );
+                    if ( httpExc.getMessage() != null )
+                    logger.info( "httpExc.getMessage() =" + httpExc.getMessage().toString()+ "=" );
+                    if ( httpExc.getCause() != null )
+                    logger.info( "httpExc.getCause() =" + httpExc.getCause().toString()+ "=" );
+                    if ( httpExc.getRootCause() != null )
+                    logger.info( "httpExc.getRootCause() =" + httpExc.getRootCause().toString()+ "=" );
+                    if ( httpExc.getMostSpecificCause() != null )
+                    logger.info( "httpExc.getMostSpecificCause() =" + httpExc.getMostSpecificCause().toString()+ "=" );
+                    message.setText( "Unauthorized Exception" );
+                    logger.severeExc( httpExc );
+                    }
                 catch (Exception ex) 
                     {
                     logger.info( "ex.getMessage() =" + ex.getMessage()+ "=" );
                     processStatus.setText( "Error" );
                     ex.printStackTrace();
                     message.setText( ex.getMessage() );
-                    logger.severeExc( ex);
+                    logger.severeExc( ex );
                     }
+                logger.severe( "After  No Exceptions" );
                 }
             //filesTbl.setCellSelectionEnabled( false );
             setColumnSizes();
@@ -1453,7 +1552,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             && ( ! maxDepth.getText().trim().equals( "" ) )
             && ( maxDepth.getText().trim().equals( maxDepth.getText().trim() ) )   )  // don't watch on a searched list
             {
-            if ( watchStartingFolder == null )
+  /* FIXXX */          if ( 1 == 2 || watchStartingFolder == null )
                 {
                 logger.info( "startDirWatcher() start Main Thread" );
                 watchStartingFolder = new WatchStartingFolder( this );
@@ -1736,7 +1835,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
     public void searchBtnAction( java.awt.event.ActionEvent evt )
         {
         logger.finest( "searchBtnAction()" );
-        logger.info( "searchBtnAction() with connUserInfo =" + connUserInfo + "=" );
+        logger.fine( "searchBtnAction() with connUserInfo =" + connUserInfo + "=" );
 //        try
 //        {
 //            int x = 2/0;
@@ -1765,6 +1864,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         stopDirWatcher();
 
         SearchModel searchModel = extractSearchModel();
+        logger.fine( "searchModel = " + Rest.saveObjectToString( searchModel ) + "=" );
 //        Rest.saveObjectToFile( "SearchModel.json", searchModel );
 //        RestTemplate restTemplate = new RestTemplate();
         RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
@@ -1772,14 +1872,54 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         //object in the list and hence convert it to default JSON object type LinkedHashMap
 //        FilesTblModel filesTblModel = restTemplate.getForObject( SERVER_URI+JfpRestURIConstants.GET_FILES, FilesTblModel.class, SearchModel.class );
 
-        logger.info( "rest send searchModel =" + searchModel + "=" );
-
 //        String response = restTemplate.postForEntity( "http://" + rmtHost.getText().trim() + ":8080" + JfpRestURIConstants.SEARCH, searchModel, String.class).getBody();
-        String response = noHostVerifyRestTemplate.postForEntity( connUserInfo.getToUri() + JfpRestURIConstants.SEARCH, searchModel, String.class).getBody();
-        logger.info( "response =" + response + "=" );
-        resultsData = Rest.jsonToObject( response, ResultsData.class );
-        logger.info( "resultsData.getFilesMatched() =" + resultsData.getFilesMatched() );
-        logger.info( "resultsData.getFilesTblModel() =" + resultsData.getFilesTblModel().toString() );
+//        String response = "";
+        ResponseEntity<ResultsData> responseEntity = null;
+        try {
+            HttpHeaders headers = Rest.getHeaders( connUserInfo.getToUser(), connUserInfo.getToPassword() );
+            //headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+//            MultiValueMap<String, String> params = new LinkedMultiValueMap();
+//            params.add( "filename", rmtFilePath );
+//            HttpEntity<Object> requestEntity = new HttpEntity<Object>( params, headers );
+//            response = noHostVerifyRestTemplate.exchange( connUserInfo.getToUri() + JfpRestURIConstants.SEARCH 
+//                                    , HttpMethod.POST, requestEntity, String.class ).getBody();
+
+            HttpEntity<SearchModel> requestEntity = new HttpEntity( searchModel, headers );
+//            response = noHostVerifyRestTemplate.postForEntity( connUserInfo.getToUri() + JfpRestURIConstants.SEARCH, 
+//                                                                     requestEntity, String.class).getBody();
+
+            // Works
+//            response = noHostVerifyRestTemplate.postForEntity( connUserInfo.getToUri() + JfpRestURIConstants.SEARCH, 
+//                                                                     searchModel, String.class).getBody();
+
+            logger.finest( "call url: " + connUserInfo.getToUri() + JfpRestURIConstants.SEARCH );	
+            responseEntity = noHostVerifyRestTemplate.postForEntity( connUserInfo.getToUri() + JfpRestURIConstants.SEARCH, 
+                                                                requestEntity, ResultsData.class );
+            logger.fine("Status Code: " + responseEntity.getStatusCode() );	
+            }
+        catch (Exception ex) 
+            {
+            logger.info( "postForEntity error on Search" );	
+            ex.printStackTrace();
+            }
+
+        try {
+            //logger.info( "response =" + response + "=" );
+            //  resultsData = Rest.jsonToObject( response, ResultsData.class );
+            resultsData = responseEntity.getBody();
+            logger.finest( "response as resultsData =" + Rest.saveObjectToString( resultsData ) );
+            logger.finest( "resultsData.getFilesMatched() =" + resultsData.getFilesMatched() );
+            //logger.info( "resultsData.getFilesTblModel() =" + resultsData.getFilesTblModel().toString() );
+            }
+        catch (Exception ex) 
+            {
+            logger.fine( "Error. No valid response from server" );
+            logger.severe( logger.getExceptionAsString( ex ) );
+            jFileFinderWin.setMessage( "Error. No valid response from server" );
+            jFileFinderWin.setResultsData( new ResultsData() );
+            return;
+            }
 
         NumberFormat numFormat = NumberFormat.getIntegerInstance();
         String partialMsg = "";
@@ -1792,9 +1932,21 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             {
             jFileFinderWin.setProcessStatus( Constants.PROCESS_STATUS_SEARCH_COMPLETED );
             }
-        jFileFinderWin.setMessage( "Matched " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) 
-                + " folders out of " + numFormat.format( resultsData.getFilesTested() ) + " files and " + numFormat.format( resultsData.getFoldersTested() ) + " folders.  Total "
-                + numFormat.format( resultsData.getFilesVisited() ) + partialMsg );
+        
+        if ( ! resultsData.getProcessStatus().trim().equals( "" ) )
+            {
+            setProcessStatus( resultsData.getProcessStatus() );
+            }
+        if ( ! resultsData.getMessage().trim().equals( "" ) )
+            {
+            message.setText( resultsData.getMessage() );
+            }
+        else
+            {
+            jFileFinderWin.setMessage( "Matched " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) 
+                    + " folders out of " + numFormat.format( resultsData.getFilesTested() ) + " files and " + numFormat.format( resultsData.getFoldersTested() ) + " folders.  Total "
+                    + numFormat.format( resultsData.getFilesVisited() ) + partialMsg );
+            }
         jFileFinderWin.setResultsData( resultsData );
 
         //jFileFinderWin.emptyFilesTable();
@@ -2097,6 +2249,10 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         
 //        resultsData = null;  // to free up memory 
                 
+
+//    if ( 1 == 1 ) return;  // to sorting or not
+    
+    
         // set up sorting
         TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>( filesTbl.getModel() );
         sorter.setSortsOnUpdates( false );
@@ -2151,9 +2307,18 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             if ( connUserInfo.isConnectedFlag()  &&   //rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) &&
                  ! stdOutFile.getText().equals( filestr ) && ! stdErrFile.getText().equals( filestr ) )
                 {
-                JschSftpUtils jschSftpUtils = new JschSftpUtils();
-                jschSftpUtils.SftpGet( filestr, rmtUser.getText().trim(), rmtPasswd.getText().trim(), rmtHost.getText().trim(), rmtSshPort.getText().trim(), JfpHomeTempDir + file.getName() );
-                file = new File( JfpHomeTempDir + file.getName() );
+                if ( connUserInfo.isUsingSftp() )
+                    {
+                    JschSftpUtils jschSftpUtils = new JschSftpUtils();
+                    jschSftpUtils.SftpGet( filestr, rmtUser.getText().trim(), rmtPasswd.getText().trim(), rmtHost.getText().trim(), rmtSshPort.getText().trim(), JfpHomeTempDir + file.getName() );
+                    file = new File( JfpHomeTempDir + file.getName() );
+                    }
+//  FIXXX               else if ( connUserInfo.isUsingHttps() )
+//                    {
+//                    JschSftpUtils jschSftpUtils = new JschSftpUtils();
+//                    jschSftpUtils.SftpGet( filestr, rmtUser.getText().trim(), rmtPasswd.getText().trim(), rmtHost.getText().trim(), rmtSshPort.getText().trim(), JfpHomeTempDir + file.getName() );
+//                    file = new File( JfpHomeTempDir + file.getName() );
+//                    }
                 }
             if ( file.exists() )
                 {
@@ -2433,16 +2598,16 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
 //            int rc = jp.execJava2( cmdList, true, "--logging.file=" + "/tmp/webserver.log", "-dir=" + selectedPath );
 //            int rc = jp.execJava2( cmdList, true );
             logger.info( "runCmdString =" + runCmdString + "=" );
-            runCmdString = runCmdString.replace( "%f", selectedPath );
-            Path fpath = Paths.get( selectedPath );
-            runCmdString = runCmdString.replace( "%F", fpath.getFileName().toString() );
-            logger.info( "runCmdString =" + runCmdString + "=" );
 
             String rcStr = "";
             if ( runCmdString.startsWith( "url:" ) )
                 {
                 try
                     {
+                    runCmdString = runCmdString.replace( "%f", selectedPath );
+                    Path fpath = Paths.get( selectedPath );
+                    runCmdString = runCmdString.replace( "%F", fpath.getFileName().toString() );
+                    logger.info( "runCmdString =" + runCmdString + "=" );
                     RestTemplate restTemplate = Rest.createNoHostVerifyRestTemplate();
                     restTemplate.getForObject( runCmdString.substring( "url:".length() ), String.class );
                     } 
@@ -2455,8 +2620,29 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             else
                 {
                 // split by spaces and assume that will work.
-                String[] cmdAr = runCmdString.split( " " );
-                cmdList = new ArrayList<String>(Arrays.asList( cmdAr )); 
+//                String[] cmdAr = runCmdString.split( " " );
+                cmdList = new ArrayList<String>(); 
+                
+                //String regex = "\"([^\"]*)\"|(\\S+)";
+                String regex = "\"([^\"]*)\"|'([^\"]*)'|(\\S+)";
+//                String regex = "([^\"]*)"|'([^']*)'|([^\"' ]+);
+
+                Matcher m = Pattern.compile(regex).matcher( runCmdString );
+                while (m.find()) {
+                    if (m.group(1) != null) {
+                        logger.finer("Double Quoted [" + m.group(1) + "]");
+                        cmdList.add( m.group(1) );
+                    }
+                    else if (m.group(2) != null) {
+                        logger.finer("Single Quoted [" + m.group(2) + "]");
+                        cmdList.add( m.group(2) );
+                    } else {
+                        logger.finer("Plain [" + m.group(3) + "]");
+                        cmdList.add( m.group(3) );
+                    }
+                }
+//                cmdList = new ArrayList<String>(Arrays.asList( cmdAr )); 
+                cmdList = replaceCmdVars( cmdList, selectedPath );   // do after split so spaces in filenames do not become part of splits
 
                 int rc = jp.execJava2( cmdList, true );
                 if ( cmdType.equalsIgnoreCase( JfpConstants.ASSOC_CMD_TYPE_STOP ) )
@@ -2493,6 +2679,29 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         } catch (InterruptedException ex) {
             logger.severeExc( ex );
         }
+    }
+
+    public ArrayList<String> replaceCmdVars( ArrayList<String> cmdList, String selectedPath )
+    {
+        ArrayList<String> newCmdList = new ArrayList<String>();
+        try {
+            Path fpath = Paths.get( selectedPath );
+            for ( String tmp : cmdList )
+                {
+                tmp = tmp.replace( "%f", selectedPath );
+                tmp = tmp.replace( "%F", fpath.getFileName().toString() );
+                tmp = tmp.replace( "%p", fpath.getParent().toString() );
+                
+                newCmdList.add( tmp );
+                }
+            for ( String tmp : newCmdList )
+                {
+                logger.info( "cnewCmdListmd piece =" + tmp + "=" );
+                }
+        } catch (Exception ex) {
+            logger.severeExc( ex );
+        }
+        return newCmdList;
     }
 
     public static void addEscapeListener(final JFrame win) {
@@ -2551,7 +2760,10 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         stringBuf.append( filesysType ).append( "?" );
         if ( connUserInfo.isConnectedFlag() )
             {
-            stringBuf.append( Constants.PATH_PROTOCOL_SFTP + "?" + getRmtUser() + "?" + getRmtPasswd() + "?" + getRmtHost() + "?" + getRmtSshPort() ).append( "?" );
+            if ( ! getRmtSshPort().equals( "" ) )
+                stringBuf.append( Constants.PATH_PROTOCOL_SFTP + "?" + getRmtUser() + "?" + getRmtPasswd() + "?" + getRmtHost() + "?" + getRmtSshPort() ).append( "?" );
+            else
+                stringBuf.append( Constants.PATH_PROTOCOL_HTTPS + "?" + getRmtUser() + "?" + getRmtPasswd() + "?" + getRmtHost() + "?" + getRmtAskHttpsPort() ).append( "?" );
             }
         else
             {
@@ -2829,19 +3041,22 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         deletePath = new javax.swing.JButton();
         jPanel10 = new javax.swing.JPanel();
         topPanel = new javax.swing.JPanel();
-        jLabel17 = new javax.swing.JLabel();
-        rmtUser = new javax.swing.JTextField();
-        jLabel18 = new javax.swing.JLabel();
-        rmtPasswd = new javax.swing.JPasswordField();
-        jLabel19 = new javax.swing.JLabel();
-        rmtHost = new javax.swing.JTextField();
+        jLabel21 = new javax.swing.JLabel();
+        connectionType = new javax.swing.JTextField();
         rmtConnectBtn = new javax.swing.JButton();
         rmtDisconnectBtn = new javax.swing.JButton();
         rmtForceDisconnectBtn = new javax.swing.JButton();
-        jLabel20 = new javax.swing.JLabel();
-        rmtSshPort = new javax.swing.JTextField();
+        rmtUserLbl = new javax.swing.JLabel();
+        rmtUser = new javax.swing.JTextField();
+        rmtHostLbl = new javax.swing.JLabel();
+        rmtHost = new javax.swing.JTextField();
+        jLabel22 = new javax.swing.JLabel();
         rmtAskHttpsPortLbl = new javax.swing.JLabel();
         rmtAskHttpsPort = new javax.swing.JTextField();
+        rmtSshPortLbl = new javax.swing.JLabel();
+        rmtSshPort = new javax.swing.JTextField();
+        rmtPasswdLbl = new javax.swing.JLabel();
+        rmtPasswd = new javax.swing.JPasswordField();
         jSplitPane1 = new javax.swing.JSplitPane();
         jPanel6 = new javax.swing.JPanel();
         fileMgrMode = new javax.swing.JCheckBox();
@@ -3259,120 +3474,208 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             jPanel10.setPreferredSize(new java.awt.Dimension(800, 500));
             jPanel10.setLayout(new java.awt.BorderLayout());
 
-            topPanel.setMinimumSize(new java.awt.Dimension(60, 35));
+            topPanel.setMinimumSize(new java.awt.Dimension(400, 35));
+            topPanel.setLayout(new java.awt.GridBagLayout());
 
-            jLabel17.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-            jLabel17.setText("Remote User");
-            jLabel17.setMaximumSize(new java.awt.Dimension(100, 25));
-            jLabel17.setMinimumSize(new java.awt.Dimension(100, 25));
-            jLabel17.setPreferredSize(new java.awt.Dimension(100, 25));
-            topPanel.add(jLabel17);
+            jLabel21.setText("Connection");
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.gridy = 0;
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+            topPanel.add(jLabel21, gridBagConstraints);
+
+            connectionType.setText(" ");
+            connectionType.setMargin(new java.awt.Insets(2, 7, 0, 0));
+            connectionType.setMaximumSize(new java.awt.Dimension(100, 25));
+            connectionType.setMinimumSize(new java.awt.Dimension(60, 25));
+            connectionType.setPreferredSize(new java.awt.Dimension(60, 25));
+            connectionType.addMouseListener(new java.awt.event.MouseAdapter() {
+                public void mouseClicked(java.awt.event.MouseEvent evt) {
+                    connectionTypeMouseClicked(evt);
+                }
+            });
+            connectionType.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    connectionTypeActionPerformed(evt);
+                }
+            });
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.gridy = 0;
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+            gridBagConstraints.insets = new java.awt.Insets(0, 7, 0, 0);
+            topPanel.add(connectionType, gridBagConstraints);
+
+            rmtConnectBtn.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/yellow/connect-icon-16.png"))); // NOI18N
+            rmtConnectBtn.setMaximumSize(new java.awt.Dimension(45, 25));
+            rmtConnectBtn.setMinimumSize(new java.awt.Dimension(45, 25));
+            rmtConnectBtn.setPreferredSize(new java.awt.Dimension(45, 23));
+            rmtConnectBtn.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    rmtConnectBtnActionPerformed(evt);
+                }
+            });
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.gridy = 0;
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+            gridBagConstraints.insets = new java.awt.Insets(0, 15, 0, 0);
+            topPanel.add(rmtConnectBtn, gridBagConstraints);
+
+            rmtDisconnectBtn.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/yellow/disconnect-icon-16.png"))); // NOI18N
+            rmtDisconnectBtn.setMaximumSize(new java.awt.Dimension(45, 25));
+            rmtDisconnectBtn.setMinimumSize(new java.awt.Dimension(45, 25));
+            rmtDisconnectBtn.setPreferredSize(new java.awt.Dimension(45, 23));
+            rmtDisconnectBtn.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    rmtDisconnectBtnActionPerformed(evt);
+                }
+            });
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.gridy = 0;
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+            gridBagConstraints.insets = new java.awt.Insets(0, 7, 0, 0);
+            topPanel.add(rmtDisconnectBtn, gridBagConstraints);
+
+            rmtForceDisconnectBtn.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/yellow/disconnect-icon-16.png"))); // NOI18N
+            rmtForceDisconnectBtn.setText("!!");
+            rmtForceDisconnectBtn.setMaximumSize(new java.awt.Dimension(65, 25));
+            rmtForceDisconnectBtn.setMinimumSize(new java.awt.Dimension(65, 25));
+            rmtForceDisconnectBtn.setPreferredSize(new java.awt.Dimension(65, 23));
+            rmtForceDisconnectBtn.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    rmtForceDisconnectBtnActionPerformed(evt);
+                }
+            });
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.gridy = 0;
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+            gridBagConstraints.insets = new java.awt.Insets(0, 7, 0, 0);
+            topPanel.add(rmtForceDisconnectBtn, gridBagConstraints);
+
+            rmtUserLbl.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+            rmtUserLbl.setText("Remote User");
+            rmtUserLbl.setMaximumSize(new java.awt.Dimension(100, 25));
+            rmtUserLbl.setMinimumSize(new java.awt.Dimension(80, 25));
+            rmtUserLbl.setPreferredSize(new java.awt.Dimension(80, 25));
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.gridy = 0;
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+            gridBagConstraints.insets = new java.awt.Insets(0, 15, 0, 0);
+            topPanel.add(rmtUserLbl, gridBagConstraints);
 
             rmtUser.setMargin(new java.awt.Insets(2, 7, 0, 0));
             rmtUser.setMaximumSize(new java.awt.Dimension(100, 25));
-            rmtUser.setMinimumSize(new java.awt.Dimension(100, 25));
+            rmtUser.setMinimumSize(new java.awt.Dimension(80, 25));
             rmtUser.setPreferredSize(new java.awt.Dimension(100, 25));
             rmtUser.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     rmtUserActionPerformed(evt);
                 }
             });
-            topPanel.add(rmtUser);
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.gridy = 0;
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+            gridBagConstraints.insets = new java.awt.Insets(0, 7, 0, 0);
+            topPanel.add(rmtUser, gridBagConstraints);
 
-            jLabel18.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-            jLabel18.setText("Pass");
-            jLabel18.setMaximumSize(new java.awt.Dimension(50, 25));
-            jLabel18.setMinimumSize(new java.awt.Dimension(50, 25));
-            jLabel18.setPreferredSize(new java.awt.Dimension(50, 25));
-            topPanel.add(jLabel18);
-
-            rmtPasswd.setMaximumSize(new java.awt.Dimension(80, 25));
-            rmtPasswd.setMinimumSize(new java.awt.Dimension(80, 25));
-            rmtPasswd.setPreferredSize(new java.awt.Dimension(80, 25));
-            rmtPasswd.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    rmtPasswdActionPerformed(evt);
-                }
-            });
-            topPanel.add(rmtPasswd);
-
-            jLabel19.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-            jLabel19.setText("Host");
-            jLabel19.setMaximumSize(new java.awt.Dimension(50, 25));
-            jLabel19.setMinimumSize(new java.awt.Dimension(50, 25));
-            jLabel19.setPreferredSize(new java.awt.Dimension(50, 25));
-            topPanel.add(jLabel19);
+            rmtHostLbl.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+            rmtHostLbl.setText("Host");
+            rmtHostLbl.setMaximumSize(new java.awt.Dimension(50, 25));
+            rmtHostLbl.setMinimumSize(new java.awt.Dimension(35, 25));
+            rmtHostLbl.setPreferredSize(new java.awt.Dimension(35, 25));
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.gridy = 0;
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+            gridBagConstraints.insets = new java.awt.Insets(0, 15, 0, 0);
+            topPanel.add(rmtHostLbl, gridBagConstraints);
 
             rmtHost.setMargin(new java.awt.Insets(2, 7, 0, 0));
-            rmtHost.setMaximumSize(new java.awt.Dimension(150, 25));
-            rmtHost.setMinimumSize(new java.awt.Dimension(150, 25));
-            rmtHost.setPreferredSize(new java.awt.Dimension(150, 25));
+            rmtHost.setMaximumSize(new java.awt.Dimension(150000, 25));
+            rmtHost.setMinimumSize(new java.awt.Dimension(50, 25));
+            rmtHost.setPreferredSize(new java.awt.Dimension(350, 25));
             rmtHost.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     rmtHostActionPerformed(evt);
                 }
             });
-            topPanel.add(rmtHost);
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.gridy = 0;
+            gridBagConstraints.gridwidth = java.awt.GridBagConstraints.RELATIVE;
+            gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+            gridBagConstraints.weightx = 1.0;
+            gridBagConstraints.insets = new java.awt.Insets(0, 7, 0, 0);
+            topPanel.add(rmtHost, gridBagConstraints);
 
-            rmtConnectBtn.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/yellow/connect-icon-16.png"))); // NOI18N
-            rmtConnectBtn.setMaximumSize(new java.awt.Dimension(45, 25));
-            rmtConnectBtn.setMinimumSize(new java.awt.Dimension(45, 25));
-            rmtConnectBtn.setPreferredSize(new java.awt.Dimension(45, 25));
-            rmtConnectBtn.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    rmtConnectBtnActionPerformed(evt);
-                }
-            });
-            topPanel.add(rmtConnectBtn);
-
-            rmtDisconnectBtn.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/yellow/disconnect-icon-16.png"))); // NOI18N
-            rmtDisconnectBtn.setMaximumSize(new java.awt.Dimension(45, 25));
-            rmtDisconnectBtn.setMinimumSize(new java.awt.Dimension(45, 25));
-            rmtDisconnectBtn.setPreferredSize(new java.awt.Dimension(45, 25));
-            rmtDisconnectBtn.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    rmtDisconnectBtnActionPerformed(evt);
-                }
-            });
-            topPanel.add(rmtDisconnectBtn);
-
-            rmtForceDisconnectBtn.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/yellow/disconnect-icon-16.png"))); // NOI18N
-            rmtForceDisconnectBtn.setText("!!");
-            rmtForceDisconnectBtn.setMaximumSize(new java.awt.Dimension(65, 25));
-            rmtForceDisconnectBtn.setMinimumSize(new java.awt.Dimension(65, 25));
-            rmtForceDisconnectBtn.setPreferredSize(new java.awt.Dimension(65, 25));
-            rmtForceDisconnectBtn.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    rmtForceDisconnectBtnActionPerformed(evt);
-                }
-            });
-            topPanel.add(rmtForceDisconnectBtn);
-
-            jLabel20.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-            jLabel20.setText("SSH Port");
-            topPanel.add(jLabel20);
-
-            rmtSshPort.setText("22");
-            rmtSshPort.setMinimumSize(new java.awt.Dimension(50, 25));
-            rmtSshPort.setPreferredSize(new java.awt.Dimension(50, 25));
-            rmtSshPort.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    rmtSshPortActionPerformed(evt);
-                }
-            });
-            topPanel.add(rmtSshPort);
+            jLabel22.setText("        ");
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+            topPanel.add(jLabel22, gridBagConstraints);
 
             rmtAskHttpsPortLbl.setText("Https Port");
-            topPanel.add(rmtAskHttpsPortLbl);
+            rmtAskHttpsPortLbl.setMinimumSize(new java.awt.Dimension(10, 25));
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+            gridBagConstraints.insets = new java.awt.Insets(0, 15, 0, 0);
+            topPanel.add(rmtAskHttpsPortLbl, gridBagConstraints);
 
-            rmtAskHttpsPort.setMinimumSize(new java.awt.Dimension(50, 25));
+            rmtAskHttpsPort.setText("8090");
+            rmtAskHttpsPort.setMaximumSize(new java.awt.Dimension(70, 25));
+            rmtAskHttpsPort.setMinimumSize(new java.awt.Dimension(10, 25));
             rmtAskHttpsPort.setPreferredSize(new java.awt.Dimension(50, 25));
             rmtAskHttpsPort.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     rmtAskHttpsPortActionPerformed(evt);
                 }
             });
-            topPanel.add(rmtAskHttpsPort);
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+            gridBagConstraints.insets = new java.awt.Insets(0, 7, 0, 0);
+            topPanel.add(rmtAskHttpsPort, gridBagConstraints);
+
+            rmtSshPortLbl.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+            rmtSshPortLbl.setText("SSH Port");
+            rmtSshPortLbl.setMinimumSize(new java.awt.Dimension(10, 25));
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+            gridBagConstraints.insets = new java.awt.Insets(0, 15, 0, 0);
+            topPanel.add(rmtSshPortLbl, gridBagConstraints);
+
+            rmtSshPort.setMaximumSize(new java.awt.Dimension(70, 25));
+            rmtSshPort.setMinimumSize(new java.awt.Dimension(10, 25));
+            rmtSshPort.setPreferredSize(new java.awt.Dimension(50, 25));
+            rmtSshPort.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    rmtSshPortActionPerformed(evt);
+                }
+            });
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+            gridBagConstraints.insets = new java.awt.Insets(0, 7, 0, 0);
+            topPanel.add(rmtSshPort, gridBagConstraints);
+
+            rmtPasswdLbl.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+            rmtPasswdLbl.setText("Pass");
+            rmtPasswdLbl.setMaximumSize(new java.awt.Dimension(50, 25));
+            rmtPasswdLbl.setMinimumSize(new java.awt.Dimension(10, 25));
+            rmtPasswdLbl.setPreferredSize(new java.awt.Dimension(50, 25));
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+            gridBagConstraints.insets = new java.awt.Insets(0, 15, 0, 0);
+            topPanel.add(rmtPasswdLbl, gridBagConstraints);
+
+            rmtPasswd.setMaximumSize(new java.awt.Dimension(80, 25));
+            rmtPasswd.setMinimumSize(new java.awt.Dimension(10, 25));
+            rmtPasswd.setPreferredSize(new java.awt.Dimension(80, 25));
+            rmtPasswd.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    rmtPasswdActionPerformed(evt);
+                }
+            });
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.gridx = 15;
+            gridBagConstraints.gridy = 0;
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+            gridBagConstraints.insets = new java.awt.Insets(0, 7, 0, 0);
+            topPanel.add(rmtPasswd, gridBagConstraints);
 
             jPanel10.add(topPanel, java.awt.BorderLayout.PAGE_START);
 
@@ -4053,9 +4356,9 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                         try {
                             desktop.browse( new URI( "https://github.com/stant/jfileprocessorRest" ) );
                         } catch (URISyntaxException ex) {
-                            logger.severeExc( ex );
+                            Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
                         } catch (IOException ex) {
-                            logger.severeExc( ex );
+                            Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                 });
@@ -4514,6 +4817,15 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             logger.info( "connUserInfo.getToFilesysType() =" + connUserInfo.getToFilesysType() );
             connUserInfo.setFrom( StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ) );
             logger.info( "connUserInfo before set for copy:" + connUserInfo );
+            if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_HTTPS ) )
+                {
+                connUserInfo.setFromAskHttpsPort( connUserInfo.getFromSshPort() );
+                connUserInfo.setFromUsingHttpsPort( connUserInfo.getFromSshPort() );
+                connUserInfo.setFromSshPort( "" );
+                }
+            
+            logger.info( "connUserInfo before set for copy:" + connUserInfo );
+
             if ( ! connUserInfo.isConnectedFlag() )
                 {
                 connUserInfo.setTo( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", getRmtAskHttpsPort() );
@@ -5105,8 +5417,10 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         scriptsMenu.removeAll();
         ArrayList<File> files = new ArrayList<File>(Arrays.asList( scriptsFile.listFiles() ));
         files.addAll( new ArrayList<File>(Arrays.asList( scriptsOsFile.listFiles() ) ) );
+        
         if ( files == null )   return;
          
+        logger.info( "files =" + files.toString() );
         for ( File file : files ) 
             {
             //logger.info( file.getName());
@@ -5122,6 +5436,32 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                 scriptsMenu.add( menuItem );
                 }
             }
+
+        try {
+            logger.info( "scriptsHomeGrooyFile =" + scriptsHomeGrooyFile );
+            files = new ArrayList<File>(Arrays.asList( scriptsHomeGrooyFile.listFiles() ));
+            if ( files == null )   {  logger.info( "No files in " + scriptsHomeGrooyFile );  return; }
+            logger.info( "scriptsHomeGrooyFile files =" + files.toString() );
+
+            scriptsMenu.add( new JSeparator() );
+            for ( File file : files ) 
+                {
+                logger.info( file.getName());
+                if ( file.toString().endsWith( ".groovy" ) )
+                    {
+                    JMenuItem menuItem = null;
+//                    if ( file.getName().equals( "runCommandOnSelectedFiles.groovy" ) )
+//                        menuItem = new JMenuItem( file.getName().substring( 0, file.getName().length() - 7 ) + "   (Alt-X)", null );
+//                    else
+                        menuItem = new JMenuItem( file.getName().substring( 0, file.getName().length() - 7 ), null );
+                    ScriptMenuItemListener listener = new ScriptMenuItemListener( this, file.getAbsolutePath().toString() );
+                    menuItem.addActionListener( listener );
+                    scriptsMenu.add( menuItem );
+                    }
+                }
+            }
+        catch( Exception ex )
+            {}
         
     }//GEN-LAST:event_scriptsMenuMenuSelected
 
@@ -5268,12 +5608,24 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                     {
                     if ( connUserInfo.isConnectedFlag() || rmtConnectBtn.getBackground() != saveColor )
                         {
-//                        JOptionPane.showMessageDialog( null, "Please Disconnect first", "Error", JOptionPane.ERROR_MESSAGE );
-                        rmtDisconnectBtn.doClick();
+                        JOptionPane.showMessageDialog( null, "Please Disconnect first", "Error", JOptionPane.ERROR_MESSAGE );
+//                        rmtDisconnectBtn.doClick();
                         return;
                         }
                     }
-                connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_SFTP, getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort(), getRmtAskHttpsPort() );
+                if ( ! getRmtSshPort().equals( "" ) )
+                    {
+                    connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_SFTP, getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort(), getRmtAskHttpsPort() );
+                    }
+                else
+                    {
+                    if ( getRmtAskHttpsPort().equals( "" ) )
+                        {
+                        JOptionPane.showMessageDialog( null, "Remote User, Password, Host, Https port cannot be blank", "Error", JOptionPane.ERROR_MESSAGE );
+                        return;
+                        }
+                    connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_HTTPS, getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort(), getRmtAskHttpsPort() );
+                    }
                 connUserInfo.setFrom( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "" );
                 connUserInfo.setFromFilesysType( filesysType );
 //                if ( restServerSw == null )
@@ -5318,7 +5670,10 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             }
         if ( restServerSw == null )
             {
-            connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_SFTP, getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort(), getRmtAskHttpsPort() );
+            if ( ! getRmtSshPort().equals( "" ) )
+                connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_SFTP, getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort(), getRmtAskHttpsPort() );
+            else
+                connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_HTTPS, getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort(), getRmtAskHttpsPort() );
             restServerSw = new RestServerSw( connUserInfo, this );
             }
         if ( restServerSw != null )
@@ -5377,7 +5732,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
 
     private void rmtUserActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_rmtUserActionPerformed
     {//GEN-HEADEREND:event_rmtUserActionPerformed
-        // TODO add your handling code here:
+        rmtConnectBtn.doClick();
     }//GEN-LAST:event_rmtUserActionPerformed
 
     private void openCodeWin1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openCodeWin1ActionPerformed
@@ -5402,6 +5757,32 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                 scriptsMenu1.add( menuItem );
                 }
             }
+
+        try {
+            logger.info( "scriptsHomeGrooyFile =" + scriptsHomeGrooyFile );
+            files = new ArrayList<File>(Arrays.asList( scriptsHomeGrooyFile.listFiles() ));
+            if ( files == null )   {  logger.info( "No files in " + scriptsHomeGrooyFile );  return; }
+            logger.info( "scriptsHomeGrooyFile files =" + files.toString() );
+
+            scriptsMenu1.add( new JSeparator() );
+            for ( File file : files ) 
+                {
+                logger.info( file.getName());
+                if ( file.toString().endsWith( ".groovy" ) )
+                    {
+                    JMenuItem menuItem = null;
+//                    if ( file.getName().equals( "runCommandOnSelectedFiles.groovy" ) )
+//                        menuItem = new JMenuItem( file.getName().substring( 0, file.getName().length() - 7 ) + "   (Alt-X)", null );
+//                    else
+                        menuItem = new JMenuItem( file.getName().substring( 0, file.getName().length() - 7 ), null );
+                    ScriptMenuItemListener listener = new ScriptMenuItemListener( this, file.getAbsolutePath().toString() );
+                    menuItem.addActionListener( listener );
+                    scriptsMenu1.add( menuItem );
+                    }
+                }
+            }
+        catch( Exception ex )
+        {}
 
     }//GEN-LAST:event_scriptsMenu1MenuSelected
 
@@ -5529,6 +5910,15 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                 break;
         }
     }//GEN-LAST:event_logLevelActionPerformed
+
+    private void connectionTypeMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_connectionTypeMouseClicked
+        ConnectionWin connectionWin = new ConnectionWin( connectionType, rmtHost, rmtUser, rmtPasswd, rmtAskHttpsPort, rmtSshPort );
+        showHideConnectionFields();
+    }//GEN-LAST:event_connectionTypeMouseClicked
+
+    private void connectionTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectionTypeActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_connectionTypeActionPerformed
 
     /**
      * @param args the command line arguments
@@ -5759,6 +6149,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
     private javax.swing.JPanel botPanel;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.ButtonGroup buttonGroup2;
+    private javax.swing.JTextField connectionType;
     private javax.swing.JMenuItem copyFilename;
     private javax.swing.JButton countBtn;
     private org.jdatepicker.impl.JDatePickerImpl date1;
@@ -5784,11 +6175,9 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
-    private javax.swing.JLabel jLabel17;
-    private javax.swing.JLabel jLabel18;
-    private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel20;
+    private javax.swing.JLabel jLabel21;
+    private javax.swing.JLabel jLabel22;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -5852,9 +6241,13 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
     private javax.swing.JButton rmtDisconnectBtn;
     private javax.swing.JButton rmtForceDisconnectBtn;
     private javax.swing.JTextField rmtHost;
+    private javax.swing.JLabel rmtHostLbl;
     private javax.swing.JPasswordField rmtPasswd;
+    private javax.swing.JLabel rmtPasswdLbl;
     private javax.swing.JTextField rmtSshPort;
+    private javax.swing.JLabel rmtSshPortLbl;
     private javax.swing.JTextField rmtUser;
+    private javax.swing.JLabel rmtUserLbl;
     private javax.swing.JMenuItem savePathsToFile;
     private javax.swing.JMenuItem savePathsToFile1;
     private javax.swing.JList<String> savedPathsList;

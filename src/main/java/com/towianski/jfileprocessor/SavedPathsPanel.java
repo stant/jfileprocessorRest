@@ -141,7 +141,7 @@ public class SavedPathsPanel extends javax.swing.JPanel {
             }
         if ( jFileFinderWin.getConnUserInfo().isConnectedFlag() )
             {
-            savedPathsHm.put( ans, jFileFinderWin.getStartingFolder() + "," + jFileFinderWin.getRmtUser() + "," + jFileFinderWin.getRmtPasswd() + "," + jFileFinderWin.getRmtHost() + "," + jFileFinderWin.getRmtSshPort() + "," + jFileFinderWin.getRmtAskHttpsPort() );
+            savedPathsHm.put( ans, jFileFinderWin.getStartingFolder() + "," + jFileFinderWin.getRmtUser() + "," + jFileFinderWin.getRmtPasswd() + "," + jFileFinderWin.getRmtHost() + "," + jFileFinderWin.getRmtSshPort() + "," + jFileFinderWin.getRmtAskHttpsPort() + "," + jFileFinderWin.getConnectionType() );
             }
         else
             {
@@ -228,7 +228,7 @@ public class SavedPathsPanel extends javax.swing.JPanel {
         if ( arr.length > 3 )
             {
             ArrayList<String> arrList = new ArrayList<String>(Arrays.asList(arr));
-            while ( arrList.size() < 6 )
+            while ( arrList.size() < 7 )
                 arrList.add( "" );
 
             jFileFinderWin.setStartingFolder( arrList.get( 0 ) );
@@ -237,7 +237,8 @@ public class SavedPathsPanel extends javax.swing.JPanel {
                 jFileFinderWin.getRmtPasswd().equals( arrList.get( 2 ) ) &&
                 jFileFinderWin.getRmtHost().equals( arrList.get( 3 ) ) &&
                 jFileFinderWin.getRmtSshPort().equals( arrList.get( 4 ) ) &&
-                jFileFinderWin.getRmtAskHttpsPort().equals( arrList.get( 5 ) ) 
+                jFileFinderWin.getRmtAskHttpsPort().equals( arrList.get( 5 ) ) &&
+                jFileFinderWin.getConnectionType().equals( arrList.get( 6 ) )
                     )
                 {
                 jFileFinderWin.callSearchBtnActionPerformed( null );
@@ -250,9 +251,11 @@ public class SavedPathsPanel extends javax.swing.JPanel {
                 jFileFinderWin.setRmtHost( arrList.get( 3 ) );
                 jFileFinderWin.setRmtSshPort( arrList.get( 4 ) );
                 jFileFinderWin.setRmtAskHttpsPort( arrList.get( 5 ) );
+                jFileFinderWin.setConnectionType( arrList.get( 6 ) );
             
 //                jFileFinderWin.clickConnectAndSearch( null );
                 }
+            jFileFinderWin.showHideConnectionFields();
             }
         else
             {

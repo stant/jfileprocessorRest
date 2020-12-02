@@ -573,6 +573,13 @@ public void exec( String user, String password, String rhost, ConnUserInfo connU
     logger.info( "try exec   user =" + user + "=   to password =" + password + "=" );
     logger.info( "try exec   rhost =" + rhost + "=" );
 
+        Pattern startedOnPortMsg = Pattern.compile( ".*Tomcat started on port\\(s\\): (\\d+) \\(https\\).*" );   // the pattern to search for
+    logger.info( "exec at 9b" );
+    Pattern portInUseMsg = Pattern.compile( ".*Address already in use.*" );   // the pattern to search for
+    logger.info( "exec at 9c" );
+    Pattern connectionRefusedUseMsg = Pattern.compile( ".*Connection refused: connect.*" );
+    logger.info( "exec at 9d" );
+    
     if ( user == null )
         {
         rhost=JOptionPane.showInputDialog("Enter username@hostname",
@@ -585,24 +592,33 @@ public void exec( String user, String password, String rhost, ConnUserInfo connU
         }
       
     session=jsch.getSession(user, rhost, connUserInfo.getToSshPortInt() );
-    logger.info( "exec at 2" );
+    logger.info( "exec at 1" );
 
     session.setPassword( password );
 
     Properties config = new Properties();
     config.put("StrictHostKeyChecking","no");
-    logger.info( "exec at 3" );
+    logger.info( "exec at 2" );
     session.setConfig(config);
+    logger.info( "exec at 3" );
 
       // username and password will be given via UserInfo interface.
 //      UserInfo ui=new MyUserInfo();
 //    logger.info( "at 3" );
 //      session.setUserInfo(ui);
 
+    session.setTimeout( 15000 );
+    //session.setServerAliveInterval( 15000 );
+   // session.setSocketFactory( new SocketFactoryWithTimeout() );
     logger.info( "exec at 4" );
       session.connect();
     logger.info( "exec at 5" );
 
+        if ( ! session.isConnected() )
+        {
+            logger.info( "jsch session did not connect !" );
+            throw new JSchException();
+        }
       
       String xhost="localhost";
       int xport=10;
@@ -619,7 +635,8 @@ public void exec( String user, String password, String rhost, ConnUserInfo connU
 //                                                 runCmd );
 
       String command = runCmd;
-      Channel channel=session.openChannel("exec");
+      //Channel channel=session.openChannel("exec");
+      ChannelExec channel = (ChannelExec)session.openChannel("exec");
       command += "\n";
     logger.info( "exec at 6" );
     
@@ -645,24 +662,22 @@ public void exec( String user, String password, String rhost, ConnUserInfo connU
     InputStream in=channel.getInputStream();
     logger.info( "exec at 8" );
 
-    channel.connect();
+    channel.connect( 15000 );
     logger.info( "exec at 9" );
 
-    Pattern startedOnPortMsg = Pattern.compile( ".*Tomcat started on port\\(s\\): (\\d+) \\(https\\).*" );   // the pattern to search for
-    Pattern portInUseMsg = Pattern.compile( ".*Address already in use.*" );   // the pattern to search for
-    Pattern connectionRefusedUseMsg = Pattern.compile( ".*Connection refused: connect.*" );
-    
     byte[] tmp=new byte[1024];
-    while ( connUserInfo.getState() != ConnUserInfo.STATE_CANCEL )  // this does not seem to ever find CANCEL value !! ?
+//    logger.info( "exec at channel = " + channel );
+    logger.info( "exec at before while loop" );
+    while ( connUserInfo.getState() != ConnUserInfo.STATE_CANCEL && channel != null && ! channel.isEOF() )  // this does not seem to ever find CANCEL value !! ?
         {
-        //logger.info( "connUserInfo.getToUsingHttpsPort() = " + connUserInfo.getToUsingHttpsPort() );
-        //logger.info( "connUserInfo.getState() = " + connUserInfo.getState() );
+        logger.finest("connUserInfo.getToUsingHttpsPort() = " + connUserInfo.getToUsingHttpsPort() );
+        logger.finest( "connUserInfo.getState() = " + connUserInfo.getState() );
         while(in.available()>0)
             {
             int i=in.read(tmp, 0, 1024);
             if(i<0)break;
             String rin = new String( tmp, 0, i );
-            //System.out.print( "rmt stream ->" + rin );
+            logger.finest( "rmt stream ->" + rin );
             Matcher m1 = startedOnPortMsg.matcher( rin );
             Matcher m2 = portInUseMsg.matcher( rin );
             Matcher m3 = connectionRefusedUseMsg.matcher( rin );
@@ -673,8 +688,8 @@ public void exec( String user, String password, String rhost, ConnUserInfo connU
                 // we're only looking for one group, so get it
                 connUserInfo.setToUsingHttpsPort( m1.group(1) );
                 // print the group out for verification
-                logger.info( "got portUsed = " + connUserInfo.getToUsingHttpsPort() );
-                logger.info( "got connUserInfo.getToUri() = " + connUserInfo.getToUri() );
+                logger.finest( "got portUsed = " + connUserInfo.getToUsingHttpsPort() );
+                logger.finest( "got connUserInfo.getToUri() = " + connUserInfo.getToUri() );
                 }
             else if (m2.find())
                 {
@@ -703,14 +718,205 @@ public void exec( String user, String password, String rhost, ConnUserInfo connU
             }
       } // while
     
-    logger.info( "exec at 10" );
-      channel.disconnect();
-      session.disconnect();
-    logger.info( "exec at 11" );
+        logger.info( "exec at 10" );
+        channel.disconnect();
     }
+    catch( JSchException je )
+        {
+        logger.info( "caught JSchException" );
+        }
     catch(Exception e){
-      logger.severeExc( e);
+        logger.info( "caught Exception" );
+        connUserInfo.setState( ConnUserInfo.STATE_CANCEL );
+        }
+    finally
+        {
+        try {
+            session.disconnect();
+            }
+            catch( Exception ex )
+            {
+            logger.info( "session disconnect error" );
+            }
+        logger.info( "exec at 11" );
+        }
+    logger.info( "exec() Done" );
+  }
+
+public void execWithPemLogin( String user, String password, String rhost, ConnUserInfo connUserInfo, String runCmd )
+    {
+    try{
+    logger.info( "try exec   user =" + user + "=   to password =" + password + "=" );
+    logger.info( "try exec   rhost =" + rhost + "=" );
+
+        Pattern startedOnPortMsg = Pattern.compile( ".*Tomcat started on port\\(s\\): (\\d+) \\(https\\).*" );   // the pattern to search for
+    logger.info( "exec at 9b" );
+    Pattern portInUseMsg = Pattern.compile( ".*Address already in use.*" );   // the pattern to search for
+    logger.info( "exec at 9c" );
+    Pattern connectionRefusedUseMsg = Pattern.compile( ".*Connection refused: connect.*" );
+    logger.info( "exec at 9d" );
+    
+    if ( user == null )
+        {
+        rhost=JOptionPane.showInputDialog("Enter username@hostname",
+                                         System.getProperty("user.name")+
+                                         "@localhost"); 
+
+        // username and password will be given via UserInfo interface.
+//        UserInfo ui=new MyUserInfo();
+//        session.setUserInfo(ui);
+        }
+      
+    jsch.addIdentity("/home/stan/linux1.pem");
+    session=jsch.getSession(user, rhost, connUserInfo.getToSshPortInt() );
+    logger.info( "exec at 1" );
+
+////    session.setPassword( password );
+
+    Properties config = new Properties();
+    config.put("StrictHostKeyChecking","no");
+    logger.info( "exec at 2" );
+    session.setConfig(config);
+    logger.info( "exec at 3" );
+
+      // username and password will be given via UserInfo interface.
+//      UserInfo ui=new MyUserInfo();
+//    logger.info( "at 3" );
+//      session.setUserInfo(ui);
+
+    session.setTimeout( 15000 );
+    //session.setServerAliveInterval( 15000 );
+   // session.setSocketFactory( new SocketFactoryWithTimeout() );
+    logger.info( "exec at 4" );
+      session.connect();
+    logger.info( "exec at 5" );
+
+        if ( ! session.isConnected() )
+        {
+            logger.info( "jsch session did not connect !" );
+            throw new JSchException();
+        }
+      
+      String xhost="localhost";
+      int xport=10;
+      //String display=JOptionPane.showInputDialog("Enter display name", 
+      //                                           xhost+":"+xport);
+      //xhost=display.substring(0, display.indexOf(':'));
+      //xport=Integer.parseInt(display.substring(display.indexOf(':')+1));
+      //session.setX11Host(xhost);
+      //session.setX11Port(xport+6000);
+      
+
+//      String command=JOptionPane.showInputDialog("Enter command", 
+////                                                 "/opt/jFileProcessor/server.sh");
+//                                                 runCmd );
+
+      String command = runCmd;
+      //Channel channel=session.openChannel("exec");
+      ChannelExec channel = (ChannelExec)session.openChannel("exec");
+      command += "\n";
+    logger.info( "exec at 6" );
+    
+    //channel.setPty(true);
+
+      ((ChannelExec)channel).setCommand(command);
+    logger.info( "exec at 7" );
+
+      // X Forwarding
+       //channel.setXForwarding(true);
+
+//       channel.sendRequests();
+       
+      channel.setInputStream(System.in);
+//      channel.setInputStream(null);
+
+      //channel.setOutputStream(System.out);
+
+      //FileOutputStream fos=new FileOutputStream("/tmp/stderr");
+      //((ChannelExec)channel).setErrStream(fos);
+      ((ChannelExec)channel).setErrStream(System.err);
+
+    InputStream in=channel.getInputStream();
+    logger.info( "exec at 8" );
+
+    channel.connect( 15000 );
+    logger.info( "exec at 9" );
+
+    byte[] tmp=new byte[1024];
+//    logger.info( "exec at channel = " + channel );
+    logger.info( "exec at before while loop" );
+    while ( connUserInfo.getState() != ConnUserInfo.STATE_CANCEL && channel != null && ! channel.isEOF() )  // this does not seem to ever find CANCEL value !! ?
+        {
+        logger.finest("connUserInfo.getToUsingHttpsPort() = " + connUserInfo.getToUsingHttpsPort() );
+        logger.finest( "connUserInfo.getState() = " + connUserInfo.getState() );
+        while(in.available()>0)
+            {
+            int i=in.read(tmp, 0, 1024);
+            if(i<0)break;
+            String rin = new String( tmp, 0, i );
+            logger.finest( "rmt stream ->" + rin );
+            Matcher m1 = startedOnPortMsg.matcher( rin );
+            Matcher m2 = portInUseMsg.matcher( rin );
+            Matcher m3 = connectionRefusedUseMsg.matcher( rin );
+
+            // if we find a match, get the group 
+            if (m1.find())
+                {
+                // we're only looking for one group, so get it
+                connUserInfo.setToUsingHttpsPort( m1.group(1) );
+                // print the group out for verification
+                logger.finest( "got portUsed = " + connUserInfo.getToUsingHttpsPort() );
+                logger.finest( "got connUserInfo.getToUri() = " + connUserInfo.getToUri() );
+                }
+            else if (m2.find())
+                {
+                logger.info( "Port Already In Use !" );
+                return;
+                }
+//            else if (m3.find())
+//                {
+//                logger.info( "Connection refused: connect !" );
+//                return;
+//                }
+            }
+        //System.out.print( "DONE rmt stream." );
+        if ( channel.isClosed() )
+            {
+            if ( in.available() > 0 ) continue; 
+            logger.info( "exit-status: "+channel.getExitStatus());
+            break;
+            }
+        try{Thread.sleep(1000);} 
+        catch(Exception ee)
+            { 
+            logger.info( "JschSftpUtils() sleep exception" );
+            connUserInfo.setState( ConnUserInfo.STATE_CANCEL );
+            break;
+            }
+      } // while
+    
+        logger.info( "exec at 10" );
+        channel.disconnect();
     }
+    catch( JSchException je )
+        {
+        logger.info( "caught JSchException" );
+        }
+    catch(Exception e){
+        logger.info( "caught Exception" );
+        connUserInfo.setState( ConnUserInfo.STATE_CANCEL );
+        }
+    finally
+        {
+        try {
+            session.disconnect();
+            }
+            catch( Exception ex )
+            {
+            logger.info( "session disconnect error" );
+            }
+        logger.info( "exec at 11" );
+        }
     logger.info( "exec() Done" );
   }
 

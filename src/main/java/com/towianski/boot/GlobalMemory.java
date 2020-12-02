@@ -5,6 +5,7 @@
  */
 package com.towianski.boot;
 
+import com.towianski.security.SecUtils;
 import com.towianski.utils.MyLogger;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -19,7 +20,9 @@ public class GlobalMemory {
     ReentrantLock searchLock = new ReentrantLock();
 
     public GlobalMemory()  {       logger.info( "GlobalMemory() constructor 1" ); }
-        
+
+    public static SecUtils secUtils = null;
+    
     public boolean trySearchLock()
         {
         if ( searchLock.tryLock() )
@@ -71,5 +74,13 @@ public class GlobalMemory {
         {
         logger.info( "GlobalMemoryImpl.print() this = " + this );
         }    
+
+    public static SecUtils getSecUtils() {
+        return secUtils;
+    }
+
+    public static void setSecUtils(SecUtils secUtilsArg) {
+        secUtils = secUtilsArg;
+    }
     
 }

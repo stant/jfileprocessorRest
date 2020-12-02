@@ -14,8 +14,6 @@ import java.nio.file.WatchService;
 import java.time.Instant;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -70,7 +68,7 @@ public class WatchDirEventToTimeQueue implements Runnable
         try {
             waitSemaphore.acquire();
         } catch (InterruptedException ex) {
-            Logger.getLogger(WatchDirEventToTimeQueue.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         }
         
         logger.info( "WatchDirEventToTimeQueue() run() - now start" );

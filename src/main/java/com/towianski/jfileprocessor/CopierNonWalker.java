@@ -9,11 +9,15 @@ import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
+import com.towianski.boot.GlobalMemory;
+import com.towianski.httpsutils.HttpsUtils;
+import com.towianski.models.CommonFileAttributes;
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.Constants;
 import com.towianski.sshutils.JschSftpUtils;
 import com.towianski.sshutils.Sftp;
 import com.towianski.utils.DesktopUtils;
+import com.towianski.utils.FileUtils;
 import com.towianski.utils.MyLogger;
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +31,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Vector;
 import javax.swing.JOptionPane;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 /**
  *
@@ -65,6 +71,8 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
     com.jcraft.jsch.ChannelSftp chanSftpSrc = null;
     JschSftpUtils jschSftpUtils = new JschSftpUtils();
     Session jschSession = null;
+    HttpsUtils httpsUtilsSrc = null;
+    HttpsUtils httpsUtilsTar = null;
     Path targetPath = null;
     String targetPathStr = null;
 
@@ -111,6 +119,23 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
 //        logger.clearLog();
     }
 
+    public CopierNonWalker( ConnUserInfo connUserInfo, HttpsUtils httpsUtilsTar, HttpsUtils httpsUtilsSrc, Boolean isDoingCutFlag, ArrayList<CopyOption> copyOptions, CopyFrameSwingWorker swingWorker )
+    {
+        this.connUserInfo = connUserInfo;
+        this.httpsUtilsTar = httpsUtilsTar;
+        this.httpsUtilsSrc = httpsUtilsSrc;
+        this.isDoingCutFlag = isDoingCutFlag;
+        this.copyOptions = copyOptions;
+        this.swingWorker = swingWorker;
+        logger.info( "Copier Https this.startingPath (startingPath) =" + this.startingPath + "   this.toPath =" + this.toPath + "=" );
+        logger.info( "isDoingCutFlag =" + isDoingCutFlag );
+//        httpsUtilsSrc = new HttpsUtils( connUserInfo );
+//        httpsUtilsTar = new HttpsUtils( connUserInfo );
+        cancelFlag = false;
+        
+        logger.info( "Copier logger.getLevel() =" + logger.getLevel() + "=" );
+    }
+
     public void setPaths( Path fromPath, String startingPath, String toPath, ConnUserInfo connUserInfo ) {
         String ans = "";
         Path fromParent = null;
@@ -155,8 +180,10 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
             targetPathStr = targetPath.toString();
             if ( connUserInfo.getFromFilesysType() != connUserInfo.getToFilesysType() )
                 {
-                if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_FILE ) &&
-                     connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_SFTP )  )
+                if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_FILE ) 
+                        &&
+                     ( connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_SFTP )  ||
+                       connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_HTTPS )  )   )
                     {
                     if ( connUserInfo.getToFilesysType() == Constants.FILESYSTEM_POSIX )
                         {
@@ -169,7 +196,9 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
                         logger.info( "dos targetPathStr =" + targetPathStr + "=" );
                         }
                     }
-                else if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_SFTP ) &&
+                else if ( ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_SFTP ) ||
+                            connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_HTTPS )  )
+                        &&
                           connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_FILE )  )
                     {
                         // I would want to change sourceStr and since I am looking at target here it does not need to be changed.
@@ -185,8 +214,11 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
     //                    logger.info( "dos targetPathStr =" + targetPathStr + "=" );
     //                    }
                     }
-                else if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_SFTP ) &&
-                     connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_SFTP )  )
+                else if ( ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_SFTP ) &&
+                            connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_SFTP ) ) 
+                                            ||
+                        ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_HTTPS ) &&
+                          connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_HTTPS )  )  )
                     {
                     if ( connUserInfo.getToFilesysType() == Constants.FILESYSTEM_POSIX )
                         {
@@ -267,17 +299,37 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
         if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_FILE ) &&
              connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_SFTP )  )
             {
+            connUserInfo.setWhichUsing( "TO" );
             copyRecursiveLocalToSftp( sourceFolder, targetPathStr );
             }
         else if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_SFTP ) &&
                   connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_FILE )  )
             {
+            connUserInfo.setWhichUsing( "FROM" );
             copyRecursiveSftpToLocal( sourceFolder, targetPathStr );
             }
         else if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_SFTP ) &&
                   connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_SFTP )  )
             {
             copyRecursiveSftpToLocal( sourceFolder, targetPathStr );
+//            copyRecursiveSftpToSftp( sourceFolder, targetPathStr );
+            }
+        else if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_FILE ) &&
+                  connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_HTTPS )  )
+            {
+            connUserInfo.setWhichUsing( "TO" );
+            copyRecursiveLocalToHttps( sourceFolder, targetPathStr );
+            }
+        else if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_HTTPS ) &&
+                  connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_FILE )  )
+            {
+            connUserInfo.setWhichUsing( "FROM" );
+            copyRecursiveHttpsToLocal( sourceFolder, targetPathStr );
+            }
+        else if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_HTTPS ) &&
+                  connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_HTTPS )  )
+            {
+            copyRecursiveHttpsToLocal( sourceFolder, targetPathStr );
 //            copyRecursiveSftpToSftp( sourceFolder, targetPathStr );
             }
         else
@@ -459,6 +511,189 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
             }
     }
     
+    public void copyRecursiveLocalToHttps( String sourceFolderStr, String destinationFolderStr ) throws IOException
+    {
+        //Check if sourceFolder is a directory or file
+        //If sourceFolder is file; then copy the file directly to new location
+        logger.info( "copyRecursiveLocalToHttps sourceFolderStr =" + sourceFolderStr + "=   to destinationFolderStr =" + destinationFolderStr + "=" );
+        numTested++;
+//        String sourceFolderStr = sourceFolder.toString();
+//        String destinationFolderStr = destinationFolder.toString();
+        File sourceFolder = new File( sourceFolderStr );
+        File destinationFolder = new File( destinationFolderStr );
+        
+//        if ( connUserInfo.getFromFilesysType() != connUserInfo.getToFilesysType() )
+//            {
+//            if ( connUserInfo.getToFilesysType() == Constants.FILESYSTEM_DOS )
+//                {
+//                destinationFolderStr = destinationFolderStr.replace( "/", "\\" );
+//                }
+//            else
+//                {
+//                destinationFolderStr = destinationFolderStr.replace( "\\", "/" );
+//                }
+//            }
+        destinationFolderStr = destinationFolderStr.replace( "\\", "/" );
+        logger.info( "copyRecursiveLocalToHttps /or\\ sourceFolderStr =" + sourceFolderStr + "=   to destinationFolderStr =" + destinationFolderStr + "=" );
+        
+        if ( sourceFolder.isDirectory() )
+            {
+            logger.info( "Is Directory" );
+            numFolderTests ++;
+            
+            // check if I have rights to this Directory
+            Path newpath = Paths.get( destinationFolderStr );
+            if ( ! GlobalMemory.getSecUtils().hasPermission( newpath.getParent(), "w" ) )
+                {
+                logger.info( "Do not have Write permission on folder =" + newpath.getParent() );
+                processStatus = "Error";
+                message = "Error: you do not have write permission on \"" + newpath.getParent() + "\" to use: " + destinationFolderStr;
+                errorList.add( destinationFolderStr + " -> no rights to remote Directory - ERROR (l2h)" );
+                return;
+                }
+            
+            //Verify if destinationFolder is already present; If not then create it
+//            if (!destinationFolder.exists())
+//                {
+//                //                destinationFolder.mkdir();
+////                chanSftp.mkdir( destinationFolder.toString() );
+//                logger.info( "Directory created :: " + destinationFolder);
+//                }
+            CommonFileAttributes sourceAttrs = null;  //Files.readAttributes( Paths.get( locFile ), BasicFileAttributes.class );
+            boolean doMkdir = false;
+            try {
+                //chanSftp.stat( destinationFolderStr );
+                sourceAttrs = httpsUtilsTar.stat( destinationFolderStr );
+                logger.info( "remote dir exists" );
+                } 
+            catch (Exception exc)
+                {
+                logger.info( "Exception" );
+                doMkdir = true;
+                exc.printStackTrace();
+                }
+            if ( doMkdir )
+                {
+                try
+                    {
+                    logger.info( "mkdir =" + destinationFolderStr + "=" );
+                    //chanSftp.mkdir( destinationFolderStr );
+                    httpsUtilsTar.mkDir( destinationFolderStr );
+                    logger.info( "Directory created :: " + destinationFolderStr );
+                    } 
+                catch (Exception ex)
+                    {
+                    logger.severeExc( ex );
+                    processStatus = "Error";
+                    message = ex + ": " + destinationFolderStr;
+                    errorList.add( destinationFolderStr + " -> create remote Directory - ERROR " + ex );
+                    return;
+                    }
+                }
+             
+            //Get all files from source directory
+            String files[] = sourceFolder.list();
+             
+            //Iterate over all files and copy them to destinationFolder one by one
+            for (String file : files)
+                {
+                File srcFile = new File(sourceFolder, file);
+                File destFile = new File(destinationFolder, file);
+                 
+                //Recursive function call
+                copyRecursiveLocalToHttps( srcFile.toString(), destFile.toString() );
+                }
+            Path dir = Paths.get( sourceFolderStr );  // delete folder if doing cut
+            try {
+                if ( isDoingCutFlag )
+                    {
+                    Files.delete( dir );
+                    logger.info( "would delete local folder =" + dir );
+                    }
+                }
+            catch (Exception ex2) 
+                {
+                logger.severeExc( ex2 );
+                errorList.add( dir + " -> " + "ERROR " + ex2 );
+                //logger.info( "CAUGHT ERROR  " + "my error msg" + ex2.getClass().getSimpleName() + ": " + dir );
+                //throw new IOException( ex2 + ": " + dir );
+                }
+            numFolderMatches++;
+            }
+        else
+            {
+            logger.info( "Is File" );
+            numFileTests ++;
+            boolean copyErrorFlag = false;
+            //Copy the file content from one place to another
+//            Files.copy(sourceFolder.toPath(), destinationFolder.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            try {
+                //    sftpChannel.put("C:/source/local/path/file.zip", "/target/remote/path/file.zip");
+                logger.info( "HttpsPut locFile =" + sourceFolder + "=   to rmtFile =" + destinationFolderStr + "=" );
+                
+//                logger.info( "copyOptions contains? StandardCopyOption.REPLACE_EXISTING =" + copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) + "=" );
+                    
+                if ( httpsUtilsTar.exists( destinationFolderStr ) )
+                    {
+                    if ( copyOptions.contains( StandardCopyOption.REPLACE_EXISTING ) )  // Fixxx when on server need to pass this flag and might not be as it overwrites !
+                        {
+//                        chanSftp.chmod( 511, destinationFolderStr );   // 511 is decimal for 777 in Octal
+//					overwrite option could be looked at:  channelSftp.put(new FileInputStream(f1), f1.getName(), ChannelSftp.OVERWRITE);
+                        logger.info( "rm " + destinationFolderStr );
+                        httpsUtilsTar.rm( destinationFolderStr );
+                        logger.info( "put " + sourceFolderStr );
+                        //chanSftp.put( sourceFolderStr, destinationFolderStr );
+                        httpsUtilsTar.putFile( sourceFolderStr, destinationFolderStr );
+                        logger.info( "File replaced :: " + destinationFolderStr );
+                        numFileMatches++;
+                        }
+                    else
+                        {
+                        logger.info( "File Not replaced/copied :: " + destinationFolderStr );
+                        copyErrorFlag = true;
+                        message = "File Not replaced/copied: " + destinationFolderStr;
+                        errorList.add( sourceFolderStr + " -> copy to destinationFolderStr =" + destinationFolderStr + "=  Will not replace existing file." );
+                        }
+                    }
+                else
+                    {
+                    logger.info( "put new " + sourceFolderStr );
+                    //chanSftp.put( sourceFolderStr, destinationFolderStr );
+                    httpsUtilsTar.putFile( sourceFolderStr, destinationFolderStr );
+                    logger.info( "File copied :: " + destinationFolderStr );
+                    numFileMatches++;
+                    }
+//                jschSftpUtils.copyTo()  does not work with spaces in names off-hand.
+//                jschSftpUtils.copyTo( jschSession, sourceFolderStr, destinationFolderStr );
+                logger.info( "at 8" );
+    
+                if ( isDoingCutFlag && ! copyErrorFlag )
+                    {
+                    Files.delete( Paths.get( sourceFolderStr ) );
+//                    logger.info( "would delete local file =" + sourceFolderStr );
+                    }
+                }
+//            catch (SftpException sex) 
+//                {
+//                logger.severeExc( sex );
+//                processStatus = "Error";
+//                message = sex + ": " + destinationFolderStr;
+//                errorList.add( sourceFolderStr + " -> copy to remote File =" + destinationFolderStr + "=  ERROR " + sex );
+//                }
+            catch (Exception ex) 
+                {
+                logger.severeExc( ex );
+                processStatus = "Error";
+                message = ex + ": " + destinationFolderStr;
+                errorList.add( sourceFolderStr + " -> copy to remote File =" + destinationFolderStr + "=  ERROR " + ex.getLocalizedMessage() );
+                }
+            }
+        if ( ! connUserInfo.isRunCopyOnRemote() )
+            {
+            swingWorker.publish2( numTested );
+            }
+    }
+    
     public void copyRecursiveSftpToLocal( String sourceFolderStr, String destinationFolderStr ) throws IOException
         {
         //Check if sourceFolder is a directory or file
@@ -629,7 +864,189 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
             {
             swingWorker.publish2( numTested );
             }
-    }
+        }
+    
+    public void copyRecursiveHttpsToLocal( String sourceFolderStr, String destinationFolderStr ) throws IOException
+        {
+        //Check if sourceFolder is a directory or file
+        //If sourceFolder is file; then copy the file directly to new location
+        numTested++;
+        
+        logger.info( "copyRecursiveHttpsToLocal() srcFile =" + sourceFolderStr + "=   destFile =" + destinationFolderStr + "=" );
+        logger.info( "connUserInfo =" + connUserInfo + "=" );
+
+//        String sourceFolderStr = sourceFolder.toString();
+//        String destinationFolderStr = destinationFolder.toString();
+        File sourceFolder = new File( sourceFolderStr );
+        File destinationFolder = new File( destinationFolderStr );
+        
+        if ( sourceFolderStr.endsWith( "." ) || sourceFolderStr.endsWith( ".." ) )
+            {
+            return;
+            }
+        
+//        if ( connUserInfo.getFromFilesysType() != connUserInfo.getToFilesysType() )
+//            {
+//            if ( connUserInfo.getFromFilesysType() == Constants.FILESYSTEM_DOS )
+//                {
+//                sourceFolderStr = sourceFolderStr.replace( "/", "\\" );
+//                }
+//            else
+//                {
+//                sourceFolderStr = sourceFolderStr.replace( "\\", "/" );
+//                }
+//            }
+        sourceFolderStr = sourceFolderStr.replace( "\\", "/" );
+        logger.info( "copyRecursiveHttpsToLocal() /or\\ srcFile =" + sourceFolderStr + "=   destFile =" + destinationFolderStr + "=" );
+        
+        //SftpATTRS sourceAttrs = null;
+        CommonFileAttributes sourceAttrs = null;  //Files.readAttributes( Paths.get( locFile ), BasicFileAttributes.class );
+        try {
+            sourceAttrs = httpsUtilsSrc.stat( sourceFolderStr );
+            logger.info( "got sourceAttrs =" + sourceAttrs.toString() + "=" );
+            } 
+        catch (Exception ex)
+            {
+            //ex.printStackTrace();
+            //logger.severeExc( ex );
+            logger.info( logger.getExceptionAsString( ex ) );
+            }
+
+        if ( sourceAttrs != null && sourceAttrs.isDirectory())
+            {
+            logger.info( "copyRecursiveHttpsToLocal() - Is Directory" );
+            numFolderTests ++;
+            try {
+                //Verify if destinationFolder is already present; If not then create it
+                if ( ! destinationFolder.exists() )
+                    {
+                    destinationFolder.mkdir();
+                    logger.info( "Directory created :: " + destinationFolder );
+                    }
+
+                //Get all files from source directory
+                //Vector vecfiles;
+                //ArrayList<ChannelSftp.LsEntry> files = new ArrayList<ChannelSftp.LsEntry>();
+                //vecfiles = chanSftp.ls( sourceFolderStr );
+                logger.info( "get list of files in Directory :: " + sourceFolderStr );
+                ArrayList<String> pathsList = httpsUtilsSrc.ls( sourceFolderStr );
+//                for ( Object obj : vecfiles )
+//                    {
+//                    if (obj instanceof ChannelSftp.LsEntry) {
+//                        files.add( (ChannelSftp.LsEntry) obj );
+//                        }
+//                    }
+             
+                //Iterate over all files and copy them to destinationFolder one by one
+                for ( String apath : pathsList )
+                    {
+                    File srcFile = new File( sourceFolder, FileUtils.getFilenameFromPath( apath ) );
+                    File destFile = new File( destinationFolder, FileUtils.getFilenameFromPath( apath ) );
+                    logger.info( "copyRecursiveHttpsToLocal srcFile =" + srcFile + "=   destFile =" + destFile + "=" );
+
+                    //Recursive function call
+                    copyRecursiveHttpsToLocal( srcFile.toString(), destFile.toString() );
+                    }
+                }
+            catch (Exception ex) 
+                {
+                errorList.add( sourceFolderStr + " -> list Directory entries to copy - ERROR " + ex );
+                ex.printStackTrace();
+                logger.info( logger.getExceptionAsString( ex ) );
+                }
+            
+            if ( isDoingCutFlag )
+                {
+                try
+                    {
+//                    chanSftp.rmdir( sourceFolderStr );
+                    httpsUtilsSrc.rmDir( sourceFolderStr );
+                    logger.info( "would delete https folder =" + sourceFolderStr );
+                    //numFoldersDeleted++;
+                    } 
+                catch (Exception ex)
+                    {
+                    logger.severeExc( ex );
+                    errorList.add( sourceFolderStr + " -> remove Directory - ERROR " + ex );
+                    }
+                }
+            numFolderMatches++;
+            }
+        else
+            {
+            logger.info( "copyRecursiveHttpsToLocal() - Is File" );
+            numFileTests ++;
+            boolean copyErrorFlag = false;
+            //Copy the file content from one place to another
+//            Files.copy(sourceFolder.toPath(), destinationFolder.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            try {
+                //    sftpChannel.put("C:/source/local/path/file.zip", "/target/remote/path/file.zip");
+                logger.info( "httpsUtilsSrc.getFileViaRestTemplate locFile =" + sourceFolder + "=   to rmtFile =" + destinationFolderStr + "=" );
+                if ( Files.exists( Paths.get( destinationFolderStr ) ) )
+                    {
+                    if ( copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) )
+                        {
+                        File dfile = new File( destinationFolderStr );
+                        dfile.setWritable( true );
+                        if ( connUserInfo.getToFilesysType() == Constants.FILESYSTEM_DOS )
+                            {
+                            Files.setAttribute( Paths.get( destinationFolderStr ), "dos:readonly", false );
+                            }        
+                        //chanSftp.get( sourceFolderStr, destinationFolderStr );
+                        httpsUtilsSrc.getFileViaRestTemplate( sourceFolderStr, destinationFolderStr );
+                        numFileMatches++;
+                        logger.info( "File replaced :: " + destinationFolderStr );
+                        }
+                    else
+                        {
+                        logger.info( "File Not replaced/copied :: " + destinationFolderStr );
+                        copyErrorFlag = true;
+                        message = "File Not replaced/copied: " + destinationFolderStr;
+                        errorList.add( sourceFolderStr + " -> copy to destinationFolderStr =" + destinationFolderStr + "=  Will not replace existing file." );
+                        }
+                    }
+                else
+                    {
+//                    sourceFolderStr = sourceFolderStr.substring(0, 1).equals( "/" ) ? sourceFolderStr : "/" + sourceFolderStr;
+                    logger.info( "copyRecursiveHttpsToLocal() httpsUtilsSrc.getFileViaRestTemplate srcFile =" + sourceFolderStr + "=   destFile =" + destinationFolderStr + "=" );
+                    //chanSftp.get( sourceFolderStr, destinationFolderStr );
+                    httpsUtilsSrc.getFileViaRestTemplate( sourceFolderStr, destinationFolderStr );
+                    numFileMatches++;
+                    logger.info( "File copied :: " + destinationFolderStr );
+                    }
+//                jschSftpUtils.copyTo()  does not work with spaces in names off-hand.
+//                jschSftpUtils.copyTo( jschSession, sourceFolderStr, destinationFolderStr );
+                logger.info( "at 8" );
+    
+                if ( isDoingCutFlag && ! copyErrorFlag )
+                    {
+//                    Files.delete( Paths.get( sourceFolderStr ) );
+                    //chanSftp.rm( sourceFolderStr );
+                    httpsUtilsSrc.rm( sourceFolderStr );
+                    logger.info( "would delete file =" + sourceFolderStr );
+                    }
+                }
+//            catch (SftpException sex) 
+//                {
+//                sex.printStackTrace();            
+//                logger.severeExc( sex );
+//                message = "sourceFolderStr =" + sourceFolderStr + "=    destinationFolderStr =" + destinationFolderStr + "=" + ": "+ sex;
+//                errorList.add( sourceFolderStr + " -> copy to destinationFolderStr =" + destinationFolderStr + "=  ERROR " + sex );
+//                }
+            catch (Exception ex) 
+                {
+                ex.printStackTrace();            
+                logger.severeExc( ex );
+                logger.info( "Error for sourceFolderStr =" + sourceFolderStr + "=    destinationFolderStr =" + destinationFolderStr + "=" );
+                message = "sourceFolderStr =" + sourceFolderStr + "=    destinationFolderStr =" + destinationFolderStr + "=" + ": "+ ex;
+                errorList.add( sourceFolderStr + " -> copy to destinationFolderStr =" + destinationFolderStr + "=  ERROR " + ex );
+                }
+            }
+        if ( ! connUserInfo.isRunCopyOnRemote() )
+            {
+            swingWorker.publish2( numTested );
+            }
+        }
     
     public void copyRecursiveSftpToSftp( String sourceFolderStr, String destinationFolderStr ) throws IOException
         {

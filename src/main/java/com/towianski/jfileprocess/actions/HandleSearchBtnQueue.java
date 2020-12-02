@@ -13,8 +13,6 @@ import com.towianski.utils.MyLogger;
 import java.time.Instant;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
 
 /**
@@ -49,7 +47,7 @@ public class HandleSearchBtnQueue implements Runnable
         catch (Exception ex)
             {
             logger.info("HandleSearchBtnQueue set cancelFlag caught error !");
-            Logger.getLogger(HandleSearchBtnQueue.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
             }
         logger.info("HandleSearchBtnQueue exit cancelSearch()");
         }
@@ -61,7 +59,7 @@ public class HandleSearchBtnQueue implements Runnable
             logger.info("HandleSearchBtnQueue searchBtnQueue.size() = " + searchBtnQueue.size() );
             }
         catch (InterruptedException ex) {
-            Logger.getLogger(WatchStartingFolder.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
             }
         }
     
@@ -126,7 +124,7 @@ public class HandleSearchBtnQueue implements Runnable
                 }
             catch (Exception ex) {
                 ex.printStackTrace();
-                Logger.getLogger(HandleSearchBtnQueue.class.getName()).log(Level.SEVERE, null, ex);
+                logger.severeExc( ex );
             }
         }
     
@@ -141,7 +139,7 @@ public class HandleSearchBtnQueue implements Runnable
         try {
                 try {
                     logger.info( "HandleSearchBtnQueue .take() Wait for a Queue Item and searchBtnQueue.size() = " + searchBtnQueue.size() );
-                    logger.finest( "HandleSearchBtnQueue .take() Wait for a Queue Item and searchBtnQueue.size() = " + searchBtnQueue.size() );
+                        logger.finest( "HandleSearchBtnQueue .take() Wait for a Queue Item and searchBtnQueue.size() = " + searchBtnQueue.size() );
                     searchBtnEvent = searchBtnQueue.take();
                 } catch (InterruptedException ex) {
                     logger.info( "HandleSearchBtnQueue Wait for a Queue Item got Interrupt ! searchBtnQueue.size() = " + searchBtnQueue.size() );
@@ -158,8 +156,8 @@ public class HandleSearchBtnQueue implements Runnable
                         logger.info( "=== .take() And No Search happening so do one now" );
                         logger.finest( "=== .take() And No Search happening so do one now" );
                         searchBtnQueue.clear();
-                    globalMemory.releaseSearchLock();
                         triggerSearchBtn();
+                        globalMemory.releaseSearchLock();
                         break;
                         }
                     else
@@ -173,7 +171,7 @@ public class HandleSearchBtnQueue implements Runnable
                         logger.info( "=== .take() Search in progress Sleep for millisGap and reloop" );
                         logger.finest( "=== .take() Search in progress Sleep for millisGap and reloop" );
                         Thread.sleep(millisGap);
-                        break;
+                        continue;
                         }
 
                     /*

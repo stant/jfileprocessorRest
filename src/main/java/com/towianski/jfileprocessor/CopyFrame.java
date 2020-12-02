@@ -28,6 +28,8 @@ import java.util.EnumSet;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.KeyStroke;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -237,17 +239,27 @@ public class CopyFrame extends javax.swing.JFrame {
 //        logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
         stopDirWatcher();
 
-        CopyModel copyModel = extractCopyModel();
-//        Rest.saveObjectToFile( "CopyModel.json", copyModel );
-//        RestTemplate restTemplate = new RestTemplate();
         RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
-        //we can't get List<Employee> because JSON convertor doesn't know the type of
-        //object in the list and hence convert it to default JSON object type LinkedHashMap
-//        FilesTblModel filesTblModel = restTemplate.getForObject( SERVER_URI+JfpRestURIConstants.GET_FILES, FilesTblModel.class, CopyModel.class );
+        logger.info( "rest for delete connUserInfo =" + connUserInfo.toString() + "=" );
 
-        logger.info( "rest send copyModel =" + copyModel + "=" );
+        CopyModel copyModel = extractCopyModel();
+        logger.info( "rest send copyModel =" + Rest.saveObjectToString( copyModel ) + "=" );
 
-        String response = noHostVerifyRestTemplate.postForEntity( connUserInfo.getToUri() + JfpRestURIConstants.COPY, copyModel, String.class).getBody();
+        HttpHeaders headers = Rest.getHeaders( connUserInfo.getToUser(), connUserInfo.getToPassword() );
+//        
+        HttpEntity<CopyModel> requestEntity = new HttpEntity( copyModel, headers );
+////        HttpEntity<String> requestEntity = new HttpEntity( Rest.saveObjectToString( deleteModel ), headers );
+//
+//        // make an HTTP GET request with headers
+//        ResponseEntity<String> responseEntity = noHostVerifyRestTemplate.exchange(
+//                connUserInfo.getToUri() + JfpRestURIConstants.DELETE,
+//                HttpMethod.POST,
+//                requestEntity,
+//                String.class
+//        );
+//        String response = responseEntity.getBody();
+
+        String response = noHostVerifyRestTemplate.postForEntity( connUserInfo.getToUri() + JfpRestURIConstants.COPY, requestEntity, String.class).getBody();
         logger.info( "response =" + response + "=" );
         resultsData = Rest.jsonToObject( response, ResultsData.class );
         logger.info( "resultsData.getFilesMatched() =" + resultsData.getFilesMatched() );

@@ -64,7 +64,7 @@ public class JFileDelete //  implements Runnable
 //                }
 //            else
 //                {
-                resultsData = new ResultsData( cancelFlag, deleter.getProcessStatus(), deleter.getMessage(), deleter.getNumTested(), deleter.getNumFilesDeleted(), deleter.getNumFoldersDeleted() );
+                resultsData = new ResultsData( cancelFlag, deleter.getProcessStatus(), deleter.getMessage(), deleter.getNumTested(), deleter.getNumFilesDeleted(), deleter.getNumFoldersDeleted(), deleter.getNumFileTests(), deleter.getNumFolderTests(), deleter.getErrorList() );
 //                }
             }
         catch( Exception ex )
@@ -147,7 +147,7 @@ public class JFileDelete //  implements Runnable
                             Files.walkFileTree( fpath, deleter );
                             }
 
-                        //break;  for testing to do just 1st path
+                        //break;  // for testing to do just 1st path
                         }
                     } 
 //                catch ( java.nio.file.AccessDeniedException exAccessDenied ) 

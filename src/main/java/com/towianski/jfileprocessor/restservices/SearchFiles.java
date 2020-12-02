@@ -5,6 +5,7 @@
  */
 package com.towianski.jfileprocessor.restservices;
 
+import com.towianski.boot.GlobalMemory;
 import com.towianski.chainfilters.ChainFilterOfBoolean;
 import com.towianski.chainfilters.ChainFilterOfDates;
 import com.towianski.chainfilters.ChainFilterOfMaxDepth;
@@ -22,9 +23,12 @@ import static com.towianski.models.Constants.SHOWFILESFOLDERSCB_BOTH;
 import static com.towianski.models.Constants.SHOWFILESFOLDERSCB_FILES_ONLY;
 import static com.towianski.models.Constants.SHOWFILESFOLDERSCB_FOLDERS_ONLY;
 import static com.towianski.models.Constants.SHOWFILESFOLDERSCB_NEITHER;
+import com.towianski.models.FilesTblModel;
 import com.towianski.models.ResultsData;
 import com.towianski.models.SearchModel;
 import com.towianski.utils.MyLogger;
+import com.towianski.utils.Rest;
+import java.util.ArrayList;
 
 /**
  *
@@ -33,6 +37,7 @@ import com.towianski.utils.MyLogger;
 public class SearchFiles
     {
     private static final MyLogger logger = MyLogger.getLogger( SearchFiles.class.getName() );
+    
     public SearchFiles()
         {
         }
@@ -64,7 +69,27 @@ public class SearchFiles
                          || searchModel.getStartingFolder().endsWith( "/" ) ) ) 
                     {
                     searchModel.setStartingFolder( searchModel.getStartingFolder() + System.getProperty( "file.separator" ) );
-                    }                
+                    }
+                
+                String tmp = searchModel.getStartingFolder();
+  /* FIXXX 1 == 2 &&  */         if ( ! GlobalMemory.getSecUtils().hasPermission( tmp.substring( 0, (tmp.length() - 1) ), "r" ) )
+                    {
+                    logger.info( "No Permission to Search startingFolder =" + tmp + "=" );
+                    ResultsData resultsData = new ResultsData(Boolean.FALSE, "Error", "You do not have at least 'read' rights to this folder.");
+                    
+                    ArrayList<String> HeaderList = new ArrayList<String>();
+                    ArrayList<ArrayList> PathsInfoList = new ArrayList<ArrayList>();
+
+                    HeaderList.add( " " );
+
+                    ArrayList<Object> rowList = new ArrayList<Object>();
+                    rowList.add( "inaccessable" );
+                    PathsInfoList.add( rowList );
+
+                    resultsData.setFilesTblModel( new FilesTblModel( HeaderList, PathsInfoList ) );
+                    return resultsData;
+                    }
+
 //        if ( useGlobPattern.isSelected()
 //                && ! ( searchModel.getStartingFolder().endsWith(System.getProperty( "file.separator" ) )
 //                 || searchModel.getStartingFolder().endsWith( "/" ) )
@@ -323,6 +348,8 @@ public class SearchFiles
             logger.info( "Error retrieving file: " + why);
             e.printStackTrace();
             }
+        
+        logger.info( "will return resultsData =" + Rest.saveObjectToString( resultsData ) );
         return resultsData;
         }
 

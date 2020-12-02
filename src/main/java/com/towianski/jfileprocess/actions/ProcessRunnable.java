@@ -31,10 +31,13 @@ public final class ProcessRunnable implements Runnable {
         {
         try {
             logger.info( "ProcessRunnable start()" );
+            String tmpcmd = "";
             for ( String tmp : allArgs )
                 {
                 logger.info( "(" + tmp + ") " );
+                tmpcmd = tmpcmd + tmp + " ";
                 }
+            logger.info( "(" + tmpcmd + ") " );
             ProcessBuilder builder = new ProcessBuilder( allArgs );
             if ( startDir != null )
                 {

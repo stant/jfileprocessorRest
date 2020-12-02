@@ -5,10 +5,12 @@ package com.towianski.jfileprocessor;
  * @author Stan Towianski - June 2015
  */
 
+import com.towianski.httpsutils.HttpsUtils;
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.Constants;
 import com.towianski.models.ResultsData;
 import com.towianski.sshutils.Sftp;
+import com.towianski.utils.FileUtils;
 import com.towianski.utils.MyLogger;
 
 import java.io.IOException;
@@ -118,12 +120,19 @@ public class JFileCopy //  implements Runnable
                         cancelFillFlag = false;
                         for ( String pathstr : copyPaths )
                             {
-                            logger.info( "\n-------  new filewalk: copy path =" + pathstr + "=" );
-                            copier.setPaths( Paths.get( pathstr ), startingPath, toPath );
+                            logger.info( "\n" );
+                            logger.info( "-------  new filewalk:           toPath =" + toPath + "=" );
+                            logger.info( "      startingPath =" + startingPath + "=    pathstr =" + pathstr + "=" );
+                            this.startingPath = FileUtils.getFolderFromPath( pathstr );
+                            logger.info( "      startingPath =" + startingPath + "=" );
+                            //logger.info( "      startingPath =" + FileUtils.getFolderFromPath( pathstr ) + "=    pathstr =" + FileUtils.getFilenameFromPath( pathstr ) + "=" );
+                            copier.setPaths( Paths.get( pathstr ), startingPath,
+                                                                   toPath );
 
                             Files.walkFileTree( Paths.get( pathstr ), fileVisitOptions, Integer.MAX_VALUE, copier );
 
-                            //break;  for testing to do just 1st path
+                            //logger.info( "\n-------  for testing to copy just 1st path !" );
+                            //break;  // for testing to copy just 1st path
                             }
                         }
                     }
@@ -142,7 +151,100 @@ public class JFileCopy //  implements Runnable
                     }
                 }
             }
-        else
+        else if ( connUserInfo.getCopyProcotol() == Constants.COPY_PROTOCOL_HTTPS_GET || 
+                  connUserInfo.getCopyProcotol() == Constants.COPY_PROTOCOL_HTTPS_PUT )
+            {
+            HttpsUtils httpsUtilsSrc = null;
+            HttpsUtils httpsUtilsTar = null;
+            if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_FILE ) &&
+                 connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_HTTPS )  )
+                {
+                logger.info( "CopierNonWalker: will do https TO file" );
+                httpsUtilsTar = new HttpsUtils( "TO", connUserInfo );
+                if ( ! httpsUtilsTar.isConnected() )
+                    {
+                    cancelFlag = true;
+                    copierNonWalker.setProcessStatus( CopyFrame.PROCESS_STATUS_COPY_CANCELED );
+                    copierNonWalker.setMessage( httpsUtilsTar.getMessage() );
+                    return;
+                    }
+                }
+            else if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_HTTPS ) &&
+                      connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_FILE )  )
+                {
+                logger.info( "CopierNonWalker: will do https FROM file" );
+                httpsUtilsSrc = new HttpsUtils( "FROM", connUserInfo );
+                if ( ! httpsUtilsSrc.isConnected() )
+                    {
+                    cancelFlag = true;
+                    copierNonWalker.setProcessStatus( CopyFrame.PROCESS_STATUS_COPY_CANCELED );
+                    copierNonWalker.setMessage( httpsUtilsTar.getMessage() );
+                    return;
+                    }
+                }
+            else if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_HTTPS ) &&
+                      connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_HTTPS )  )
+                {
+                logger.info( "CopierNonWalker: will do https to https -- like https to local" );
+//                sftpSrc = new Sftp( connUserInfo.getFromUser(), connUserInfo.getFromPassword(), connUserInfo.getFromHost() );
+//                sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost() );
+                httpsUtilsTar = new HttpsUtils( "TO", connUserInfo );
+                if ( ! httpsUtilsTar.isConnected() )
+                    {
+                    cancelFlag = true;
+                    copierNonWalker.setProcessStatus( CopyFrame.PROCESS_STATUS_COPY_CANCELED );
+                    copierNonWalker.setMessage( httpsUtilsTar.getMessage() );
+                    return;
+                    }
+                httpsUtilsSrc = new HttpsUtils( "FROM", connUserInfo );
+                if ( ! httpsUtilsSrc.isConnected() )
+                    {
+                    cancelFlag = true;
+                    copierNonWalker.setProcessStatus( CopyFrame.PROCESS_STATUS_COPY_CANCELED );
+                    copierNonWalker.setMessage( httpsUtilsSrc.getMessage() );
+                    return;
+                    }
+                }
+            copierNonWalker = new CopierNonWalker( connUserInfo, httpsUtilsTar, httpsUtilsSrc, isDoingCutFlag, copyOptions, swingWorker );
+
+            try {
+                synchronized( dataSyncLock ) 
+                    {
+                    cancelFlag = false;
+                    cancelFillFlag = false;
+                        logger.info( "\n-------  new Https CopierNonWalker: copyPaths.size() =" + copyPaths.size() + "=" );
+                    for ( String pathstr : copyPaths )
+                        {
+                        logger.info( "\n" );
+                        logger.info( "-------  new Https CopierNonWalker:           toPath =" + toPath + "=" );
+                        logger.info( "      startingPath =" + startingPath + "=    pathstr =" + pathstr + "=" );
+                        this.startingPath = FileUtils.getFolderFromPath( pathstr );
+                        logger.info( "      startingPath =" + startingPath + "=" );
+                        copierNonWalker.setPaths( Paths.get( pathstr ), startingPath, toPath, connUserInfo );
+                        copierNonWalker.copyRecursive( pathstr );  // toPath gets calced to targetPath from setPaths()
+
+                        //break;  for testing to do just 1st path
+                        }
+                    copierNonWalker.done();
+                    if ( copierNonWalker.getProcessStatus().equals( "" ) )
+                        {
+                        copierNonWalker.setProcessStatus( CopyFrame.PROCESS_STATUS_COPY_COMPLETED );
+                        }
+                    }
+                } 
+            catch (Exception ex) 
+                {
+                logger.severeExc( ex );
+                ex.printStackTrace();
+                }
+            finally
+                {
+                //httpsUtilsTar.close();
+                //if ( httpsUtilsSrc != null )
+                    //httpsUtilsSrc.close();
+                }
+            }
+        else if ( connUserInfo.getCopyProcotol() == Constants.COPY_PROTOCOL_SFTP_GET || connUserInfo.getCopyProcotol() == Constants.COPY_PROTOCOL_SFTP_PUT )
             {
             Sftp sftp = null;
             Sftp sftpSrc = null;
@@ -180,7 +282,11 @@ public class JFileCopy //  implements Runnable
                     cancelFillFlag = false;
                     for ( String pathstr : copyPaths )
                         {
-                        logger.info( "\n-------  new CopierNonWalker: copy path =" + pathstr + "=" );
+                        logger.info( "\n" );
+                        logger.info( "-------  new CopierNonWalker:           toPath =" + toPath + "=" );
+                        logger.info( "      startingPath =" + startingPath + "=    pathstr =" + pathstr + "=" );
+                        this.startingPath = FileUtils.getFolderFromPath( pathstr );
+                        logger.info( "      startingPath =" + startingPath + "=" );
                         copierNonWalker.setPaths( Paths.get( pathstr ), startingPath, toPath, connUserInfo );
                         copierNonWalker.copyRecursive( pathstr );  // toPath gets calced to targetPath from setPaths()
 

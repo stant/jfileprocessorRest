@@ -5,6 +5,7 @@
  */
 package com.towianski.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import static com.towianski.models.Constants.FILESYSTEM_POSIX;
 import com.towianski.utils.MyLogger;
 import java.net.InetAddress;
@@ -22,19 +23,26 @@ public class ConnUserInfo
     String fromUser = "";
     String fromPassword = "";
     String fromHost = "localhost";
-    String fromSshPort = "22";
+    String fromSshPort = "";
     int fromFilesysType = FILESYSTEM_POSIX;
+    String fromAskHttpsPort = "0";
+    String fromUsingHttpsPort = "0";
+    
+    String fromUserHomeDir = "";
     
     boolean connectedFlag = false;
-    String ToUri = "";
+    String toUri = "";
     String toProtocol = "file://";
     String toUser = "";
     String toPassword = "";
     String toHost = "localhost";
-    String toSshPort = "22";
+    String toSshPort = "";
     String toAskHttpsPort = "0";
     String toUsingHttpsPort = "0";
     int toFilesysType = FILESYSTEM_POSIX;
+    
+    String toUserHomeDir = "";
+    String usingToOrFrom = "";
     
     public int state = 0;
 
@@ -82,6 +90,7 @@ public class ConnUserInfo
         this.toUsingHttpsPort = toAskHttpsPort;
         }
 
+    @JsonIgnore
     public void setFrom( String fromProtocol, String fromUser, String fromPassword, String fromHost, String fromSshPort )
         {
         this.fromProtocol = fromProtocol;
@@ -91,6 +100,7 @@ public class ConnUserInfo
         this.fromSshPort = fromSshPort;
         }
 
+    @JsonIgnore
     public void setTo( String toProtocol, String toUser, String toPassword, String toHost, String toSshPort, String toAskHttpsPort )
         {
         this.toProtocol = toProtocol;
@@ -102,6 +112,13 @@ public class ConnUserInfo
         this.toUsingHttpsPort = toAskHttpsPort;
         }
 
+    @JsonIgnore
+    public void setWhichUsing( String usingToOrFrom )
+        {
+        this.usingToOrFrom = usingToOrFrom;
+        }
+
+    @JsonIgnore
     public String findHostAddress( String host )
         {
         if ( host == null || host.equals( "?" ) || host.equals( "" ) )
@@ -123,23 +140,41 @@ public class ConnUserInfo
     
     ///------------------------------------------------------------------------------------
     
+    @JsonIgnore
     public boolean isRunCopyOnLocal() {
         return ! isRunCopyOnRemote();
     }
 
+    @JsonIgnore
     public boolean isRunCopyOnRemote() {
-        return ( fromProtocol.equals( Constants.PATH_PROTOCOL_SFTP ) && toProtocol.equals( Constants.PATH_PROTOCOL_SFTP ) ) ? true : false;
+                //logger.info( "ConnUserInfo:- " + this.toString() );  infinite loop !
+        if ( ( fromProtocol.equals( Constants.PATH_PROTOCOL_SFTP ) && toProtocol.equals( Constants.PATH_PROTOCOL_SFTP ) ) ||
+             ( fromProtocol.equals( Constants.PATH_PROTOCOL_HTTPS ) && toProtocol.equals( Constants.PATH_PROTOCOL_HTTPS ) )  )
+            return true;
+        return false;
     }
 
+    @JsonIgnore
     public int getCopyProcotol() {
-        if ( fromHost.equals( toHost ) )
+//        if ( fromHost.equals( toHost ) )
+//            return Constants.COPY_PROTOCOL_LOCAL;
+//        else 
+            if ( fromProtocol.equals( toProtocol ) )
+            {
+            if ( fromProtocol.equals( Constants.PATH_PROTOCOL_SFTP ) ) 
+                return Constants.COPY_PROTOCOL_SFTP_GET;
+            if ( ! fromUri.equals( toUri ) )   // if they are the same, do local copy
+                return Constants.COPY_PROTOCOL_HTTPS_GET;
             return Constants.COPY_PROTOCOL_LOCAL;
-        else if ( fromProtocol.equals( toProtocol ) )
-            return Constants.COPY_PROTOCOL_SFTP_GET;
+            }
         else if ( fromProtocol.equals( Constants.PATH_PROTOCOL_FILE ) && toProtocol.equals( Constants.PATH_PROTOCOL_SFTP ) )
             return Constants.COPY_PROTOCOL_SFTP_PUT;
         else if ( fromProtocol.equals( Constants.PATH_PROTOCOL_SFTP ) && toProtocol.equals( Constants.PATH_PROTOCOL_FILE ) )
             return Constants.COPY_PROTOCOL_SFTP_GET;
+        else if ( fromProtocol.equals( Constants.PATH_PROTOCOL_FILE ) && toProtocol.equals( Constants.PATH_PROTOCOL_HTTPS ) )
+            return Constants.COPY_PROTOCOL_HTTPS_PUT;
+        else if ( fromProtocol.equals( Constants.PATH_PROTOCOL_HTTPS ) && toProtocol.equals( Constants.PATH_PROTOCOL_FILE ) )
+            return Constants.COPY_PROTOCOL_HTTPS_GET;
 
         return Constants.COPY_PROTOCOL_LOCAL;
     }
@@ -185,7 +220,7 @@ public class ConnUserInfo
     }
 
     public String getFromUri() {
-        return "https://" + fromHost + ":" + System.getProperty( "server.port", "8443" );
+        return "https://" + fromHost + ":" + fromUsingHttpsPort;  //System.getProperty( "server.port", "8443" );
     }
 
     public void setFromUri(String fromUri) {
@@ -197,7 +232,7 @@ public class ConnUserInfo
     }
 
     public void setToUri(String ToUri) {
-        this.ToUri = ToUri;
+        this.toUri = ToUri;
     }
 
     public int getFromFilesysType() {
@@ -216,9 +251,16 @@ public class ConnUserInfo
         this.toFilesysType = toFilesysType;
     }
 
+    @JsonIgnore
     public boolean isUsingSftp()
         {
         return fromProtocol.equalsIgnoreCase( "sftp://" ) || toProtocol.equalsIgnoreCase( "sftp://" );
+        }
+
+    @JsonIgnore
+    public boolean isUsingHttps()
+        {
+        return fromProtocol.equalsIgnoreCase( "https://" ) || toProtocol.equalsIgnoreCase( "https://" );
         }
 
     public String getFromProtocol()
@@ -271,6 +313,7 @@ public class ConnUserInfo
         this.fromSshPort = fromSshPort;
         }
 
+    @JsonIgnore
     public int getFromSshPortInt()
         {
         try {
@@ -326,6 +369,7 @@ public class ConnUserInfo
         return toSshPort;
         }
 
+    @JsonIgnore
     public int getToSshPortInt()
         {
         try {
@@ -341,6 +385,7 @@ public class ConnUserInfo
         this.toSshPort = toSshPort;
         }
 
+    @JsonIgnore
     public String getToAskHttpsPort()
         {
         return toAskHttpsPort.trim().equals( "" ) ? "0" : toAskHttpsPort;
@@ -356,12 +401,92 @@ public class ConnUserInfo
         return toUsingHttpsPort;
         }
 
+    @JsonIgnore
+    public int getToUsingHttpsPortInt()
+        {
+        try {
+            return Integer.parseInt( toUsingHttpsPort );
+            }
+        catch( Exception ex ) { }
+                
+        return 8443;
+        }
+
     public void setToUsingHttpsPort(String tmp)
         {
         this.toUsingHttpsPort = tmp;
         logger.info( "connUserInfo set toUsingHttpsPort = " + this.toUsingHttpsPort );
         }
 
+    @JsonIgnore
+    public String getFromAskHttpsPort() {
+        return fromAskHttpsPort.trim().equals( "" ) ? "0" : fromAskHttpsPort;
+    }
+
+    public void setFromAskHttpsPort(String fromAskHttpsPort) {
+        this.fromAskHttpsPort = fromAskHttpsPort;
+    }
+
+    public String getFromUsingHttpsPort() {
+        return fromUsingHttpsPort;
+    }
+
+    @JsonIgnore
+    public int getFromUsingHttpsPortInt()
+        {
+        try {
+            return Integer.parseInt( fromUsingHttpsPort );
+            }
+        catch( Exception ex ) { }
+                
+        return 8443;
+        }
+
+    public void setFromUsingHttpsPort(String fromUsingHttpsPort) {
+        this.fromUsingHttpsPort = fromUsingHttpsPort;
+    }
+
+    public String getFromUserHomeDir() {
+        return fromUserHomeDir;
+    }
+
+    public void setFromUserHomeDir(String fromUserHomeDir) {
+        this.fromUserHomeDir = fromUserHomeDir;
+    }
+
+    public String getToUserHomeDir() {
+        return toUserHomeDir;
+    }
+
+    public void setToUserHomeDir(String toUserHomeDir) {
+        this.toUserHomeDir = toUserHomeDir;
+    }
+
+    @JsonIgnore
+    public String getWhichUsingUri() {
+        if ( usingToOrFrom.equalsIgnoreCase( "FROM" ) )
+            return getFromUri();
+
+        return getToUri();
+    }
+
+    @JsonIgnore
+    public String getWhichUsingUser() {
+        if ( usingToOrFrom.equalsIgnoreCase( "FROM" ) )
+            return getFromUser();
+
+        return getToUser();
+    }
+
+    @JsonIgnore
+    public String getWhichUsingPassword() {
+        if ( usingToOrFrom.equalsIgnoreCase( "FROM" ) )
+            return getFromPassword();
+
+        return getToPassword();
+    }
+
+    @JsonIgnore
     public String toString()
         {
         return  "  connectedFlag =" + connectedFlag + "="
@@ -371,8 +496,10 @@ public class ConnUserInfo
 + "  fromPassword =" + fromPassword + "="
 + "  fromHost =" + fromHost + "="
 + "  fromSshPort =" + fromSshPort + "="
++ "  fromAskHttpsPort =" + fromAskHttpsPort + "="
++ "  fromUsingHttpsPort =" + fromUsingHttpsPort + "="
 + "  fromFilesysType =" + fromFilesysType + "="
-+ "  \nToUri =" + ToUri + "="
++ "  \nToUri =" + toUri + "="
 + "  toProtocol =" + toProtocol + "="
 + "  toUser =" + toUser + "="
 + "  toPassword =" + toPassword + "="
@@ -382,7 +509,9 @@ public class ConnUserInfo
 + "  toUsingHttpsPort =" + toUsingHttpsPort + "="
 + "  toFilesysType =" + toFilesysType + "="
 + "  \nisRunCopyOnRemote() = " + isRunCopyOnRemote() + "=    getCopyProcotol() = " + getCopyProcotol()
-+ "  \nstate = " + state;
++ "  \nstate = " + state
++ "  \nusingToOrFrom = " + usingToOrFrom
++ "  \ngetWhichUsingUri = " + getWhichUsingUri();
         }
         
     }

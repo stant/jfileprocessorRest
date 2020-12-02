@@ -6,13 +6,13 @@ buildscript {
         maven { url "https://plugins.gradle.org/m2" }
     }
     dependencies {
-      classpath("org.springframework.boot:spring-boot-gradle-plugin:2.1.7.RELEASE")
+      classpath("org.springframework.boot:spring-boot-gradle-plugin:2.4.0")
 	//classpath "gradle.plugin.com.dorongold.plugins:task-tree:1.3"
         }
 }
 
 plugins {
-   id 'org.springframework.boot' version '2.1.7.RELEASE'
+   id 'org.springframework.boot' version '2.4.0'
 }
 
 
@@ -23,7 +23,7 @@ apply plugin: 'war'
 //apply plugin: com.dorongold.gradle.tasktree.TaskTreePlugin
 
 group 'com.towianski'
-version '1.8.10'
+version '2.0-beta'
 
 mainClassName = 'com.towianski.boot.StartApp'
 
@@ -71,7 +71,7 @@ task packageDistribution(type: Zip) {
 bootJar {
 //        included = true
 //        mainClassName = 'com.towianski.jfileprocessor.JFileFinderWin'
-        mainClassName = 'com.towianski.boot.StartApp'
+        mainClass = 'com.towianski.boot.StartApp'
 //    executable = 'true'
 }
 
@@ -167,6 +167,28 @@ java -jar ${rootProject.name}-${version}.war \$1
         }
 }
 
+task generateServerScriptPosix {
+        inputs.property "version", project.version
+        inputs.property "rootProject.name", project.name
+	doFirst {
+            def runFile = file("../../programs/jfp/server.sh")
+            runFile.parentFile.mkdirs()
+            runFile.text = """#!/bin/bash
+
+# if you have problem with jfp window and fonts being too small
+
+# it might work normal in Java 10
+# export JAVA_HOME=/opt/programs/Java/jdk10
+# export PATH=\$JAVA_HOME/bin;\$PATH
+
+# can add --debug to below line\n\
+# to use port 80 for standard web you might need to start as an admin
+java -Dserver.port=8090 -jar ${rootProject.name}-${version}.war --server --logging.file=server.log\n\
+
+"""
+        }
+}
+
 task generateRunScript2Posix {
         inputs.property "version", project.version
         inputs.property "rootProject.name", project.name
@@ -227,8 +249,26 @@ rem start \"\" javaw -Dsun.java2d.uiScale=2 -cp \"*\" org.springframework.boot.l
         }
 }
 
+task generateServerScriptWindows {
+	inputs.property "version", project.version
+        inputs.property "rootProject.name", project.name
+	doFirst {
+        def runFile = file("../../programs/jfp/server.bat")
+        runFile.text = 
+"""
+rem set JAVA_HOME=F:\\programs\\Java\\jdk10
+rem set PATH=%JAVA_HOME%\\bin;%PATH%
+
+rem can add --debug to end of below line\n\
+rem to use port 80 for standard web you might need to start as an admin
+java -Dserver.port=8090 -jar ${rootProject.name}-${version}.war --server --logging.file=server.log\n\
+
+"""
+        }
+}
+
 task runFilePermissions(type: Exec) {
-    commandLine 'chmod', '755', '../../programs/jfp/run.sh', '../../programs/jfp/runx2.sh', '../../programs/jfp/run.bat', '../../programs/jfp/runx2.bat'
+    commandLine 'chmod', '755', '../../programs/jfp/run.sh', '../../programs/jfp/server.sh', '../../programs/jfp/runx2.sh', '../../programs/jfp/run.bat', '../../programs/jfp/server.bat', '../../programs/jfp/runx2.bat'
 }
 
 
@@ -236,7 +276,7 @@ compileJava.dependsOn generateSources
 
 clean.dependsOn cleanPackageFolder
 
-packageDistribution.dependsOn generateRunScriptPosix,generateRunScript2Posix,generateRunScriptWindows,generateRunScript2Windows,runFilePermissions
+packageDistribution.dependsOn generateRunScriptPosix,generateRunScript2Posix,generateServerScriptPosix,generateRunScriptWindows,generateRunScript2Windows,generateServerScriptWindows,runFilePermissions
 
 //generateRunScriptPosix.dependsOn copy
 
@@ -263,24 +303,25 @@ repositories {
 }
 
 dependencies {
-    compile("org.springframework.boot:spring-boot-starter:2.1.7.RELEASE")
+    compile("org.springframework.boot:spring-boot-starter:2.4.0")
 //    compile("org.springframework:spring-context:5.1.8.RELEASE")
-    compile("org.springframework.boot:spring-boot-starter-web:2.1.7.RELEASE") 
-    compile("org.springframework.boot:spring-boot-starter-actuator:2.1.7.RELEASE") 
-    compile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '9.0.21'
+    compile("org.springframework.boot:spring-boot-starter-web:2.4.0") 
+    compile("org.springframework.boot:spring-boot-starter-actuator:2.4.0") 
+    //compile("org.springframework.security.oauth.boot:spring-security-oauth2-autoconfigure:2.4.0") 
+    compile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '9.0.39'
 ////{
 //    exclude module: "spring-boot-starter-tomcat"
 //    exclude group: 'org.apache.tomcat'
 //}
-//    providedCompile 'org.springframework.boot:spring-boot-starter-tomcat:2.1.7.RELEASE'    
-//    providedCompile group: 'org.springframework.boot', name: 'spring-boot-loader', version: '2.1.7.RELEASE'
+//    providedCompile 'org.springframework.boot:spring-boot-starter-tomcat:2.4.0'    
+//    providedCompile group: 'org.springframework.boot', name: 'spring-boot-loader', version: '2.4.0'
 //    compile("org.springframework:spring-core:5.1.8.RELEASE")
     
 //    compile("com.fasterxml.jackson.core:jackson-databind:2.9.9")
 //    compile("org.springframework:spring-web:5.1.8.RELEASE")
 //    compile("org.springframework:spring-webmvc:5.1.8.RELEASE")
     
-    compile("org.springframework.boot:spring-boot-starter-security:2.1.7.RELEASE")
+    compile("org.springframework.boot:spring-boot-starter-security:2.4.0")
 //    compile group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: '2.0.0.RELEASE'
 //    compile("org.springframework:spring-web:5.0.4.RELEASE")
 
@@ -291,6 +332,7 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     providedCompile fileTree(dir: 'libs/../../JfpLib/dist', include: ['*.jar'])
     compile 'com.jcraft:jsch:0.1.55'
+//    compile 'com.github.mwiede:jsch:0.1.59'
 //    compile 'org.slf4j:slf4j-api:1.7.25'
 //    compile 'org.slf4j:slf4j-simple:1.7.25'
 
@@ -316,7 +358,7 @@ war {
         'Start-Class': 'com.towianski.boot.StartApp',
         'Spring-Boot-Classes': 'WEB-INF/classes/',
         'Spring-Boot-Lib': 'WEB-INF/lib/',
-        'Spring-Boot-Version': '2.1.7.RELEASE',
+        'Spring-Boot-Version': '2.4.0',
         'Main-Class': 'org.springframework.boot.loader.WarLauncher'
 //        'Main-Class': 'org.springframework.boot.loader.PropertiesLauncher'
 //        'Class-Path': configurations.runtimeClasspath.files.collect { it.getName() }.join(' ')

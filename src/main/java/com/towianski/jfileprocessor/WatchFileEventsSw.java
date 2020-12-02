@@ -19,8 +19,6 @@ import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.springframework.stereotype.Component;
 
 /**
@@ -149,7 +147,7 @@ public class WatchFileEventsSw implements Player {
             watchService = FileSystems.getDefault().newWatchService();
         } catch (IOException ex) {
             ex.printStackTrace();
-            Logger.getLogger(WatchFileEventsSw.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
         }
     }
 
@@ -165,7 +163,7 @@ public class WatchFileEventsSw implements Player {
             }
         catch (Exception ex) {
             ex.printStackTrace();
-            Logger.getLogger(WatchFileEventsSw.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severeExc( ex );
             }
         }
 

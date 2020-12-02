@@ -20,7 +20,8 @@ class Test {
         long avail = store.getUsableSpace() / Mb;
         long percentUsed = (long)((float)used/total*100);
 
-        strbuf.append( String.format("%12d %12d %12d %6d%% %-40s\n", total, used, avail, percentUsed, store ) );
+        if ( total > 0 )
+            strbuf.append( String.format("%12d %12d %12d %6d%% %-40s\n", total, used, avail, percentUsed, store ) );
     }
 
  static void main(String[] args) {
@@ -35,9 +36,17 @@ class Test {
 
         strbuf.append( String.format("%12s %12s %12s %6s %-40s\n", "mbytes", "used", "avail", " % used", "Mounted on (from Filesystem)" ) );
         FileSystem fs = FileSystems.getDefault();
-        for (FileStore store: fs.getFileStores()) {
-            printFileStore( store, strbuf );
-        }
+        for (FileStore store: fs.getFileStores()) 
+            {
+            try
+                {
+                printFileStore( store, strbuf );
+                }
+            catch( Exception ex )
+                {
+                strbuf.append( String.format( "%s:  %-40s\n", ex.getLocalizedMessage(), store ) );
+                }
+            }
 
         System.out.println( "strbuf =" + strbuf + "=" );
         TextEditPanel textEditPanel = new TextEditPanel( codeProcessorPanel.jFileFinderWin );
@@ -48,5 +57,4 @@ class Test {
         textEditPanel.setVisible(true);
         textEditPanel.setFont( new Font("monospaced", Font.PLAIN, 12) );
         textEditPanel.setState ( JFrame.NORMAL );
-
    }  

@@ -1,4 +1,4 @@
-    package com.towianski.boot.server;
+package com.towianski.boot.server;
 
 /*
  * Copyright 2012-2018 the original author or authors.
@@ -16,57 +16,101 @@
  * limitations under the License.
  */
 
+import com.towianski.boot.GlobalMemory;
+import com.towianski.boot.GlobalMemoryServer;
+import com.towianski.security.SecUtils;
+import com.towianski.security.SecUtilsServer;
 import com.towianski.utils.MyLogger;
 import java.io.File;
 import java.io.PrintStream;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
+import java.util.logging.Level;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Profile;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 
-@ComponentScan({ "com.towianski.controllers" })
+//@DependsOn( { "customAuthenticationProvider", "securityConfig" } )
+@DependsOn( { "authSecurityConfiguration" } )
+@ComponentScan({ "com.towianski.controllers","com.towianski.httpsutils", "com.towianski.boot.server" })
 @SpringBootApplication
 @Profile("server")
 public class TomcatApp {
 
     private static final MyLogger logger = MyLogger.getLogger( TomcatApp.class.getName() );
-    
+
+//    ServerUserFileRightsList serverUserFileRightsList = new ServerUserFileRightsList();
+//    CustomPermissionEvaluator customPermissionEvaluator = new CustomPermissionEvaluator();
+
+//    @Bean
+//    protected ServletContextListener listener() {
+//        return new ServletContextListener() {
+//
+//            @Override
+//            public void contextInitialized(ServletContextEvent sce) {
+//                logger.info("ServletContext initialized");
+//            }
+//
+//            @Override
+//            public void contextDestroyed(ServletContextEvent sce) {
+//                logger.info("ServletContext destroyed");
+//            }
+//
+//        };
+//    }
+
     @Bean
-    protected ServletContextListener listener() {
-        return new ServletContextListener() {
-
-            @Override
-            public void contextInitialized(ServletContextEvent sce) {
-                logger.info("ServletContext initialized");
-            }
-
-            @Override
-            public void contextDestroyed(ServletContextEvent sce) {
-                logger.info("ServletContext destroyed");
-            }
-
-        };
+    public GlobalMemoryServer globalMemory() {
+        logger.info( "GlobalMemoryServer() constructor" );
+        return new GlobalMemoryServer();
     }
+
+    @Bean
+    public CustomPermissionEvaluator customPermissionEvaluatorNormBean() {
+        logger.info( "CustomPermissionEvaluator() constructor" );
+        CustomPermissionEvaluator customPermissionEvaluatorNormBean = new CustomPermissionEvaluator( serverUserFileRightsList() );
+        return customPermissionEvaluatorNormBean;
+    }
+
+    @Bean
+    public ServerUserFileRightsList serverUserFileRightsList() {
+        logger.info( "ServerUserFileRights() constructor" );
+        //return new ServerUserFileRightsListHolder();
+        ServerUserFileRightsList serverUserFileRightsList = ServerUserFileRightsListHolder.readInServerUserFileRightsListFromFile();
+        return serverUserFileRightsList;
+        
+//        return serverUserFileRightsList;
+//        return ServerUserFileRightsList.readInServerUserFileRightsFromFileList();
+//        ServerUserFileRightsList serverUserFileRightsList = new ServerUserFileRightsList();
+//        return serverUserFileRightsList();
+    }
+
+    @Bean
+    public SecUtilsServer secUtils() {
+        logger.info( "SecUtilsServer() constructor" );
+        return new SecUtilsServer();
+    }
+
+
+//    @Autowired
+//    private CustomAuthenticationProvider customAuthenticationProvider;
+    
+    //ServerUserFileRights serverUserFileRights = null;
 
         // This will redirect http to https - skipping http
 //@Bean
@@ -114,14 +158,31 @@ public class TomcatApp {
 //        }
     
     
-        @Configuration
-        public class SecurityConfig  extends WebSecurityConfigurerAdapter {
-
-            @Override
-            protected void configure(HttpSecurity http) throws Exception {
-                http.csrf().disable().authorizeRequests().anyRequest().permitAll();
-            }
-        }
+//        @Configuration
+//        public class SecurityConfig  extends WebSecurityConfigurerAdapter {
+//
+////            @Override
+////            protected void configure(HttpSecurity http) throws Exception {
+////                http.csrf().disable().authorizeRequests().anyRequest().permitAll();
+// 
+//            @Autowired
+//            @Override
+//            protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+//                auth.authenticationProvider( customAuthenticationProvider );  // new CustomAuthenticationProvider() ); //authProvider );
+//            }    
+//            
+//            @Override
+//            protected void configure( HttpSecurity http ) throws Exception {
+//                new CustomAuthenticationProvider();
+//                http.csrf().disable().authorizeRequests().antMatchers( "/jfp/sys/**", JfpRestURIConstants.SEARCH).permitAll()
+//                        .anyRequest().authenticated();
+//                
+////                http.httpBasic().and().authorizeRequests().antMatchers( "/jfp/sys/**", JfpRestURIConstants.SEARCH).permitAll()
+////                        .anyRequest().permitAll();
+//
+////                http.csrf().disable().authorizeRequests().anyRequest().permitAll();
+//            }
+//        }
         
 //    	final static String KEYSTORE_PASSWORD = "s3cr3t";
 
@@ -227,18 +288,50 @@ public class TomcatApp {
             }
 //        logger.info( "** -Dwhatever =" + System.getProperty("whatever") + "=" );
 //        logger.info( "** -Dmyarg2 =" + System.getProperty("myarg2") + "=" );
-        
+
 //        SpringApplication.run(TomcatApp.class, args);
         context = new SpringApplicationBuilder(TomcatApp.class).profiles("server").run(args);
-
-        logger.info( "*** after SpringApplication.run(TomcatApp.class, args)" );
         
-            logger.info( "server using port =" + context.getEnvironment().getProperty("local.server.port") + "=" );
+        //globalMemoryServer().setServerUserFileRightsList( serverUserFileRightsList() );
+        //globalMemoryServer().setcustomPermissionEvaluatorNormBean( customPermissionEvaluatorNormBean );
+        GlobalMemoryServer.setCustomPermissionEvaluatorNormBean( (context.getBean( CustomPermissionEvaluator.class )) );
+        GlobalMemoryServer.setServerUserFileRightsList( (context.getBean( ServerUserFileRightsList.class )) );
+        GlobalMemory.setSecUtils( (context.getBean( SecUtils.class )) );
 
         stdOutFilePropertyChange( loggingFile );
         stdErrFilePropertyChange( loggingFile );
 
-                    
+        //logger.setAllLoggerLevels( Level.ALL );  // for debugging
+        
+        logger.info( "serverUserFileRightsList Address = " + System.identityHashCode( context.getBean( ServerUserFileRightsList.class ) ) );
+
+        //(context.getBean( ServerUserFileRightsList.class )).readInServerUserFileRightsFromFileList();
+        
+        String[] beanNames = context.getBeanDefinitionNames();
+
+        logger.info( "\n---- top of List Of TomcatApp Spring Beans ----");
+        for (String beanName : beanNames) {
+            logger.info( "bean:" + beanName + " : " + context.getBean(beanName).getClass().toString());
+        }
+        logger.info( "---- End of List Of TomcatApp Spring Beans ----\n");
+
+        logger.info( "*** after SpringApplication.run(TomcatApp.class, args)" );
+        
+        logger.info( "server using port =" + context.getEnvironment().getProperty("local.server.port") + "=" );
+
+        /*
+        JfpServerPanel serverPanel = new JfpServerPanel();
+        //serverPanel.setVisible(true);
+        
+        // Create and display the form 
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+//                new JFileFinderWin().setVisible(true);
+                serverPanel.setVisible(true);
+            }
+        });
+          */
+                  
 //        final JFileFinderWin jffw = new JFileFinderWin();
 //        if ( args.length > 0 )
 //            {
@@ -301,6 +394,5 @@ public class TomcatApp {
             e.printStackTrace();
             }
     }                                         
-
     
 }

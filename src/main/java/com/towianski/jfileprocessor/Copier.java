@@ -5,6 +5,7 @@
  */
 package com.towianski.jfileprocessor;
 
+import com.towianski.boot.GlobalMemory;
 import com.towianski.utils.MyLogger;
 import java.io.File;
 import java.io.IOException;
@@ -150,8 +151,8 @@ public class Copier extends SimpleFileVisitor<Path>
         try {
             Path targetPath = this.toPath.resolve( this.startingPath.relativize( dir ) );
     //        logger.finest( );
-    //        logger.finest( "preVisitDir relativize =" + this.startingPath.relativize( dir ) + "=" );
-    //        logger.finest( "preVisitDir toPath =" + toPath + "   resolve targetPath =" + targetPath + "=" );
+            logger.finest( "preVisitDir relativize =" + this.startingPath.relativize( dir ) + "=" );
+            logger.finest( "preVisitDir toPath =" + toPath + "   resolve targetPath =" + targetPath + "=" );
 
             numTested++;
             numFolderTests ++;
@@ -163,6 +164,24 @@ public class Copier extends SimpleFileVisitor<Path>
                 }
 
             Path toPathFile = toPath.resolve( startingPath.relativize( dir ) );
+
+            logger.finest( "check dir rights for copy To dir =" + dir );
+            if ( ! GlobalMemory.getSecUtils().hasPermission( dir, "r" ) )
+                {
+                logger.info( "Do not have Write permission on folder =" + dir );
+                errorList.add( dir + " -> " + "ERROR " + "Do not have Write permission on folder" );
+                return FileVisitResult.SKIP_SUBTREE;
+                //throw new Exception( "https: \"" + "\" does not have folder permissions" );
+                }
+
+            logger.finest( "check dir rights for copy To toPathFile =" + toPathFile );
+            if ( ! GlobalMemory.getSecUtils().hasPermission( toPathFile, "w" ) )
+                {
+                logger.info( "Do not have Write permission on folder =" + toPathFile );
+                errorList.add( toPathFile + " -> " + "ERROR " + "Do not have Write permission on folder" );
+                return FileVisitResult.TERMINATE;
+                //throw new Exception( "https: \"" + "\" does not have folder permissions" );
+                }
 
     //        logger.finest( "dir =" + dir + "= .getFileSystem() =" + dir.getFileSystem() + "=   toPathFile =" + toPathFile + "= .getFileSystem() =" + toPathFile.getFileSystem() + "=" );
             logger.finest( "dir =" + dir + "= .getFileStore() =" + Files.getFileStore( dir ) + "=   toPathFile.getParent() =" + toPathFile.getParent() + "= .getFileStore() =" + Files.getFileStore( toPathFile.getParent() ) + "=" );
@@ -207,10 +226,17 @@ public class Copier extends SimpleFileVisitor<Path>
         catch ( java.nio.file.FileAlreadyExistsException faeExc )
             {
             logger.info( "ERROR  " + faeExc + ": " + dir );
-            logger.info( "ERROR  " + faeExc + ": " + dir );
+            logger.info( logger.getExceptionAsString( faeExc ) );
             errorList.add( dir + " -> " + "ERROR " + faeExc );
             message = "ERROR: " + faeExc + ": " + dir;
             //return FileVisitResult.CONTINUE;
+            }
+        catch ( java.nio.file.FileSystemException fsFileExc ) 
+            {
+            logger.info( "ERROR  " + fsFileExc + ": " + dir );
+            logger.info( logger.getExceptionAsString( fsFileExc ) );
+            errorList.add( dir + " -> " + "ERROR " + fsFileExc );
+            return FileVisitResult.CONTINUE;
             }
         catch ( Exception exc )
             {
@@ -330,9 +356,16 @@ public class Copier extends SimpleFileVisitor<Path>
         catch ( java.nio.file.FileAlreadyExistsException faeExc )
             {
             logger.info( "ERROR  " + faeExc + ": " + file );
-            logger.info( "ERROR  " + faeExc + ": " + file );
+            logger.info( logger.getExceptionAsString( faeExc ) );
             errorList.add( file + " -> " + "ERROR " + faeExc );
             message = "ERROR: " + faeExc + ": " + file;
+            return FileVisitResult.CONTINUE;
+            }
+        catch ( java.nio.file.FileSystemException fsFileExc ) 
+            {
+            logger.info( "ERROR  " + fsFileExc + ": " + file );
+            logger.info( logger.getExceptionAsString( fsFileExc ) );
+            errorList.add( file + " -> " + "ERROR " + fsFileExc );
             return FileVisitResult.CONTINUE;
             }
         catch ( Exception exc )

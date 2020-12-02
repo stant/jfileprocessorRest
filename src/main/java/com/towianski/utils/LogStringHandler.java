@@ -9,7 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
-import java.util.logging.Logger;
+//import java.util.logging.Logger;
 
 /**
  *
@@ -17,9 +17,10 @@ import java.util.logging.Logger;
  */
 public class LogStringHandler extends Handler {
     //private static final MyLogger logger = MyLogger.getLogger( LogStringHandler.class.getName() );
-    private static Logger logger = Logger.getLogger("LogStringHandler");
+    //private static Logger logger = Logger.getLogger("LogStringHandler");
 
-    SimpleDateFormat sdf = new SimpleDateFormat( "yyyy/MM/dd.HH:mm:ss");
+//    SimpleDateFormat sdf = new SimpleDateFormat( "yyyy/MM/dd HH:mm:ss");
+    SimpleDateFormat sdf = new SimpleDateFormat( "HH:mm:ss");
 
     public LogStringHandler()
         {
@@ -30,13 +31,21 @@ public class LogStringHandler extends Handler {
         {
         StringBuffer outBuf = new StringBuffer();
         //outBuf.append( "publish->");
-        outBuf.append( sdf.format( Calendar.getInstance().getTime() ) )
-                .append( " ");
-        outBuf.append( logRecord.getLevel() + ": ");
-        outBuf.append( logRecord.getSourceClassName() + ": ");
-        outBuf.append( logRecord.getSourceMethodName() + "(): ");
-//        outBuf.append( "line " + Thread.currentThread().getStackTrace()[2].getLineNumber() + ": ");
-//            String fullClassName = Thread.currentThread().getStackTrace()[2].getClassName();
+        outBuf.append( sdf.format( Calendar.getInstance().getTime() ) ).append( " " );
+//        outBuf.append( "Thread: " + Thread.currentThread().getId() ).append( " " );
+        outBuf.append( "Thread: " + Thread.currentThread().getName() ).append( " " );
+        outBuf.append( logRecord.getLevel() + ": " );
+        outBuf.append( logRecord.getSourceClassName() + ": " );
+        //outBuf.append( logRecord.getSourceMethodName() + "(): " );
+        outBuf.append( logRecord.getSourceMethodName() + "():" + Thread.currentThread().getStackTrace()[6].getLineNumber() ).append( " " );
+//        outBuf.append( "##################");
+//        int i = 0;
+//        for ( StackTraceElement ste : Thread.currentThread().getStackTrace() )
+//            {
+//            outBuf.append( "[" + (i++) + "] =" + ste.toString() + "\n" );
+//            }
+//        outBuf.append( "###----------#####");
+//            String fullClassName = Thread.currentThread().getStackTrace()[5].getClassName();
 //    String className = fullClassName.substring(fullClassName.lastIndexOf(".") + 1);
 //    String methodName = Thread.currentThread().getStackTrace()[2].getMethodName();
 //    int lineNumber = Thread.currentThread().getStackTrace()[2].getLineNumber();

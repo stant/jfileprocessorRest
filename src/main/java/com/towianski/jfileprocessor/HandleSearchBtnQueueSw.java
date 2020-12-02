@@ -12,8 +12,6 @@ import com.towianski.models.Constants;
 import com.towianski.utils.MyLogger;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -79,7 +77,7 @@ public class HandleSearchBtnQueueSw {
 //                logger.info( "handleSearchBtnQueueSw (" + watchFolder + ") after start watch thread, now exit actionPerformed" );
                 } 
             catch (Exception ex) {
-                Logger.getLogger(HandleSearchBtnQueueSw.class.getName()).log(Level.SEVERE, null, ex);
+                logger.severeExc( ex );
             } 
         }
         

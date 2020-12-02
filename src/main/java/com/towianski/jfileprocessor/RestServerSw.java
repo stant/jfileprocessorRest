@@ -7,12 +7,13 @@ package com.towianski.jfileprocessor;
 
 import com.towianski.jfileprocess.actions.ProcessInThread;
 import com.towianski.jfileprocess.actions.TomcatAppMonitor;
-import com.towianski.jfileprocess.actions.TomcatAppThread;
+import com.towianski.jfileprocess.actions.TomcatAppSftpThread;
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.Constants;
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.utils.MyLogger;
 import com.towianski.utils.Rest;
+import java.time.Duration;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.web.client.RestTemplate;
 
@@ -43,8 +44,8 @@ public class RestServerSw {
     public RestTemplate timeoutRestTemplate( RestTemplateBuilder restTemplateBuilder )
         {
         return restTemplateBuilder
-                .setConnectTimeout(100)
-                .setReadTimeout(100)
+                .setConnectTimeout( Duration.ofMillis( 100 ) )
+                .setReadTimeout( Duration.ofMillis( 100 ) )
                 .build();
         }
 
@@ -73,7 +74,7 @@ public class RestServerSw {
             }
         else   // no thread already running
             {
-            TomcatAppThread tomcatAppThread = new TomcatAppThread( connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin );
+            TomcatAppSftpThread tomcatAppThread = new TomcatAppSftpThread( connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin );
             tomcatAppThread.cancelTomcatAppThread(forceStop);
             }
         logger.info( "exit RestServerSw.cancelRestServer()" );

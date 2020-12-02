@@ -52,18 +52,21 @@ class Test {
             
         String str = "";
         String strName = "";
+        String folder = "";
         def atFile = null;
         for( int i = 0; i < numItems; i++ )
             {
             str = defaultComboBoxModel.getElementAt( i ).toString();
             Path path = Paths.get( str );
             strName = path.getFileName().toString();
+            folder = path.getParent().toString();
 
             outFile << System.getProperty("line.separator") + "------ " + (i + 1) + " - " + str + "  -------------------------------" + System.getProperty("line.separator");
 
             String cmd = baseCmd;
             cmd = cmd.replace( "%f", str );
             cmd = cmd.replace( "%F", strName );
+            cmd = cmd.replace( "%p", folder );
             System.out.println( "do: =" + cmd + "=" );
             def list = cmd.execute().text
             list.eachLine{

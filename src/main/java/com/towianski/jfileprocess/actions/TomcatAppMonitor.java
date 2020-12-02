@@ -109,7 +109,16 @@ public class TomcatAppMonitor implements Runnable
         cancelFlag = false;
         int downTimes = 0;
 
-        tomcatAppThread = new TomcatAppThread( connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin );
+        logger.info( "TomcatAppMonitor.run() connUserInfo.isUsingSftp() =" + connUserInfo.isUsingSftp() + "=   connUserInfo.isUsingHttps() =" + connUserInfo.isUsingHttps() + "=" );
+        if ( connUserInfo.isUsingSftp() )
+            {
+            tomcatAppThread = new TomcatAppSftpThread( connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin );
+            }
+        if ( connUserInfo.isUsingHttps() )
+            {
+            tomcatAppThread = new TomcatAppHttpsThread( connUserInfo, connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), jFileFinderWin );
+            }
+
         runThread = ProcessInThread.newThread( "tomcatAppThread", count++, false, tomcatAppThread );
         runThread.start();
 

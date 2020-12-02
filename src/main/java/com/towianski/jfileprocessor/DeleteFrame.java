@@ -27,6 +27,8 @@ import java.util.EnumSet;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.KeyStroke;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -375,17 +377,28 @@ public class DeleteFrame extends javax.swing.JFrame {
         logger.info( "on EDT? = " + javax.swing.SwingUtilities.isEventDispatchThread() );
         stopDirWatcher();
 
-        DeleteModel deleteModel = extractDeleteModel();
-//        Rest.saveObjectToFile( "DeleteModel.json", deleteModel );
-//        RestTemplate restTemplate = new RestTemplate();
         RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
-        //we can't get List<Employee> because JSON convertor doesn't know the type of
-        //object in the list and hence convert it to default JSON object type LinkedHashMap
-//        FilesTblModel filesTblModel = restTemplate.getForObject( SERVER_URI+JfpRestURIConstants.GET_FILES, FilesTblModel.class, SearchModel.class );
+        logger.info( "rest for delete connUserInfo =" + connUserInfo.toString() + "=" );
 
-        logger.info( "rest send deleteModel =" + deleteModel + "=" );
+        DeleteModel deleteModel = extractDeleteModel();
+        logger.info( "extractDeleteModel deleteModel =" + Rest.saveObjectToString( deleteModel ) );
 
-        String response = noHostVerifyRestTemplate.postForEntity( connUserInfo.getToUri() + JfpRestURIConstants.DELETE, deleteModel, String.class).getBody();
+        HttpHeaders headers = Rest.getHeaders( connUserInfo.getToUser(), connUserInfo.getToPassword() );
+//        
+        HttpEntity<DeleteModel> requestEntity = new HttpEntity( deleteModel, headers );
+////        HttpEntity<String> requestEntity = new HttpEntity( Rest.saveObjectToString( deleteModel ), headers );
+//
+//        // make an HTTP GET request with headers
+//        ResponseEntity<String> responseEntity = noHostVerifyRestTemplate.exchange(
+//                connUserInfo.getToUri() + JfpRestURIConstants.DELETE,
+//                HttpMethod.POST,
+//                requestEntity,
+//                String.class
+//        );
+//        String response = responseEntity.getBody();
+
+        String response = noHostVerifyRestTemplate.postForEntity( connUserInfo.getToUri() + JfpRestURIConstants.DELETE, 
+                        requestEntity, String.class).getBody();
         logger.info( "response =" + response + "=" );
         resultsData = Rest.jsonToObject( response, ResultsData.class );
         logger.info( "resultsData.getFilesMatched() =" + resultsData.getFilesMatched() );
@@ -424,6 +437,7 @@ public class DeleteFrame extends javax.swing.JFrame {
 
             this.setMessage( msg + partialMsg );
             this.setResultsData( resultsData );
+            showErrorsList();
             
             // clean up
             resultsData = null;
@@ -443,6 +457,15 @@ public class DeleteFrame extends javax.swing.JFrame {
                 why = e.getMessage();
             }
             logger.info( "Error in DeleteFrameSwingWorker(): " + why);
+            }
+        }
+    
+    public void showErrorsList()
+        {
+        logger.info( "resultsData.getErrorList().size(): " + resultsData.getErrorList().size());
+        if ( resultsData.getErrorList().size() > 0 )
+            {
+            jFileFinderWin.openStringsToList( null, "Delete-Issues-List", resultsData.getErrorList() );  // This one saves search results to a List window called "files"
             }
         }
 

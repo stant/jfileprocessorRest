@@ -18,10 +18,10 @@ public class SearchModel
     String searchBtnText = null;
     String action = "";
     String startingFolder = null;
-    String patternType = null;
-    String filePattern = null;
-    String tabsLogicType = null;
-    String showFilesFoldersType = null;
+    String patternType = "-glob";
+    String filePattern = "";
+    String tabsLogicType = "AND";
+    String showFilesFoldersType = "Files & Folders";
     
     String size1Op;
     String size1;
@@ -35,8 +35,8 @@ public class SearchModel
     String date2Op;
     Date date2;
 
-    String maxDepth;
-    String minDepth;
+    String maxDepth = "1";
+    String minDepth = "1";
     String stopFileCount;
     String stopFolderCount;
     

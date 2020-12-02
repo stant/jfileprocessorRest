@@ -104,15 +104,19 @@ class WatchFolders3Impl {
                 resultsData.setMessage( "by user" );
                 break;
                 }
+    System.out.println( "putAllowToRunQueue() allowToRunQueue.size() = " + allowToRunQueue.size() );
             System.out.println("watchFolders3 waiting to get runallow token" );
             allowToRunQueue.take();   // blocks until get a token denoting allowed to run.
+            System.out.println("watchFolders3 after .take()" );
 
             watchFileEventsSw.restart();
+            System.out.println("watchFolders3 after watchFileEventsSw.restart();" );
 
             while( true )
                 {
+                System.out.println("watchFolders3 Waiting at fileEventQueue.take()" );
                 FileTimeEvent fte = fileEventQueue.take();
-                System.out.println( "> " + fte.getFilename() + "   event =" + fte.getEventKind() + System.getProperty("line.separator") );
+                System.out.println( "watchFolders3 > " + fte.getFilename() + "   event =" + fte.getEventKind() + System.getProperty("line.separator") );
                 if ( fte.getEventKind() == null )
                     {
                     outFile << "--Canceled--" + System.getProperty("line.separator");
@@ -132,12 +136,12 @@ class WatchFolders3Impl {
     //                Files.move( fte.getFullFilePath(), 
     //                    Paths.get("/net2/watch-final-2").resolve( Paths.get( fte.getFilename() ) ), 
     //                    StandardCopyOption.REPLACE_EXISTING);
-                    //outFile << "copy file: =" + "> " + fte.getFullFilePath() + "=";
-                    //outFile << "  to file: =" + "> " + Paths.get("/net2/watch-3").resolve( Paths.get( fte.getFilename() ) ) + "=" + System.getProperty("line.separator");;
+                    outFile << "copy file: =" + "> " + fte.getFullFilePath() + "=";
+                    outFile << "  to file: =" + "> " + Paths.get("/net2/watch-3").resolve( Paths.get( fte.getFilename() ) ) + "=" + System.getProperty("line.separator");;
                     Files.copy( fte.getFullFilePath(), 
                         Paths.get("/net2/watch-final-1").resolve( Paths.get( fte.getFilename() ) ),   // c:\\watch-1
                         StandardCopyOption.REPLACE_EXISTING);
-                    //outFile << "delete file: =" + "> " + fte.getFullFilePath() + System.getProperty("line.separator");
+                    outFile << "delete file: =" + "> " + fte.getFullFilePath() + System.getProperty("line.separator");
                     Files.deleteIfExists( fte.getFullFilePath() );
                     }
                 catch (Exception e) {
@@ -148,9 +152,10 @@ class WatchFolders3Impl {
             }
         catch (InterruptedException ex)
             {
-            System.out.println("watchFolders3 waiting to get runallow token" );
+            System.out.println("watchFolders3 waiting InterruptedException" );
             }
         catch (Exception e2) {
+            System.out.println("watchFolders3 waiting Exception" );
             e2.printStackTrace();
             }
         } // while
@@ -174,9 +179,12 @@ public void putAllowToRunQueue()
         allowToRunQueue.put( 1 );
         }
     catch (InterruptedException ex) {
-            ex.printStackTrace();
+        System.out.println( "putAllowToRunQueue() InterruptedException" );
+        ex.printStackTrace();
         }
+    System.out.println( "putAllowToRunQueue() allowToRunQueue.size() = " + allowToRunQueue.size() );
     }
+    
    }
  
 

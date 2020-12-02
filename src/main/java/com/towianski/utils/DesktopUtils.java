@@ -37,6 +37,11 @@ public class DesktopUtils
    {
       return getJfpConfigHome( "TrashFolder", "folder", true );
    }
+    
+   public static File getHomeGrooyFolder()
+   {
+      return getJfpConfigHome( "groovy-scripts", "folder", true );
+   }
 
    public static String getJfpHomeTmpDir( boolean addEndingSlash )
    {
