@@ -34,7 +34,20 @@ public class JschSftpUtils
     private static final MyLogger logger = MyLogger.getLogger( JschSftpUtils.class.getName() );
     JSch jsch =new JSch();
     Session session = null;
+    ConnUserInfo connUserInfo = null;
 
+    // FIXXX - these methods are not passing SshKeyFilename and they need to
+    // either retrofit or move to using Sftp instead possibly.
+    // this empty constr is called when need to use connUserInfo constr instead.
+    public JschSftpUtils()
+        {    
+        }
+    
+    public JschSftpUtils( ConnUserInfo connUserInfo )
+        {    
+        this.connUserInfo = connUserInfo;
+        }
+    
     public Session getSession()
         {
         return session;
@@ -46,9 +59,10 @@ public class JschSftpUtils
         }
         
 // return "" if ok, or an error message
-public String sftpIfDiff( String locFile, String user, String password, String rhost, int toSshPort, String rmtFile )
+public String sftpIfDiff( String locFile, String user, String password, String rhost, int toSshPort, String toSshKeyFilename, String rmtFile )
     {
-    Sftp sftp = new Sftp( user, password, rhost, toSshPort );
+//    Sftp sftp = new Sftp( user, password, rhost, toSshPort );
+    Sftp sftp = new Sftp( "TO", connUserInfo );
     if ( ! sftp.isConnected() )
         {
         return sftp.getMessage();
@@ -573,7 +587,7 @@ public void exec( String user, String password, String rhost, ConnUserInfo connU
     logger.info( "try exec   user =" + user + "=   to password =" + password + "=" );
     logger.info( "try exec   rhost =" + rhost + "=" );
 
-        Pattern startedOnPortMsg = Pattern.compile( ".*Tomcat started on port\\(s\\): (\\d+) \\(https\\).*" );   // the pattern to search for
+    Pattern startedOnPortMsg = Pattern.compile( ".*Tomcat .* port\\(s\\): (\\d+) \\(https\\).*" );   // the pattern to search for
     logger.info( "exec at 9b" );
     Pattern portInUseMsg = Pattern.compile( ".*Address already in use.*" );   // the pattern to search for
     logger.info( "exec at 9c" );
@@ -591,10 +605,18 @@ public void exec( String user, String password, String rhost, ConnUserInfo connU
 //        session.setUserInfo(ui);
         }
       
-    session=jsch.getSession(user, rhost, connUserInfo.getToSshPortInt() );
+    if ( ! connUserInfo.getToSshKeyFilename().equals( "" ) )
+        {
+        jsch.addIdentity( connUserInfo.getToSshKeyFilename() );
+        logger.info( "using Sftp sshKeyFilename =" + connUserInfo.getToSshKeyFilename() + "=" );
+        }
+    session=jsch.getSession( user, rhost, connUserInfo.getToSshPortInt() );
     logger.info( "exec at 1" );
 
-    session.setPassword( password );
+    if ( connUserInfo.getToSshKeyFilename().equals( "" ) )
+        {
+        session.setPassword( password );
+        }
 
     Properties config = new Properties();
     config.put("StrictHostKeyChecking","no");

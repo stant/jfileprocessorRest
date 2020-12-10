@@ -39,10 +39,12 @@ public class ServerUserFileRightsListHolder {
                 if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
                     {
                     obj.getServerUserFileRightsList().add( new ServerUserFileRights( "stan", "test", "c:\\Downloads", "rwx" ) );
+                    obj.getServerUserFileRightsList().add( new ServerUserFileRights( "stan", "test", "c:\\", "r" ) );
                     obj.getServerUserFileRightsList().add( new ServerUserFileRights( "admin", "test", "c:\\Downloads", "rwx" ) );
                     }
                 else // posix
                     {
+                    obj.getServerUserFileRightsList().add( new ServerUserFileRights( "stan", "test", "/", "r" ) );
                     obj.getServerUserFileRightsList().add( new ServerUserFileRights( "stan", "test", "/tmp", "rwx" ) );
                     obj.getServerUserFileRightsList().add( new ServerUserFileRights( "stan", "test", "/tmp", "rwx" ) );
                     obj.getServerUserFileRightsList().add( new ServerUserFileRights( "admin", "test", "/tmp", "rwx" ) );

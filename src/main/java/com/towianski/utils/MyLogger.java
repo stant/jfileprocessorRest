@@ -10,6 +10,7 @@ import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -25,6 +26,9 @@ public class MyLogger extends java.util.logging.Logger
 
     private static Level currentLogLevel = Level.OFF;
     
+    private static HashMap<String, Level>logLevelHm = new HashMap<>();
+
+
 static MyLogger mylogger = null;
 
 //    final java.util.logging.Logger logger = null;
@@ -34,6 +38,15 @@ static MyLogger mylogger = null;
   
     protected MyLogger(String name) {
         super(name,null);
+        logLevelHm.put( "Level.ALL", Level.ALL );
+        logLevelHm.put( "Level.CONFIG", Level.CONFIG );
+        logLevelHm.put( "Level.FINE", Level.FINE );
+        logLevelHm.put( "Level.FINER", Level.FINER );
+        logLevelHm.put( "Level.FINEST", Level.FINEST );
+        logLevelHm.put( "Level.INFO", Level.INFO );
+        logLevelHm.put( "Level.OFF", Level.OFF );
+        logLevelHm.put( "Level.SEVERE", Level.SEVERE );
+        logLevelHm.put( "Level.WARNING", Level.WARNING );
     }
     
  
@@ -79,6 +92,15 @@ static MyLogger mylogger = null;
         logger.setLevel( currentLogLevel );
     
         return (MyLogger)logger;
+        }
+
+    public static void setAllLoggerLevels( String newLevelStr )
+        {
+        System.out.println( "set loglevel newLevelStr (" + newLevelStr + ")" );
+        Level newLevel = logLevelHm.get( newLevelStr );
+        
+        if ( newLevel != null )
+            setAllLoggerLevels( newLevel );
         }
 
     public static void setAllLoggerLevels( Level newLevel )
@@ -201,7 +223,7 @@ public void severeExc( Exception exc )
 //    MyLogger logger2 = MyLogger.getLogger("test");
     MyLogger logger2 = MyLogger.getLogger( MyLogger.class.getName() );
 
-     logger2.setLevel( Level.FINE );
+    logger2.setLevel( Level.FINE );
 
     logger2.log(Level.INFO, "message 1");
     logger2.log(Level.SEVERE, "message 2");

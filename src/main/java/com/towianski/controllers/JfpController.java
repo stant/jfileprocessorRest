@@ -210,7 +210,7 @@ public class JfpController {
     @RequestMapping( value = JfpRestURIConstants.GET_FILE, method = RequestMethod.GET )
     public ResponseEntity<Resource> getFile( String fileName ) throws IOException
         {
-        logger.info( "fileName =" + fileName + "=" );
+        logger.info( "GET_FILE fileName =" + fileName + "=" );
         File file = new File( fileName );
         Path path = Paths.get( file.getAbsolutePath() );
         ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
@@ -231,7 +231,8 @@ public class JfpController {
     @RequestMapping( value = JfpRestURIConstants.DOES_FILE_EXIST, method = RequestMethod.GET )
     public @ResponseBody Boolean doesFileExist( String fileName ) throws IOException
         {
-        logger.info( "fileName =" + fileName + "=" );
+        fileName = URLDecoder.decode( fileName, "UTF-8" );
+        logger.info( "DOES_FILE_EXIST fileName =" + fileName + "=" );
         File file = null;
 
         try {
@@ -275,7 +276,7 @@ public class JfpController {
 //        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
 //        String fileName2 = fileStorageService.storeFile(file);
 
-        String fileName = StringUtils.cleanPath( source.getOriginalFilename());
+        String fileName = StringUtils.cleanPath( source.getOriginalFilename() );
         Path targetLocation = null;
 
         logger.info( "fileName =" + fileName + "=" );
@@ -302,7 +303,8 @@ public class JfpController {
                 //throw new Exception( "https: \"" + "\" does not have folder permissions" );
                 }
             
-            Files.copy( source.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING );
+            Files.copy( source.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING );  // FIXXX pass replace flag and not auto replace !
+            logger.info( "Done SendFile targetLocation =" + targetLocation.toString() + "=" );
             
             // extra stuff to fixxx dealing with extended attributes or something...
 ////            UserPrincipal owner = Files.getOwner( targetLocation );

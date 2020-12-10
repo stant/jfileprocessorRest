@@ -98,7 +98,7 @@ public class TomcatAppSftpThread extends TomcatAppThread  // implements Runnable
             RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
 
             cancelFlag = false;
-            JschSftpUtils jschSftpUtils = new JschSftpUtils();
+            JschSftpUtils jschSftpUtils = new JschSftpUtils( connUserInfo );
             String response = null;
 
             logger.info( "TomcatAppThread.run() make rest /jfp/sys/ping call" );
@@ -138,7 +138,7 @@ public class TomcatAppSftpThread extends TomcatAppThread  // implements Runnable
                 if ( connUserInfo.isUsingSftp() )
                     {
                     //jschSftpUtils.copyIfMissing( fpath + jfpFilename, user, passwd, rmtHost, jfpFilename );
-                    String errMsg = jschSftpUtils.sftpIfDiff( fpath + jfpFilename, user, passwd, rmtHost, connUserInfo.getToSshPortInt(), jfpFilename );
+                    String errMsg = jschSftpUtils.sftpIfDiff( fpath + jfpFilename, user, passwd, rmtHost, connUserInfo.getToSshPortInt(), connUserInfo.getToSshKeyFilename(), jfpFilename );
                     if ( ! errMsg.equals( "" ) )
                         {
                         JOptionPane.showMessageDialog( null, "Could not connect. Is sftp subsystem configured in ssh?", "Error", JOptionPane.ERROR_MESSAGE );

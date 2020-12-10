@@ -74,7 +74,7 @@ public class MyMouseAdapter extends MouseAdapter
                     }
                 else if ( folderType == FilesTblModel.FOLDERTYPE_FILE )
                     {
-                    jFileFinderWin.desktopOpen( selectedPath, JfpConstants.ASSOC_CMD_TYPE_EXEC );
+                    jFileFinderWin.desktopOpen( selectedPath, JfpConstants.ASSOC_CMD_TYPE_EXEC, rowIndex );
                     }
                }            
         }

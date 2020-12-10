@@ -61,7 +61,8 @@ public class JFileCopy //  implements Runnable
     public void cancelSearch()
         {
         cancelFlag = true;
-        copier.cancelSearch();
+        if ( copier != null ) copier.cancelSearch();
+        if ( copierNonWalker != null ) copierNonWalker.cancelSearch();
         }
 
     public void cancelFill()
@@ -244,25 +245,29 @@ public class JFileCopy //  implements Runnable
                     //httpsUtilsSrc.close();
                 }
             }
-        else if ( connUserInfo.getCopyProcotol() == Constants.COPY_PROTOCOL_SFTP_GET || connUserInfo.getCopyProcotol() == Constants.COPY_PROTOCOL_SFTP_PUT )
+        else if ( connUserInfo.getCopyProcotol() == Constants.COPY_PROTOCOL_SFTP_GET || 
+                  connUserInfo.getCopyProcotol() == Constants.COPY_PROTOCOL_SFTP_PUT )
             {
             Sftp sftp = null;
             Sftp sftpSrc = null;
             if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_FILE ) &&
                  connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_SFTP )  )
                 {
-                sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), connUserInfo.getToSshPortInt() );
+                //sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), connUserInfo.getToSshPortInt() );
+                sftp = new Sftp( "TO", connUserInfo );
                 }
             else if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_SFTP ) &&
                       connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_FILE )  )
                 {
-                sftp = new Sftp( connUserInfo.getFromUser(), connUserInfo.getFromPassword(), connUserInfo.getFromHost(), connUserInfo.getFromSshPortInt() );
+                //sftp = new Sftp( connUserInfo.getFromUser(), connUserInfo.getFromPassword(), connUserInfo.getFromHost(), connUserInfo.getFromSshPortInt() );
+                sftp = new Sftp( "FROM", connUserInfo );
                 }
             else if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_SFTP ) &&
                       connUserInfo.getToProtocol().equals( Constants.PATH_PROTOCOL_SFTP )  )
                 {
                 logger.info( "CopierNonWalker: will do sftp to sftp -- like sftp to local" );
-                sftp = new Sftp( connUserInfo.getFromUser(), connUserInfo.getFromPassword(), connUserInfo.getFromHost(), connUserInfo.getFromSshPortInt() );
+                //sftp = new Sftp( connUserInfo.getFromUser(), connUserInfo.getFromPassword(), connUserInfo.getFromHost(), connUserInfo.getFromSshPortInt() );
+                sftp = new Sftp( "FROM", connUserInfo );
 //                sftpSrc = new Sftp( connUserInfo.getFromUser(), connUserInfo.getFromPassword(), connUserInfo.getFromHost() );
 //                sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost() );
                 }

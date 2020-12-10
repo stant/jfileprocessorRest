@@ -23,7 +23,7 @@ apply plugin: 'war'
 //apply plugin: com.dorongold.gradle.tasktree.TaskTreePlugin
 
 group 'com.towianski'
-version '2.0-beta'
+version '2.1-beta'
 
 mainClassName = 'com.towianski.boot.StartApp'
 
@@ -182,7 +182,8 @@ task generateServerScriptPosix {
 # export PATH=\$JAVA_HOME/bin;\$PATH
 
 # can add --debug to below line\n\
-# to use port 80 for standard web you might need to start as an admin
+#     and --loglevel=Level.ALL  or whatever\n\
+# to use port 80 for standard web you might need to start as an admin\n\
 java -Dserver.port=8090 -jar ${rootProject.name}-${version}.war --server --logging.file=server.log\n\
 
 """
@@ -260,7 +261,8 @@ rem set JAVA_HOME=F:\\programs\\Java\\jdk10
 rem set PATH=%JAVA_HOME%\\bin;%PATH%
 
 rem can add --debug to end of below line\n\
-rem to use port 80 for standard web you might need to start as an admin
+rem  --loglevel=Level.ALL  or whatever\n\
+rem to use port 80 for standard web you might need to start as an admin\n\
 java -Dserver.port=8090 -jar ${rootProject.name}-${version}.war --server --logging.file=server.log\n\
 
 """

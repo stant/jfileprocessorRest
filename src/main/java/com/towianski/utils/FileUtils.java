@@ -45,7 +45,8 @@ public class FileUtils
             if ( connUserInfo.isUsingSftp() )
                 {
                 Sftp sftp = null;
-                sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), connUserInfo.getToSshPortInt() );
+                //sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), connUserInfo.getToSshPortInt() );
+                sftp = new Sftp( "TO", connUserInfo );
                 return sftp.exists( targetPath.toString() );
                 }
             else if ( connUserInfo.isUsingHttps() )
@@ -100,7 +101,8 @@ public class FileUtils
             {
             if ( connUserInfo.isUsingSftp() )
                 {
-                Sftp sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), connUserInfo.getToSshPortInt() );
+                //Sftp sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), connUserInfo.getToSshPortInt() );
+                Sftp sftp = new Sftp( "TO", connUserInfo );
                 sftp.mkDir( targetPath.toString() );
                 }
             else if ( connUserInfo.isUsingHttps() )
@@ -207,8 +209,8 @@ public class FileUtils
             {
             if ( connUserInfo.isUsingSftp() )
                 {
-                Sftp sftp = null;
-                sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), connUserInfo.getToSshPortInt() );
+                //sftp = new Sftp( connUserInfo.getToUser(), connUserInfo.getToPassword(), connUserInfo.getToHost(), connUserInfo.getToSshPortInt() );
+                Sftp sftp = new Sftp( "TO", connUserInfo );
                 sftp.touch( targetPath.toString() );
                 }
             else if ( connUserInfo.isUsingHttps() )

@@ -9,8 +9,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 
@@ -28,8 +30,11 @@ public class ConnectionWin extends javax.swing.JDialog {
     JTextField parentPassword = null;
     JTextField parentHttpsPort = null;
     JTextField parentSshPort = null;
+    JTextField parentSshKeyFilename = null;
     
-    public ConnectionWin( JTextField parentConnectionType, JTextField parentHost, JTextField parentUsername, JTextField parentPassword, JTextField parentHttpsPort, JTextField parentSshPort ) {
+    
+    public ConnectionWin( JTextField parentConnectionType, JTextField parentHost, JTextField parentUsername, JTextField parentPassword, JTextField parentHttpsPort, JTextField parentSshPort,JTextField parentSshKeyFilename ) 
+        {
         initComponents();
         this.parentConnectionType = parentConnectionType;
         this.parentHost = parentHost;
@@ -37,6 +42,7 @@ public class ConnectionWin extends javax.swing.JDialog {
         this.parentPassword = parentPassword;
         this.parentHttpsPort = parentHttpsPort;
         this.parentSshPort = parentSshPort;
+        this.parentSshKeyFilename = parentSshKeyFilename;
 
         connectionType.setSelectedItem( parentConnectionType.getText() );
         host.setText( parentHost.getText() );
@@ -44,6 +50,7 @@ public class ConnectionWin extends javax.swing.JDialog {
         password.setText( parentPassword.getText() );
         httpsPort.setText( parentHttpsPort.getText() );
         sshPort.setText( parentSshPort.getText() );
+        sshKeyFilename.setText( parentSshKeyFilename.getText() );
 
         this.setLocationRelativeTo( parentConnectionType );
         this.addEscapeListener( this );
@@ -93,6 +100,10 @@ public class ConnectionWin extends javax.swing.JDialog {
         jLabel5 = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
         connectionType = new javax.swing.JComboBox<>();
+        sshKeyFilename = new javax.swing.JTextField();
+        jLabel7 = new javax.swing.JLabel();
+        jLabel8 = new javax.swing.JLabel();
+        jButton1 = new javax.swing.JButton();
 
         setMinimumSize(new java.awt.Dimension(600, 300));
         setModal(true);
@@ -147,7 +158,7 @@ public class ConnectionWin extends javax.swing.JDialog {
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
-        gridBagConstraints.gridy = 7;
+        gridBagConstraints.gridy = 8;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
         gridBagConstraints.insets = new java.awt.Insets(10, 10, 7, 10);
         getContentPane().add(okBtn, gridBagConstraints);
@@ -160,7 +171,7 @@ public class ConnectionWin extends javax.swing.JDialog {
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 3;
-        gridBagConstraints.gridy = 7;
+        gridBagConstraints.gridy = 8;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
         gridBagConstraints.insets = new java.awt.Insets(10, 10, 7, 10);
         getContentPane().add(cancelBtn, gridBagConstraints);
@@ -216,13 +227,11 @@ public class ConnectionWin extends javax.swing.JDialog {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 5;
-        gridBagConstraints.gridwidth = 2;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTHWEST;
-        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
         gridBagConstraints.insets = new java.awt.Insets(10, 7, 0, 10);
         getContentPane().add(sshPort, gridBagConstraints);
 
-        jLabel4.setText("Sftp Port");
+        jLabel4.setText("Ssh Port");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 5;
@@ -279,6 +288,53 @@ public class ConnectionWin extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(10, 7, 0, 10);
         getContentPane().add(connectionType, gridBagConstraints);
 
+        sshKeyFilename.setMinimumSize(new java.awt.Dimension(70, 25));
+        sshKeyFilename.setPreferredSize(new java.awt.Dimension(70, 25));
+        sshKeyFilename.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                sshKeyFilenameActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 6;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(10, 7, 0, 10);
+        getContentPane().add(sshKeyFilename, gridBagConstraints);
+
+        jLabel7.setText("Ssh Key File");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 6;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+        getContentPane().add(jLabel7, gridBagConstraints);
+
+        jLabel8.setText("optional");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 5;
+        gridBagConstraints.gridy = 6;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+        gridBagConstraints.insets = new java.awt.Insets(0, 7, 0, 10);
+        getContentPane().add(jLabel8, gridBagConstraints);
+
+        jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/yellow/Search-icon-16.png"))); // NOI18N
+        jButton1.setMaximumSize(new java.awt.Dimension(50, 25));
+        jButton1.setMinimumSize(new java.awt.Dimension(50, 25));
+        jButton1.setPreferredSize(new java.awt.Dimension(50, 25));
+        jButton1.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 4;
+        gridBagConstraints.gridy = 6;
+        gridBagConstraints.insets = new java.awt.Insets(10, 7, 0, 10);
+        getContentPane().add(jButton1, gridBagConstraints);
+
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
@@ -289,6 +345,7 @@ public class ConnectionWin extends javax.swing.JDialog {
         parentPassword.setText( password.getText() );
         parentHttpsPort.setText( httpsPort.getText() );
         parentSshPort.setText( sshPort.getText() );
+        parentSshKeyFilename.setText( sshKeyFilename.getText() );
         this.dispatchEvent( new WindowEvent( this, WindowEvent.WINDOW_CLOSING )); 
         this.dispose();
     }//GEN-LAST:event_okBtnActionPerformed
@@ -335,6 +392,8 @@ public class ConnectionWin extends javax.swing.JDialog {
             httpsPort.setVisible( false );
             sshPort.setText( "" );
             sshPort.setVisible( false );
+            sshKeyFilename.setText( "" );
+            sshKeyFilename.setVisible( false );
             }
         else if ( connectionType.getSelectedItem().toString().equalsIgnoreCase( "https" ) )
             {
@@ -344,6 +403,8 @@ public class ConnectionWin extends javax.swing.JDialog {
             httpsPort.setVisible( true );
             sshPort.setText( "" );
             sshPort.setVisible( false );
+            sshKeyFilename.setText( "" );
+            sshKeyFilename.setVisible( false );
             }
         else if ( connectionType.getSelectedItem().toString().equalsIgnoreCase( "sftp + https" ) )
             {
@@ -352,9 +413,43 @@ public class ConnectionWin extends javax.swing.JDialog {
             password.setVisible( true );
             httpsPort.setVisible( true );
             sshPort.setVisible( true );
+            sshKeyFilename.setVisible( true );
             }
         this.pack();
     }//GEN-LAST:event_connectionTypeActionPerformed
+
+    private void sshKeyFilenameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sshKeyFilenameActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_sshKeyFilenameActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileHidingEnabled( true );
+        chooser.setDialogTitle( "Select ssh key file" );
+        File sshKeyFile = null;
+        if ( sshKeyFilename.getText().trim().equals( "" ) )
+            {
+            chooser.setCurrentDirectory( new java.io.File(".") );
+            }
+        else
+            {
+            sshKeyFile = new java.io.File( sshKeyFilename.getText().trim() );
+            chooser.setCurrentDirectory( sshKeyFile.getParentFile() );
+            }
+        chooser.setFileSelectionMode( JFileChooser.FILES_ONLY );
+        //
+        // disable the "All files" option.
+        //
+        chooser.setAcceptAllFileFilterUsed(false);
+    
+    if ( chooser.showDialog( this, "Select" ) == JFileChooser.APPROVE_OPTION )
+        {
+        File selectedFile = chooser.getSelectedFile();
+        //Settings.set( "last.directory", dialog.getCurrentDirectory().getAbsolutePath() );
+        //String[] tt = { selectedFile.getPath() };
+        sshKeyFilename.setText( selectedFile.getPath() );
+        }
+    }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -401,14 +496,18 @@ public class ConnectionWin extends javax.swing.JDialog {
     private javax.swing.JComboBox<String> connectionType;
     private javax.swing.JTextField host;
     private javax.swing.JTextField httpsPort;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JButton okBtn;
     private javax.swing.JTextField password;
+    private javax.swing.JTextField sshKeyFilename;
     private javax.swing.JTextField sshPort;
     private javax.swing.JTextField username;
     // End of variables declaration//GEN-END:variables

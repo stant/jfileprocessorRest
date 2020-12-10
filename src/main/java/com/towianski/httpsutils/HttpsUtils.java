@@ -430,17 +430,17 @@ public Boolean exists( String targetPath ) throws UnsupportedEncodingException
         {
         RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
 
-        MultiValueMap<String, String> params = new LinkedMultiValueMap();
+//        MultiValueMap<String, String> params = new LinkedMultiValueMap();
         String rmtFilePath = URLEncoder.encode( targetPath, "UTF-8" );
-        params.add( "fileName", rmtFilePath );
-        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity( params, Rest.getHeaders( user, password ) );
+//        params.add( "fileName", rmtFilePath );
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity( Rest.getHeaders( user, password ) );
 
 //                    response = noHostVerifyRestTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.DOES_FILE_EXIST, Boolean.class );
 //                    HttpEntity request = new HttpEntity( Rest.getHeaders( connUserInfo.getToUser(), connUserInfo.getToPassword() ) );
 
         // make an HTTP GET request with headers
         ResponseEntity<Boolean> responseEntity = noHostVerifyRestTemplate.exchange(
-                connUserInfo.getToUri() + JfpRestURIConstants.DOES_FILE_EXIST,
+                connUserInfo.getToUri() + JfpRestURIConstants.DOES_FILE_EXIST + "?fileName=" + rmtFilePath,
                 HttpMethod.GET,
                 requestEntity,
                 Boolean.class
@@ -604,18 +604,20 @@ public ArrayList<String> ls( String rmtFile ) throws UnsupportedEncodingExceptio
 
         try {
             //logger.info( "response =" + response + "=" );
-          //  resultsData = Rest.jsonToObject( response, ResultsData.class );
+            //resultsData = Rest.jsonToObject( response, ResultsData.class );
             resultsData = responseEntity.getBody();
             logger.info( "response as resultsData =" + Rest.saveObjectToString( resultsData ) );
             logger.info( "resultsData.getFilesMatched() =" + resultsData.getFilesMatched() );
             //logger.info( "resultsData.getFilesTblModel() =" + resultsData.getFilesTblModel().toString() );
-        } catch (Exception ex) {
+            } 
+        catch (Exception ex) 
+            {
             logger.info( "Error. No valid response from server" );
             java.util.logging.Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
             //jFileFinderWin.setMessage( "Error. No valid response from server" );
             //jFileFinderWin.setResultsData( new ResultsData() );
             return pathsList;
-        }
+            }
 
         NumberFormat numFormat = NumberFormat.getIntegerInstance();
         logger.info( "Matched " + numFormat.format( resultsData.getFilesMatched() ) + " files and " + numFormat.format( resultsData.getFoldersMatched() ) 

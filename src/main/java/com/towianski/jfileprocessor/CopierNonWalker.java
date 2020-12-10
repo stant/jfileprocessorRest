@@ -633,6 +633,7 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
                 
 //                logger.info( "copyOptions contains? StandardCopyOption.REPLACE_EXISTING =" + copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) + "=" );
                     
+                logger.info( "httpsUtilsTar.exists( destinationFolderStr ) ?" + httpsUtilsTar.exists( destinationFolderStr ) + "=" );
                 if ( httpsUtilsTar.exists( destinationFolderStr ) )
                     {
                     if ( copyOptions.contains( StandardCopyOption.REPLACE_EXISTING ) )  // Fixxx when on server need to pass this flag and might not be as it overwrites !

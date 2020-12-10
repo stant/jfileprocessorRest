@@ -24,6 +24,7 @@ public class ConnUserInfo
     String fromPassword = "";
     String fromHost = "localhost";
     String fromSshPort = "";
+    String fromSshKeyFilename = "";
     int fromFilesysType = FILESYSTEM_POSIX;
     String fromAskHttpsPort = "0";
     String fromUsingHttpsPort = "0";
@@ -39,6 +40,7 @@ public class ConnUserInfo
     String toSshPort = "";
     String toAskHttpsPort = "0";
     String toUsingHttpsPort = "0";
+    String toSshKeyFilename = "";
     int toFilesysType = FILESYSTEM_POSIX;
     
     String toUserHomeDir = "";
@@ -78,7 +80,7 @@ public class ConnUserInfo
         this.fromSshPort = fromSshPort;
         }
 
-    public ConnUserInfo( boolean connectedFlag, String toProtocol, String toUser, String toPassword, String toHost, String toSshPort, String toAskHttpsPort )
+    public ConnUserInfo( boolean connectedFlag, String toProtocol, String toUser, String toPassword, String toHost, String toSshPort, String toSshKeyFilename, String toAskHttpsPort )
         {
         this.connectedFlag = connectedFlag;
         this.toProtocol = toProtocol;
@@ -86,28 +88,34 @@ public class ConnUserInfo
         this.toPassword = toPassword;
         this.toHost = toHost;
         this.toSshPort = toSshPort;
+        this.toSshKeyFilename = toSshKeyFilename;
         this.toAskHttpsPort = toAskHttpsPort;
-        this.toUsingHttpsPort = toAskHttpsPort;
+        
+        this.toUsingHttpsPort = toAskHttpsPort;   // needed
         }
 
     @JsonIgnore
-    public void setFrom( String fromProtocol, String fromUser, String fromPassword, String fromHost, String fromSshPort )
+    public void setFrom( String fromProtocol, String fromUser, String fromPassword, String fromHost, String fromSshPort, String fromSshKeyFilename, String fromAskHttpsPort )
         {
         this.fromProtocol = fromProtocol;
         this.fromUser = fromUser;
         this.fromPassword = fromPassword;
         this.fromHost = findHostAddress( fromHost );
         this.fromSshPort = fromSshPort;
+        this.fromSshKeyFilename = fromSshKeyFilename;
+        this.fromAskHttpsPort = fromAskHttpsPort;
+        this.fromUsingHttpsPort = fromAskHttpsPort;
         }
 
     @JsonIgnore
-    public void setTo( String toProtocol, String toUser, String toPassword, String toHost, String toSshPort, String toAskHttpsPort )
+    public void setTo( String toProtocol, String toUser, String toPassword, String toHost, String toSshPort, String toSshKeyFilename, String toAskHttpsPort )
         {
         this.toProtocol = toProtocol;
         this.toUser = toUser;
         this.toPassword = toPassword;
         this.toHost = toHost;
         this.toSshPort = toSshPort;
+        this.toSshKeyFilename = toSshKeyFilename;
         this.toAskHttpsPort = toAskHttpsPort;
         this.toUsingHttpsPort = toAskHttpsPort;
         }
@@ -191,8 +199,8 @@ public class ConnUserInfo
         this.connectedFlag = connectedFlag;
         if ( ! connectedFlag )
             {
-            setFrom( Constants.PATH_PROTOCOL_FILE, "", "", "?", "" );
-            setTo( Constants.PATH_PROTOCOL_FILE, "", "", "?", "", "" );
+            setFrom( Constants.PATH_PROTOCOL_FILE, "", "", "?", "", "", "" );
+            setTo( Constants.PATH_PROTOCOL_FILE, "", "", "?", "", "", "" );
             if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
                 {
                 fromFilesysType = Constants.FILESYSTEM_DOS;
@@ -225,6 +233,22 @@ public class ConnUserInfo
 
     public void setFromUri(String fromUri) {
         this.fromUri = fromUri;
+    }
+
+    public String getFromSshKeyFilename() {
+        return fromSshKeyFilename;
+    }
+
+    public void setFromSshKeyFilename(String fromSshKeyFilename) {
+        this.fromSshKeyFilename = fromSshKeyFilename;
+    }
+
+    public String getToSshKeyFilename() {
+        return toSshKeyFilename;
+    }
+
+    public void setToSshKeyFilename(String toSshKeyFilename) {
+        this.toSshKeyFilename = toSshKeyFilename;
     }
 
     public String getToUri() {
@@ -496,6 +520,7 @@ public class ConnUserInfo
 + "  fromPassword =" + fromPassword + "="
 + "  fromHost =" + fromHost + "="
 + "  fromSshPort =" + fromSshPort + "="
++ "  fromSshKeyFilename =" + fromSshKeyFilename + "="
 + "  fromAskHttpsPort =" + fromAskHttpsPort + "="
 + "  fromUsingHttpsPort =" + fromUsingHttpsPort + "="
 + "  fromFilesysType =" + fromFilesysType + "="
@@ -505,6 +530,7 @@ public class ConnUserInfo
 + "  toPassword =" + toPassword + "="
 + "  toHost =" + toHost + "="
 + "  toSshPort =" + toSshPort + "="
++ "  toSshKeyFilename =" + toSshKeyFilename + "="
 + "  toAskHttpsPort =" + toAskHttpsPort + "="
 + "  toUsingHttpsPort =" + toUsingHttpsPort + "="
 + "  toFilesysType =" + toFilesysType + "="

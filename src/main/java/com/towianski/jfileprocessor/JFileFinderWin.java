@@ -27,6 +27,7 @@ import com.towianski.chainfilters.ChainFilterOfPreVisitMaxDepth;
 import com.towianski.chainfilters.ChainFilterOfPreVisitMinDepth;
 import com.towianski.chainfilters.ChainFilterOfShowHidden;
 import com.towianski.chainfilters.FilterChain;
+import com.towianski.httpsutils.HttpsUtils;
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.jfileprocess.actions.BackwardFolderAction;
 import com.towianski.jfileprocess.actions.CopyAction;
@@ -133,6 +134,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -147,6 +150,7 @@ import javax.swing.DefaultListModel;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -154,6 +158,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
@@ -200,6 +205,8 @@ public class JFileFinderWin extends javax.swing.JFrame {
     private final static MyLogger logger = MyLogger.getLogger( JFileFinderWin.class.getName() );
 
     private static File bookmarksFileLock = null;
+
+    //ExecutorService executor = Executors.newCachedThreadPool();
 
     Thread jfinderThread = null;
     JFileFinderSwingWorker jFileFinderSwingWorker = null;
@@ -430,8 +437,8 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         logger.info( "JfpHomeTempDir Directory =" + JfpHomeTempDir + "=" );
         logger.info( "Scripts Directory =" + scriptsFile + "=" );
 
-        connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", getRmtAskHttpsPort() );
-        connUserInfo.setTo( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", getRmtAskHttpsPort() );
+        connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", getRmtSshKeyFilename(), getRmtAskHttpsPort() );
+        connUserInfo.setTo( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", getRmtAskHttpsPort(), "" );
         calcFilesysType();  // also sets in connUserInfo
         
         jSplitPane2.setLeftComponent( savedPathReplacablePanel );
@@ -975,12 +982,34 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         this.searchBtnIsWaiting = searchBtnIsWaiting;
     }
 
+    public void setActionMessage(String xx) {
+//        SwingUtilities.invokeAndWait(new Runnable() 
+//            {
+//            public void run() {
+                actionMessage.setText( xx );
+//                try {
+//                    Thread.sleep( 2000 );
+//                } catch (InterruptedException ex) {
+//                    Logger.getLogger(JFileFinderWin.class.getName()).log(Level.SEVERE, null, ex);
+//                }
+//                }
+//            });
+    }
+
     public boolean getFileMgrMode() {
         return fileMgrMode.isSelected();
     }
 
     public void setFileMgrMode(boolean bb) {
         this.fileMgrMode.setSelected( bb );
+    }
+
+    public JFormattedTextField getStdOutFile() {
+        return stdOutFile;
+    }
+
+    public JFormattedTextField getStdErrFile() {
+        return stdErrFile;
     }
 
     public int getFilesysType() {
@@ -1038,6 +1067,8 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             rmtAskHttpsPort.setVisible( false );
             rmtSshPortLbl.setVisible( false );
             rmtSshPort.setVisible( false );
+            //rmtSshKeyFilenameLbl.setVisible( false );
+            rmtSshKeyFilename.setVisible( false );
             }
         else if ( connectionType.getText().equalsIgnoreCase( "https" ) )
             {
@@ -1054,6 +1085,8 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             rmtAskHttpsPort.setVisible( true );
             rmtSshPortLbl.setVisible( false );
             rmtSshPort.setVisible( false );
+            //rmtSshKeyFilenameLbl.setVisible( false );
+            rmtSshKeyFilename.setVisible( false );
             }
         else if ( connectionType.getText().equalsIgnoreCase( "sftp + https" ) )
             {
@@ -1070,6 +1103,8 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             rmtAskHttpsPort.setVisible( true );
             rmtSshPortLbl.setVisible( true );
             rmtSshPort.setVisible( true );
+            //rmtSshKeyFilenameLbl.setVisible( false );
+            rmtSshKeyFilename.setVisible( true );
             }
         this.pack();
         }
@@ -1344,6 +1379,14 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         {
         this.rmtSshPort.setText(str);
         }
+
+    public String getRmtSshKeyFilename() {
+        return rmtSshKeyFilename.getText();
+    }
+
+    public void setRmtSshKeyFilename(String rmtSshKeyFilename) {
+        this.rmtSshKeyFilename.setText( rmtSshKeyFilename );
+    }
 
     public String getRmtAskHttpsPort()
         {
@@ -2288,7 +2331,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         System.gc();        
         }
 
-    public void desktopOpen( String filestr, String fileAssocCmdType )
+    public void desktopOpen( String filestr, String fileAssocCmdType, int rowIndex )
         {
         String rmtFile = filestr;
         File file = new File( filestr.replace( "\\", "/" ) );
@@ -2300,46 +2343,59 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             }
 //        logger.info( "filestr              =" + filestr + "=" );
 //        logger.info( "stdOutFile.getText() =" + stdOutFile.getText() + "=" );
-
+        
         logger.info( "ck to do jfpExecOrStop if exists or Desktop Open for filestr =" + filestr + "=" );
         Desktop desktop = Desktop.getDesktop();
         try {
             if ( connUserInfo.isConnectedFlag()  &&   //rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) &&
                  ! stdOutFile.getText().equals( filestr ) && ! stdErrFile.getText().equals( filestr ) )
                 {
+                setActionMessage( "Get remote file" );
                 if ( connUserInfo.isUsingSftp() )
                     {
                     JschSftpUtils jschSftpUtils = new JschSftpUtils();
                     jschSftpUtils.SftpGet( filestr, rmtUser.getText().trim(), rmtPasswd.getText().trim(), rmtHost.getText().trim(), rmtSshPort.getText().trim(), JfpHomeTempDir + file.getName() );
                     file = new File( JfpHomeTempDir + file.getName() );
                     }
-//  FIXXX               else if ( connUserInfo.isUsingHttps() )
-//                    {
-//                    JschSftpUtils jschSftpUtils = new JschSftpUtils();
-//                    jschSftpUtils.SftpGet( filestr, rmtUser.getText().trim(), rmtPasswd.getText().trim(), rmtHost.getText().trim(), rmtSshPort.getText().trim(), JfpHomeTempDir + file.getName() );
-//                    file = new File( JfpHomeTempDir + file.getName() );
-//                    }
+                else if ( connUserInfo.isUsingHttps() )
+                    {
+                    HttpsUtils httpsUtils = new HttpsUtils( "TO", connUserInfo );
+                    httpsUtils.getFileViaRestTemplate( filestr, JfpHomeTempDir + file.getName() );
+                    file = new File( JfpHomeTempDir + file.getName() );
+                    }
                 }
             if ( file.exists() )
                 {
                 if ( findFileAssocOrAsk( file.toString(), "dontAsk" ) != null )
                     {
                     logger.info( "do jfpExecOrStop =" + file + "=" );
+                    setActionMessage( "Run jfp association on file" );
                     jfpExecOrStop( file.toString(), fileAssocCmdType );
                     }
                 else
                     {
                     logger.info( "do Desktop Open for filestr =" + file + "=" );
+                    setActionMessage( "Run association on file" );
                     desktop.open( file );
                     }
                 }
             if ( connUserInfo.isConnectedFlag()  &&   //rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) &&
                  ! stdOutFile.getText().equals( filestr ) && ! stdErrFile.getText().equals( filestr ) )
                 {
-                SftpReturnFileFrame sftpReturnFileFrame = new SftpReturnFileFrame( connUserInfo, JfpHomeTempDir + file.getName(), rmtUser.getText().trim(), rmtPasswd.getText().trim(), rmtHost.getText().trim(), rmtFile.toString() );
-                sftpReturnFileFrame.validate();
-                sftpReturnFileFrame.pack();
-                sftpReturnFileFrame.setVisible(true);
+                if ( connUserInfo.isUsingSftp() )
+                    {
+                    SftpReturnFileFrame sftpReturnFileFrame = new SftpReturnFileFrame( connUserInfo, JfpHomeTempDir + file.getName(), rmtUser.getText().trim(), rmtPasswd.getText().trim(), rmtHost.getText().trim(), rmtFile.toString() );
+                    sftpReturnFileFrame.validate();
+                    sftpReturnFileFrame.pack();
+                    sftpReturnFileFrame.setVisible(true);
+                    }
+                else if ( connUserInfo.isUsingHttps() )
+                    {
+                    HttpsReturnFileFrame httpsReturnFileFrame = new HttpsReturnFileFrame( connUserInfo, JfpHomeTempDir + file.getName(), rmtUser.getText().trim(), rmtPasswd.getText().trim(), rmtHost.getText().trim(), rmtFile.toString() );
+                    httpsReturnFileFrame.validate();
+                    httpsReturnFileFrame.pack();
+                    httpsReturnFileFrame.setVisible(true);
+                    }
 //                
 //                Process p = Runtime.getRuntime().exec("start /wait cmd /K " + file);
 //                int exitVal = p.waitFor();
@@ -2351,6 +2407,10 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             logger.severeExc( ex);
             JOptionPane.showMessageDialog( this, "Open not supported in this desktop", "Error", JOptionPane.ERROR_MESSAGE );
             }
+        finally
+            {
+            setActionMessage( "done" );
+            }
         
 //        //let's try to open PDF file
 //        fpath = new File("/Users/pankaj/java.pdf");
@@ -2369,55 +2429,37 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
 //        if(fpath.exists()) desktop.open(fpath);
         }
         
-    public void desktopEdit( String filestr )
+    public void desktopEdit( String filestr, int rowIndex )
         {
-        String rmtFile = filestr;
-        File file = new File( filestr.replace( "\\", "/" ) );
-        //first check if Desktop is supported by Platform or not
-        if ( ! Desktop.isDesktopSupported() )
-            {
-            logger.info( "Desktop is not supported");
-            return;
-            }
-         
-        logger.info( "do Desktop Edit" );
-        Desktop desktop = Desktop.getDesktop();
-        try {
-            if ( connUserInfo.isConnectedFlag()  &&   //rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) &&
-                 ! stdOutFile.getText().equals( filestr ) && ! stdErrFile.getText().equals( filestr ) )
-                {
-                JschSftpUtils jschSftpUtils = new JschSftpUtils();
-                jschSftpUtils.SftpGet( filestr, rmtUser.getText().trim(), rmtPasswd.getText().trim(), rmtHost.getText().trim(), rmtSshPort.getText().trim(), JfpHomeTempDir + file.getName() );
-                file = new File( JfpHomeTempDir + file.getName() );
-                }
-            if ( file.exists() )
-                {
-                //desktop.edit( file );
-                logger.info( "start Cmd =" + myEditorCmd.getText() + " " + file.toString() + "=" );
-                ProcessInThread jp = new ProcessInThread();
-                int rc = jp.exec( connUserInfo.isConnectedFlag() ? JfpHomeTempDir : getStartingFolder(), true, false, myEditorCmd.getText(), file.toString() );
-                logger.info( "javaprocess.exec start new window rc = " + rc + "=" );
-                }
-            if ( connUserInfo.isConnectedFlag()  &&   //rmtConnectBtn.getText().equalsIgnoreCase( Constants.RMT_CONNECT_BTN_CONNECTED ) &&
-                 ! stdOutFile.getText().equals( filestr ) && ! stdErrFile.getText().equals( filestr ) )
-                {
-                SftpReturnFileFrame sftpReturnFileFrame = new SftpReturnFileFrame( connUserInfo, JfpHomeTempDir + file.getName(), rmtUser.getText().trim(), rmtPasswd.getText().trim(), rmtHost.getText().trim(), rmtFile.toString() );
-                sftpReturnFileFrame.validate();
-                sftpReturnFileFrame.pack();
-                sftpReturnFileFrame.setVisible(true);
-//                
-//                Process p = Runtime.getRuntime().exec("start /wait cmd /K " + file);
-//                int exitVal = p.waitFor();
-                }
-            }
-        catch (Exception ex) 
-            {
-            logger.severeExc(ex);
-//            JOptionPane.showMessageDialog( this, "Edit not supported in this desktop.\nWill try Open.", "Error", JOptionPane.ERROR_MESSAGE );
-            desktopOpen( filestr, JfpConstants.ASSOC_CMD_TYPE_EXEC );
-            }
+        //executor.execute( new DesktopEditSwingWorker( this, filestr, rowIndex ) );
+        DesktopEditSwingWorker dtesw = new DesktopEditSwingWorker( this, filestr, rowIndex );
+        dtesw.execute();
         }
         
+//    public void setBgColorAt( int row, Color toColor ) 
+//        {
+//        //logger.info( "setValueAt  value =" + aValue + "=  row =" + row + "  col =" + col );
+//        if ( row < 0 ) return;
+//        try {
+//            TableColumnModel tblColModel = filesTbl.getColumnModel();
+////            System.err.println( "setColumnSizes() table col count =" + tblColModel.getColumnCount() );
+//            if ( tblColModel.getColumnCount() < 2 )
+//                {
+//                return;
+//                }
+//
+//            PathRenderer pathRenderer = (PathRenderer) tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).getCellRenderer();
+////                tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_PATH ).setCellRenderer( new PathRenderer( connUserInfo.getToFilesysType() ) );
+//            Component comp = pathRenderer.getComponent(row);
+//            comp.setBackground( toColor );
+//            } 
+//        catch( Exception ex )
+//            {
+//            logger.info( "setValueAt  Exception for row =" + row );
+//            ex.printStackTrace();
+//            }
+//        }
+    
 /*    
     private FileAssoc findFileAssocOrAskOLD( String selectedPath, String cmd ) {                                            
         try {
@@ -2760,14 +2802,14 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         stringBuf.append( filesysType ).append( "?" );
         if ( connUserInfo.isConnectedFlag() )
             {
+            String prot = Constants.PATH_PROTOCOL_HTTPS;
             if ( ! getRmtSshPort().equals( "" ) )
-                stringBuf.append( Constants.PATH_PROTOCOL_SFTP + "?" + getRmtUser() + "?" + getRmtPasswd() + "?" + getRmtHost() + "?" + getRmtSshPort() ).append( "?" );
-            else
-                stringBuf.append( Constants.PATH_PROTOCOL_HTTPS + "?" + getRmtUser() + "?" + getRmtPasswd() + "?" + getRmtHost() + "?" + getRmtAskHttpsPort() ).append( "?" );
+                prot = Constants.PATH_PROTOCOL_SFTP;
+            stringBuf.append( prot + "?" + getRmtUser() + "?" + getRmtPasswd() + "?" + getRmtHost() + "?" + getRmtSshPort() + "?" + getRmtSshKeyFilename() + "?" + getRmtAskHttpsPort() ).append( "?" );
             }
         else
             {
-            stringBuf.append( Constants.PATH_PROTOCOL_FILE + "???" + hostAddress + "?" + getRmtSshPort() ).append( "?" );
+            stringBuf.append( Constants.PATH_PROTOCOL_FILE + "???" + hostAddress + "?" + getRmtSshPort() + "?" + "?" ).append( "?" );
             }
         
         for( int row : filesTbl.getSelectedRows() )
@@ -3057,6 +3099,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         rmtSshPort = new javax.swing.JTextField();
         rmtPasswdLbl = new javax.swing.JLabel();
         rmtPasswd = new javax.swing.JPasswordField();
+        rmtSshKeyFilename = new javax.swing.JTextField();
         jSplitPane1 = new javax.swing.JSplitPane();
         jPanel6 = new javax.swing.JPanel();
         fileMgrMode = new javax.swing.JCheckBox();
@@ -3129,7 +3172,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         testSshBtn = new javax.swing.JButton();
         jPanel7 = new javax.swing.JPanel();
         searchBtn = new javax.swing.JButton();
-        jLabel3 = new javax.swing.JLabel();
+        actionMessage = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         filesTbl = new javax.swing.JTable() {
             public void changeSelection(    int row, int column, boolean toggle, boolean extend)
@@ -3485,17 +3528,12 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
 
             connectionType.setText(" ");
             connectionType.setMargin(new java.awt.Insets(2, 7, 0, 0));
-            connectionType.setMaximumSize(new java.awt.Dimension(100, 25));
-            connectionType.setMinimumSize(new java.awt.Dimension(60, 25));
-            connectionType.setPreferredSize(new java.awt.Dimension(60, 25));
+            connectionType.setMaximumSize(new java.awt.Dimension(90, 25));
+            connectionType.setMinimumSize(new java.awt.Dimension(90, 25));
+            connectionType.setPreferredSize(new java.awt.Dimension(90, 25));
             connectionType.addMouseListener(new java.awt.event.MouseAdapter() {
                 public void mouseClicked(java.awt.event.MouseEvent evt) {
                     connectionTypeMouseClicked(evt);
-                }
-            });
-            connectionType.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    connectionTypeActionPerformed(evt);
                 }
             });
             gridBagConstraints = new java.awt.GridBagConstraints();
@@ -3551,14 +3589,14 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             topPanel.add(rmtForceDisconnectBtn, gridBagConstraints);
 
             rmtUserLbl.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-            rmtUserLbl.setText("Remote User");
-            rmtUserLbl.setMaximumSize(new java.awt.Dimension(100, 25));
-            rmtUserLbl.setMinimumSize(new java.awt.Dimension(80, 25));
-            rmtUserLbl.setPreferredSize(new java.awt.Dimension(80, 25));
+            rmtUserLbl.setText("User");
+            rmtUserLbl.setMaximumSize(new java.awt.Dimension(35, 25));
+            rmtUserLbl.setMinimumSize(new java.awt.Dimension(35, 25));
+            rmtUserLbl.setPreferredSize(new java.awt.Dimension(35, 25));
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridy = 0;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-            gridBagConstraints.insets = new java.awt.Insets(0, 15, 0, 0);
+            gridBagConstraints.insets = new java.awt.Insets(0, 8, 0, 0);
             topPanel.add(rmtUserLbl, gridBagConstraints);
 
             rmtUser.setMargin(new java.awt.Insets(2, 7, 0, 0));
@@ -3584,7 +3622,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             gridBagConstraints = new java.awt.GridBagConstraints();
             gridBagConstraints.gridy = 0;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
-            gridBagConstraints.insets = new java.awt.Insets(0, 15, 0, 0);
+            gridBagConstraints.insets = new java.awt.Insets(0, 8, 0, 0);
             topPanel.add(rmtHostLbl, gridBagConstraints);
 
             rmtHost.setMargin(new java.awt.Insets(2, 7, 0, 0));
@@ -3676,6 +3714,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
             gridBagConstraints.insets = new java.awt.Insets(0, 7, 0, 0);
             topPanel.add(rmtPasswd, gridBagConstraints);
+            topPanel.add(rmtSshKeyFilename, new java.awt.GridBagConstraints());
 
             jPanel10.add(topPanel, java.awt.BorderLayout.PAGE_START);
 
@@ -4418,14 +4457,14 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                 gridBagConstraints.gridy = 0;
                 gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
                 jPanel7.add(searchBtn, gridBagConstraints);
-
-                jLabel3.setText("Files in Table:");
                 gridBagConstraints = new java.awt.GridBagConstraints();
                 gridBagConstraints.gridx = 3;
                 gridBagConstraints.gridy = 0;
+                gridBagConstraints.gridwidth = 9;
+                gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
                 gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
                 gridBagConstraints.insets = new java.awt.Insets(5, 5, 0, 0);
-                jPanel7.add(jLabel3, gridBagConstraints);
+                jPanel7.add(actionMessage, gridBagConstraints);
 
                 filesTbl.setModel(new javax.swing.table.DefaultTableModel(
                     new Object [][] {
@@ -4631,14 +4670,14 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
 //        File selectedPath = new File( (String) filesTbl.getModel().getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) );
         logger.info( "selected row String =" + (String) filesTbl.getModel().getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) );
 //        logger.info( "selected row file =" + selectedPath );
-        desktopOpen( (String) filesTbl.getModel().getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ), JfpConstants.ASSOC_CMD_TYPE_EXEC );
+        desktopOpen( (String) filesTbl.getModel().getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ), JfpConstants.ASSOC_CMD_TYPE_EXEC, rowIndex );
     }//GEN-LAST:event_openFileActionPerformed
 
     private void myEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_myEditActionPerformed
         int rowIndex = filesTbl.convertRowIndexToModel( filesTbl.getSelectedRow() );
 //        File selectedPath = new File( (String) filesTbl.getModel().getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) );
         //logger.info( "selected row file =" + selectedPath );
-        desktopEdit( (String) filesTbl.getModel().getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) );
+        desktopEdit( (String) filesTbl.getModel().getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ), rowIndex );
     }//GEN-LAST:event_myEditActionPerformed
 
     private void copyFilenameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_copyFilenameActionPerformed
@@ -4802,7 +4841,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             //copyPaths = getClipboardFilesList();
             ArrayList<String> StringsList = getClipboardStringsList( "\\?" );
     
-            if ( StringsList == null || StringsList.size() < 8 )
+            if ( StringsList == null || StringsList.size() < 9 )
                 {
                 JOptionPane.showMessageDialog( this, "No Files selected to Copy.", "Error", JOptionPane.ERROR_MESSAGE );
                 return;
@@ -4815,20 +4854,22 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             logger.info( "connUserInfo.getFromFilesysType() =" + connUserInfo.getFromFilesysType() ); 
             connUserInfo.setToFilesysType( filesysType );
             logger.info( "connUserInfo.getToFilesysType() =" + connUserInfo.getToFilesysType() );
-            connUserInfo.setFrom( StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ) );
-            logger.info( "connUserInfo before set for copy:" + connUserInfo );
-            if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_HTTPS ) )
-                {
-                connUserInfo.setFromAskHttpsPort( connUserInfo.getFromSshPort() );
-                connUserInfo.setFromUsingHttpsPort( connUserInfo.getFromSshPort() );
-                connUserInfo.setFromSshPort( "" );
-                }
+            
+            connUserInfo.setFrom( StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ), StringsList.remove( 0 ) );
+//            logger.info( "connUserInfo before set for copy:" + connUserInfo );
+//            if ( connUserInfo.getFromProtocol().equals( Constants.PATH_PROTOCOL_HTTPS ) )
+//                {
+//                connUserInfo.setFromAskHttpsPort( connUserInfo.getFromSshPort() );
+//                connUserInfo.setFromUsingHttpsPort( connUserInfo.getFromSshPort() );
+//                connUserInfo.setFromSshPort( "" );
+//                connUserInfo.setFromSshKeyFilename( "" );
+//                }
             
             logger.info( "connUserInfo before set for copy:" + connUserInfo );
 
             if ( ! connUserInfo.isConnectedFlag() )
                 {
-                connUserInfo.setTo( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", getRmtAskHttpsPort() );
+                connUserInfo.setTo( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", "", getRmtAskHttpsPort() );
                 }
 //            else
 //                {
@@ -4850,6 +4891,9 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                 logger.finest( "read clipboard fpath =" + fpath );
                 }
             //if ( 1 == 1 ) return;
+            
+            logger.info( "Final connUserInfo :" + connUserInfo );
+
             copyFrame.setup( this, connUserInfo, isDoingCutFlag, copyPathStartPath, copyPaths, selectedPath );
             copyFrame.pack();
             copyFrame.setVisible( true );
@@ -5001,7 +5045,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             }
         else if ( folderType == FilesTblModel.FOLDERTYPE_FILE )
             {
-            this.desktopOpen( selectedPath, JfpConstants.ASSOC_CMD_TYPE_EXEC );
+            this.desktopOpen( selectedPath, JfpConstants.ASSOC_CMD_TYPE_EXEC, rowIndex );
             }        
     }                                      
 
@@ -5468,11 +5512,11 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
     private void logsBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logsBtnActionPerformed
         if ( stdOutFile.getText() != null && ! stdOutFile.getText().equals( "" ) )
             {
-            desktopOpen( stdOutFile.getText(), JfpConstants.ASSOC_CMD_TYPE_EXEC );
+            desktopOpen( stdOutFile.getText(), JfpConstants.ASSOC_CMD_TYPE_EXEC, -1 );
             }
         if ( stdErrFile.getText() != null && ! stdErrFile.getText().equals( "" ) )
             {
-            desktopOpen( stdErrFile.getText(), JfpConstants.ASSOC_CMD_TYPE_EXEC );
+            desktopOpen( stdErrFile.getText(), JfpConstants.ASSOC_CMD_TYPE_EXEC, -1 );
             }
 
     }//GEN-LAST:event_logsBtnActionPerformed
@@ -5548,7 +5592,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                     logger.info( "try jschSftpUtils   file =" + fpath + jfpFilename + "=   to remote =" + rmtUser.getText() + "@" + rmtHost + ":" + jfpFilename + "=" );
 
                     jFileFinderWin.setMessage( "copy server to remote" );
-                    jschSftpUtils.sftpIfDiff( fpath + jfpFilename, rmtUser.getText(), rmtPasswd.getText(), rmtHost.getText(), 22, jfpFilename );
+                    jschSftpUtils.sftpIfDiff( fpath + jfpFilename, rmtUser.getText(), rmtPasswd.getText(), rmtHost.getText(), 22, getRmtSshKeyFilename(), jfpFilename );
                     } 
                 catch (Exception ex) 
                     {
@@ -5615,7 +5659,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                     }
                 if ( ! getRmtSshPort().equals( "" ) )
                     {
-                    connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_SFTP, getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort(), getRmtAskHttpsPort() );
+                    connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_SFTP, getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort(), getRmtSshKeyFilename(), getRmtAskHttpsPort() );
                     }
                 else
                     {
@@ -5624,9 +5668,9 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                         JOptionPane.showMessageDialog( null, "Remote User, Password, Host, Https port cannot be blank", "Error", JOptionPane.ERROR_MESSAGE );
                         return;
                         }
-                    connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_HTTPS, getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort(), getRmtAskHttpsPort() );
+                    connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_HTTPS, getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort(), getRmtSshKeyFilename(), getRmtAskHttpsPort() );
                     }
-                connUserInfo.setFrom( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "" );
+                connUserInfo.setFrom( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", "", "" );
                 connUserInfo.setFromFilesysType( filesysType );
 //                if ( restServerSw == null )
 //                    {
@@ -5671,9 +5715,9 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         if ( restServerSw == null )
             {
             if ( ! getRmtSshPort().equals( "" ) )
-                connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_SFTP, getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort(), getRmtAskHttpsPort() );
+                connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_SFTP, getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort(), getRmtSshKeyFilename(), getRmtAskHttpsPort() );
             else
-                connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_HTTPS, getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort(), getRmtAskHttpsPort() );
+                connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_HTTPS, getRmtUser(), getRmtPasswd(), getRmtHost(), getRmtSshPort(), getRmtSshKeyFilename(), getRmtAskHttpsPort() );
             restServerSw = new RestServerSw( connUserInfo, this );
             }
         if ( restServerSw != null )
@@ -5687,8 +5731,8 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
 //            rmtConnectBtn.setBackground( saveColor );
             rmtConnectBtn.setText( "" );
             }
-        connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", getRmtAskHttpsPort() );
-        connUserInfo.setFrom( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "" );
+        connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", "", getRmtAskHttpsPort() );
+        connUserInfo.setFrom( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", "", "" );
         calcFilesysType();  // also sets in connUserInfo
     }//GEN-LAST:event_rmtForceDisconnectBtnActionPerformed
 
@@ -5720,8 +5764,8 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             setRmtSshPort("" );
             setRmtAskHttpsPort("" );
             }
-        connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", getRmtAskHttpsPort() );
-        connUserInfo.setFrom( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "" );
+        connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", "", getRmtAskHttpsPort() );
+        connUserInfo.setFrom( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", "", "" );
         calcFilesysType();  // also sets in connUserInfo
     }//GEN-LAST:event_rmtDisconnectBtnActionPerformed
 
@@ -5912,13 +5956,9 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
     }//GEN-LAST:event_logLevelActionPerformed
 
     private void connectionTypeMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_connectionTypeMouseClicked
-        ConnectionWin connectionWin = new ConnectionWin( connectionType, rmtHost, rmtUser, rmtPasswd, rmtAskHttpsPort, rmtSshPort );
+        ConnectionWin connectionWin = new ConnectionWin( connectionType, rmtHost, rmtUser, rmtPasswd, rmtAskHttpsPort, rmtSshPort, rmtSshKeyFilename );
         showHideConnectionFields();
     }//GEN-LAST:event_connectionTypeMouseClicked
-
-    private void connectionTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectionTypeActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_connectionTypeActionPerformed
 
     /**
      * @param args the command line arguments
@@ -6145,6 +6185,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
     private javax.swing.JMenuItem Paste;
     private javax.swing.JMenuItem Paste1;
     private javax.swing.JMenuItem Rename;
+    private javax.swing.JLabel actionMessage;
     private javax.swing.JButton addPath;
     private javax.swing.JPanel botPanel;
     private javax.swing.ButtonGroup buttonGroup1;
@@ -6178,7 +6219,6 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel21;
     private javax.swing.JLabel jLabel22;
-    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
@@ -6244,6 +6284,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
     private javax.swing.JLabel rmtHostLbl;
     private javax.swing.JPasswordField rmtPasswd;
     private javax.swing.JLabel rmtPasswdLbl;
+    private javax.swing.JTextField rmtSshKeyFilename;
     private javax.swing.JTextField rmtSshPort;
     private javax.swing.JLabel rmtSshPortLbl;
     private javax.swing.JTextField rmtUser;

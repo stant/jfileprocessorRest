@@ -276,6 +276,7 @@ public class TomcatApp {
         SpringApplication app;
         final ConfigurableApplicationContext context;
         String loggingFile = "";
+        String loggingLevel = null;
         
         for ( int i = 0; i < args.length; i++ )
             {
@@ -284,6 +285,10 @@ public class TomcatApp {
             if ( args[i].toLowerCase().startsWith( "--logging.file" ) )
                 {
                 loggingFile = args[i].substring( "--logging.file=".length() );
+                }
+            else if ( args[i].toLowerCase().startsWith( "--loglevel" ) )
+                {
+                loggingLevel = args[i].substring( "--loglevel=".length() );
                 }
             }
 //        logger.info( "** -Dwhatever =" + System.getProperty("whatever") + "=" );
@@ -300,8 +305,9 @@ public class TomcatApp {
 
         stdOutFilePropertyChange( loggingFile );
         stdErrFilePropertyChange( loggingFile );
-
-        //logger.setAllLoggerLevels( Level.ALL );  // for debugging
+ 
+        if ( loggingLevel != null )
+            logger.setAllLoggerLevels( loggingLevel );  // for debugging
         
         logger.info( "serverUserFileRightsList Address = " + System.identityHashCode( context.getBean( ServerUserFileRightsList.class ) ) );
 

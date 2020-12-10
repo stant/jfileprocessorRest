@@ -5,7 +5,6 @@
  */
 package com.towianski.httpsutils;
 
-import com.towianski.sshutils.*;
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
