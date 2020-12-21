@@ -14,6 +14,7 @@ import com.towianski.httpsutils.HttpsUtils;
 import com.towianski.models.CommonFileAttributes;
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.Constants;
+import com.towianski.models.CopyCounts;
 import com.towianski.sshutils.JschSftpUtils;
 import com.towianski.sshutils.Sftp;
 import com.towianski.utils.DesktopUtils;
@@ -507,7 +508,8 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
             }
         if ( ! connUserInfo.isRunCopyOnRemote() )
             {
-            swingWorker.publish2( numTested );
+            //swingWorker.publish2( numTested );
+            swingWorker.publish3( new CopyCounts( numTested, 0 ) );
             }
     }
     
@@ -643,8 +645,14 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
                         logger.info( "rm " + destinationFolderStr );
                         httpsUtilsTar.rm( destinationFolderStr );
                         logger.info( "put " + sourceFolderStr );
-                        //chanSftp.put( sourceFolderStr, destinationFolderStr );
-                        httpsUtilsTar.putFile( sourceFolderStr, destinationFolderStr );
+                        if ( ! connUserInfo.isRunCopyOnRemote() )
+                            {
+                            httpsUtilsTar.putFileSw( sourceFolderStr, destinationFolderStr, swingWorker, numTested );
+                            }
+                        else
+                            {
+                            httpsUtilsTar.putFile( sourceFolderStr, destinationFolderStr );
+                            }
                         logger.info( "File replaced :: " + destinationFolderStr );
                         numFileMatches++;
                         }
@@ -659,8 +667,14 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
                 else
                     {
                     logger.info( "put new " + sourceFolderStr );
-                    //chanSftp.put( sourceFolderStr, destinationFolderStr );
-                    httpsUtilsTar.putFile( sourceFolderStr, destinationFolderStr );
+                    if ( ! connUserInfo.isRunCopyOnRemote() )
+                        {
+                        httpsUtilsTar.putFileSw( sourceFolderStr, destinationFolderStr, swingWorker, numTested );
+                        }
+                    else
+                        {
+                        httpsUtilsTar.putFile( sourceFolderStr, destinationFolderStr );
+                        }
                     logger.info( "File copied :: " + destinationFolderStr );
                     numFileMatches++;
                     }
@@ -691,7 +705,8 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
             }
         if ( ! connUserInfo.isRunCopyOnRemote() )
             {
-            swingWorker.publish2( numTested );
+            //swingWorker.publish2( numTested );
+            swingWorker.publish3( new CopyCounts( numTested, 0 ) );
             }
     }
     
@@ -863,7 +878,8 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
             }
         if ( ! connUserInfo.isRunCopyOnRemote() )
             {
-            swingWorker.publish2( numTested );
+            //swingWorker.publish2( numTested );
+            swingWorker.publish3( new CopyCounts( numTested, 0 ) );
             }
         }
     
@@ -993,8 +1009,15 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
                             {
                             Files.setAttribute( Paths.get( destinationFolderStr ), "dos:readonly", false );
                             }        
-                        //chanSftp.get( sourceFolderStr, destinationFolderStr );
-                        httpsUtilsSrc.getFileViaRestTemplate( sourceFolderStr, destinationFolderStr );
+                        if ( ! connUserInfo.isRunCopyOnRemote() )
+                            {
+                            httpsUtilsSrc.getFileViaRestTemplateSw( sourceFolderStr, destinationFolderStr, swingWorker, numTested );
+                            }
+                        else
+                            {
+                            httpsUtilsSrc.getFileViaRestTemplate( sourceFolderStr, destinationFolderStr );
+                            }
+
                         numFileMatches++;
                         logger.info( "File replaced :: " + destinationFolderStr );
                         }
@@ -1010,8 +1033,14 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
                     {
 //                    sourceFolderStr = sourceFolderStr.substring(0, 1).equals( "/" ) ? sourceFolderStr : "/" + sourceFolderStr;
                     logger.info( "copyRecursiveHttpsToLocal() httpsUtilsSrc.getFileViaRestTemplate srcFile =" + sourceFolderStr + "=   destFile =" + destinationFolderStr + "=" );
-                    //chanSftp.get( sourceFolderStr, destinationFolderStr );
-                    httpsUtilsSrc.getFileViaRestTemplate( sourceFolderStr, destinationFolderStr );
+                    if ( ! connUserInfo.isRunCopyOnRemote() )
+                        {
+                        httpsUtilsSrc.getFileViaRestTemplateSw( sourceFolderStr, destinationFolderStr, swingWorker, numTested );
+                        }
+                    else
+                        {
+                        httpsUtilsSrc.getFileViaRestTemplate( sourceFolderStr, destinationFolderStr );
+                        }
                     numFileMatches++;
                     logger.info( "File copied :: " + destinationFolderStr );
                     }
@@ -1045,7 +1074,8 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
             }
         if ( ! connUserInfo.isRunCopyOnRemote() )
             {
-            swingWorker.publish2( numTested );
+            //swingWorker.publish2( numTested );
+            swingWorker.publish3( new CopyCounts( numTested, 0 ) );
             }
         }
     

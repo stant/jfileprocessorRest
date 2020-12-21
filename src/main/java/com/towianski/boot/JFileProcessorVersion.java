@@ -3,7 +3,7 @@ package com.towianski.boot;
 
 public class JFileProcessorVersion {
     public static String getVersion() {
-            return "2.1-beta";
+            return "2.2-beta";
     }
 
     public static String getName() {
@@ -11,6 +11,6 @@ public class JFileProcessorVersion {
     }
 
     public static String getFileName() {
-            return "JFileProcessor" + "-" + "2.1-beta" + ".war";
+            return "JFileProcessor" + "-" + "2.2-beta" + ".war";
     }
 }

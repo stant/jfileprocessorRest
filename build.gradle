@@ -23,7 +23,7 @@ apply plugin: 'war'
 //apply plugin: com.dorongold.gradle.tasktree.TaskTreePlugin
 
 group 'com.towianski'
-version '2.1-beta'
+version '2.2-beta'
 
 mainClassName = 'com.towianski.boot.StartApp'
 

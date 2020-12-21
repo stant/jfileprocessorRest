@@ -17,17 +17,24 @@ package com.towianski.httpsutils;
  *
  */
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.towianski.jfileprocessor.CopyFrameSwingWorker;
 import com.towianski.jfileprocessor.JFileFinderWin;
 import com.towianski.models.CommonFileAttributes;
 import com.towianski.models.ConnUserInfo;
+import com.towianski.models.CopyCounts;
 import com.towianski.models.FilesTblModel;
+import com.towianski.models.JfpConstants;
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.models.ResultsData;
 import com.towianski.models.SearchModel;
 import com.towianski.utils.MyLogger;
 import com.towianski.utils.Rest;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
@@ -42,10 +49,21 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Level;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import org.apache.http.conn.ssl.SSLContexts;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -843,27 +861,51 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
             // Streams the response instead of loading it all in memory
             ResponseExtractor<Void> responseExtractor = response -> {
                 try {
-                // Here I write the response to a file but do what you like
-                    logger.info( "getFileViaRestTemplate save response body to target =" + target + "=" );
+                logger.info( "getFileViaRestTemplate save response body to target =" + target + "=" );
                 Path path = Paths.get( target );
+                long totBytesRead = 0;
+                long fileLength = Long.parseLong( response.getHeaders().get( "X-jfp.file.length" ).get(0) );
+                logger.info( "getFileViaRestTemplate get response header fileLength =" + fileLength + "=" );
 
-    //            StringBuilder sb = new StringBuilder();
-    //            
-    //            try {
-    //                BufferedReader reader = 
-    //                       new BufferedReader(new InputStreamReader(response.getBody()));
-    //                String line = null;
-    //
-    //                while ((line = reader.readLine()) != null) {
-    //                    sb.append(line);
-    //                }
-    //            }
-    //            catch (IOException e) { e.printStackTrace(); }
-    //            catch (Exception e) { e.printStackTrace(); }
-    //
-    //            logger.info("finalResult " + sb.toString());
-
-                Files.copy(response.getBody(), path);
+                //ByteArrayInputStream bais = (ByteArrayInputStream) response.getBody();
+                FileOutputStream fos = new FileOutputStream( path.toFile() );
+                
+                try {
+                    byte[] buffer = new byte[102400];    
+                    int bytesRead = 0;
+                    while( bytesRead != -1 )  //|| totBytesRead >= fileLength )
+                        {
+                        bytesRead = response.getBody().read( buffer, 0, 102400 ); //-1, 0, or more
+                        logger.finest( "getFileViaRestTemplate read buffer bytesRead =" + bytesRead + "=" );
+                        if ( bytesRead > 0 )
+                            {
+                            fos.write( buffer, 0, bytesRead );
+                            totBytesRead += bytesRead;
+                            logger.finest( "getFileViaRestTemplate totBytesRead =" + totBytesRead + "=" );
+                            // I have to find and stop at fileLength otherwise it seems to wait for a 1 minute readTimeout
+                            // before it detects the end of file send!
+                            if ( totBytesRead >= fileLength )
+                                {
+                                logger.finest( "getFileViaRestTemplate STOP at fileLength totBytesRead =" + totBytesRead + "=" );
+                                break;
+                                }
+                            }
+                        }
+                    logger.finest( "getFileViaRestTemplate Done Reading/writing totBytesRead =" + totBytesRead + "=" );
+                    }
+                catch( Exception exc )
+                    {
+                    Writer buffer = new StringWriter();
+                    PrintWriter pw = new PrintWriter(buffer);
+                    exc.printStackTrace(pw);
+                    logger.info( "Exception: " + buffer.toString() );
+                    }
+                finally 
+                    {
+                    logger.finest( "getFileViaRestTemplate start close file" );
+                    if (fos != null) fos.close();
+                    logger.finest( "getFileViaRestTemplate done close file" );
+                    }
                 }
             catch( Exception exc )
                 {
@@ -902,14 +944,140 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
             
 //            noHostVerifyRestTemplate.execute( getFileUrl, HttpMethod.GET
 //                            , requestCallback, responseExtractor, params);
-                    
+
             noHostVerifyRestTemplate.execute( URI.create(getFileUrl), HttpMethod.GET, requestCallback, responseExtractor );
+            logger.info( "Done with REST call =" + getFileUrl + "=" );
             } 
         catch (Exception ex) {
            logger.info( "getFileViaRestTemplate ERROR =" + ex );
            logger.severeExc( ex );
         }
     }
+
+    public void getFileViaRestTemplateSw( String source, String target, CopyFrameSwingWorker swingWorker, long numTested ) throws IOException {
+        try {
+            // Optional Accept header
+            RequestCallback requestCallback = request -> request.getHeaders()
+                .setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM, MediaType.ALL));
+
+            // Streams the response instead of loading it all in memory
+            ResponseExtractor<Void> responseExtractor = response -> {
+                try {
+                logger.info( "getFileViaRestTemplate save response body to target =" + target + "=" );
+                Path path = Paths.get( target );
+                long totBytesRead = 0;
+                long dispAtBytes = 102400;
+                long fileLength = Long.parseLong( response.getHeaders().get( "X-jfp.file.length" ).get(0) );
+                logger.info( "getFileViaRestTemplate get response header fileLength =" + fileLength + "=" );
+                
+                //ByteArrayInputStream bais = (ByteArrayInputStream) response.getBody();
+//                FileOutputStream fos = new FileOutputStream( path.toFile() );
+                //BufferedInputStream inStream = new BufferedInputStream( response.getBody() );
+                BufferedOutputStream outStream = new BufferedOutputStream( new FileOutputStream( path.toFile() ) );
+                // a lot of time fooling around trying to make performance better. upload almost twice as long as download.
+                
+                try {
+                    byte[] buffer = new byte[102400];    
+                    int bytesRead = 0;
+                    while(bytesRead != -1)
+                        {
+                        bytesRead = response.getBody().read( buffer, 0, 102400 ); //-1, 0, or more
+                        logger.finest( "getFileViaRestTemplate read buffer bytesRead =" + bytesRead + "=" );
+                        if ( bytesRead > 0 )
+                            {
+                            outStream.write( buffer, 0, bytesRead );
+                            totBytesRead += bytesRead;
+                            logger.finest( "getFileViaRestTemplate totBytesRead =" + totBytesRead + "=" );
+                            if ( totBytesRead > dispAtBytes )
+                                {
+                                swingWorker.publish3( new CopyCounts( numTested, totBytesRead ) );
+                                dispAtBytes = totBytesRead + 102400;
+                                }
+                            // I have to find and stop at fileLength otherwise it seems to wait for a 1 minute readTimeout
+                            // before it detects the end of file send!
+                            if ( totBytesRead >= fileLength )
+                                {
+                                logger.finest( "getFileViaRestTemplate STOP at fileLength totBytesRead =" + totBytesRead + "=" );
+                                break;
+                                }
+                            }
+                        }
+                    logger.finest( "getFileViaRestTemplate Done Reading/writing totBytesRead =" + totBytesRead + "=" );
+                    swingWorker.publish3( new CopyCounts( numTested, totBytesRead ) );
+                    outStream.flush();
+                    }
+                catch( Exception exc )
+                    {
+                    Writer buffer = new StringWriter();
+                    PrintWriter pw = new PrintWriter(buffer);
+                    exc.printStackTrace(pw);
+                    logger.info( "Exception: " + buffer.toString() );
+                    }
+                finally 
+                    {
+                    //if (inStream != null) inStream.close();
+                    if (outStream != null) outStream.close();
+                    }
+                }
+            catch( Exception exc )
+                {
+                Writer buffer = new StringWriter();
+                PrintWriter pw = new PrintWriter(buffer);
+                exc.printStackTrace(pw);
+                logger.info( "Exception: " + buffer.toString() );
+                }
+            return null;
+            };
+        
+//          logger.info( "getFileViaRestTemplate uri =" + uri + JfpRestURIConstants.GET_FILE_SIZE + source + "=" );
+//          noHostVerifyRestTemplate.execute(URI.create(uri + "/jfp/downloadFile/" + source), HttpMethod.GET, requestCallback, responseExtractor);
+        
+            String rmtFilePath = URLEncoder.encode( source, "UTF-8" );
+//            logger.info( "TomcatAppMonitor.run() make rest " + connUserInfo.getToUri() + JfpRestURIConstants.GET_FILE_SIZE + 
+//                    rmtFilePath );
+
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+//            headers.setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM));
+            HttpHeaders headers = Rest.getHeaders( user, password );
+                
+            MultiValueMap<String, String> params = new LinkedMultiValueMap();
+            params.add( "fileName", rmtFilePath );
+            //Map<String, String> params = new HashMap();
+            //params.put( "fileName", source );
+//            HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity( params, headers );
+//            HttpEntity<Resource> response = noHostVerifyRestTemplate.exchange( uri + JfpRestURIConstants.GET_FILE
+//                                    , HttpMethod.GET
+                                    //requestEntity, Long.class );  //, params );
+
+            //String getFileUrl = uri + JfpRestURIConstants.GET_FILE + "?fileName=" + source;
+            String getFileUrl = uri + JfpRestURIConstants.GET_FILE + "?fileName=" + rmtFilePath;
+            logger.info( "qqq call =" + getFileUrl + "=" );
+            
+//            noHostVerifyRestTemplate.execute( getFileUrl, HttpMethod.GET
+//                            , requestCallback, responseExtractor, params);
+                    
+            noHostVerifyRestTemplate.execute( URI.create(getFileUrl), HttpMethod.GET, requestCallback, responseExtractor );
+            logger.info( "Done with REST call =" + getFileUrl + "=" );
+            } 
+        catch (Exception ex) {
+           logger.info( "getFileViaRestTemplate ERROR =" + ex );
+           logger.severeExc( ex );
+        }
+    }
+    
+        // Using Webclient - for the future
+//    public Flux<DataBuffer> downloadFileUrl( ) throws IOException 
+//        {
+//        WebClient webClient = WebClient.create();
+//
+//        // Request service to get file data
+//        return Flux<DataBuffer> fileDataStream = webClient.get()
+//                .uri( this.fileUrl )
+//                .accept( MediaType.APPLICATION_OCTET_STREAM )
+//                .retrieve()
+//                .bodyToFlux( DataBuffer.class );
+//        }
 
     public void putFile( String source, String target ) throws IOException {
         try {
@@ -984,6 +1152,154 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
             throw new IOException( "Unauthorized" );
         }
     }
+
+    public void putFileSw( String source, String target, CopyFrameSwingWorker swingWorker, long numTested ) throws IOException, NoSuchAlgorithmException, KeyStoreException, CertificateException, KeyManagementException {
+            //String rmtFilePath = URLEncoder.encode( source, "UTF-8" );
+
+            //HttpHeaders headers = new HttpHeaders();
+//            HttpHeaders headers = Rest.getHeaders( user, password );
+//            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            logger.info( "putFileSw source =" + source + "=" );
+            logger.info( "putFileSw target =" + target + "=" );
+
+            try {
+                Path path = Paths.get( source );
+
+//            MultiValueMap<String, Object> params = new LinkedMultiValueMap();
+//            params.add( "source", new FileSystemResource( Paths.get( source ) ) );
+//            params.add( "target", target );
+//            //Map<String, String> params = new HashMap();
+//            //params.put( "fileName", source );
+//            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity( params, headers );
+//
+//            logger.info( "qqq call =" + uri + JfpRestURIConstants.SEND_FILE + "=" );
+//            ResponseEntity<String> response = noHostVerifyRestTemplate.postForEntity( uri + JfpRestURIConstants.SEND_FILE,
+//                                    requestEntity, String.class );
+//            
+//            String param = "value";
+
+//            FileInputStream truststoreFile = new FileInputStream( ResourceUtils.getFile( "classpath:selfsigned.jks").getAbsolutePath() );
+//            InputStream truststoreFile = new ClassPathResource("selfsigned.jks").getInputStream();
+//            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+//            KeyStore truststore = KeyStore.getInstance(KeyStore.getDefaultType());
+//            char[] trustorePassword = "jfp2020".toCharArray();
+//            truststore.load(truststoreFile, trustorePassword);
+//            trustManagerFactory.init(truststore);
+//            SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+//            KeyManager[] keyManagers = {};//if you have key managers;
+
+            SSLContext sslContext = SSLContexts.custom()
+                .loadTrustMaterial(null, new TrustSelfSignedStrategy())
+                .build();
+            
+//            SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+//            
+//            CloseableHttpClient httpClient = HttpClients.custom()
+//                .setSSLSocketFactory(sslConnectionSocketFactory)
+//                .build();
+//            
+//            HttpComponentsClientHttpRequestFactory requestFactory =
+//                new HttpComponentsClientHttpRequestFactory();
+//            
+//            requestFactory.setHttpClient(httpClient);
+
+            
+//            sslContext.init(null, trustManagerFactory.getTrustManagers(), new SecureRandom());
+
+            //SSLContext sc = SSLContext.getInstance("TLSv1.2");
+            // Init the SSLContext with a TrustManager[] and SecureRandom()
+            //sslContext.init(null, trustCerts, new java.security.SecureRandom()); 
+
+            //URLConnection connection = new URL( uri + JfpRestURIConstants.SEND_FILE ).openConnection();
+            HttpsURLConnection sslConn = (HttpsURLConnection)new URL( uri + JfpRestURIConstants.SEND_FILE +
+                    "?source=" + URLEncoder.encode( Paths.get( source ).toString(), "UTF-8" ) +
+                    "&target=" + URLEncoder.encode( Paths.get( target ).toString(), "UTF-8" ) +
+                    "&fileLength=" + URLEncoder.encode( path.toFile().length() + "", "UTF-8" )
+                    ).openConnection();
+            logger.info( "qqq call =" + uri + JfpRestURIConstants.SEND_FILE +
+                    "?source=" + URLEncoder.encode( Paths.get( source ).toString(), "UTF-8" ) +
+                    "&target=" + URLEncoder.encode( Paths.get( target ).toString(), "UTF-8" ) +
+                    "&fileLength=" + URLEncoder.encode( path.toFile().length() + "", "UTF-8" ) 
+                );
+            
+            sslConn.setFixedLengthStreamingMode( path.toFile().length() );
+//            sslConn.setChunkedStreamingMode( 1024000 ); //10MB chunk This ensures that any file (of any size) is streamed over a https connection, without internal buffering. 
+            
+            sslConn.setSSLSocketFactory(sslContext.getSocketFactory());
+            //sslConn.setSSLSocketFactory( sslConnectionSocketFactory.getClass() );
+            
+            sslConn.setDoOutput(true);  //  implicitly set the request method to POST
+            sslConn.setRequestMethod("POST");
+            sslConn.setReadTimeout(60 * 1000);
+            sslConn.setConnectTimeout(5 * 1000);
+            sslConn.setRequestProperty("Content-Type", MediaType.APPLICATION_OCTET_STREAM_VALUE );
+            String base64Credentials = new String(Base64.encodeBase64( (user + ":" + password).getBytes()));         
+            sslConn.setRequestProperty("Authorization", "Basic " + base64Credentials );
+            sslConn.setRequestProperty("Connection", "close");
+//            OutputStream output = connection.getOutputStream();
+//            PrintWriter writer = new PrintWriter(new OutputStreamWriter( output, "UTF-8"), true);
+            
+            sslConn.setHostnameVerifier(new HostnameVerifier() {
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
+                    /** if it necessarry get url verfication */
+                    //return HttpsURLConnection.getDefaultHostnameVerifier().verify("your_domain.com", session);
+                    return true;
+                }
+            });
+            //sslConn.setSSLSocketFactory((SSLSocketFactory) SSLSocketFactory.getDefault());
+
+//            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + path.getFileName() );
+//
+//            // Content-Length
+//            //response.setContentLength((int) file.length());
+//            response.addHeader( "X-jfp.file.length", ""  + path.toFile().length() );
+
+            // performance: what seems to matter is not buffering request or response streams
+            // probably reading file with bigger buffer like 1mb instead of 100k
+            
+            OutputStream outStream = sslConn.getOutputStream();
+            //BufferedOutputStream bufOutStream = new BufferedOutputStream( output );
+            BufferedInputStream inStream = new BufferedInputStream( new FileInputStream( path.toFile() ) );
+
+            byte[] buffer = new byte[1024000];
+            int bytesRead = 0;
+            long totBytesRead = 0;
+            long dispAtBytes = 102400;
+            while ((bytesRead = inStream.read( buffer )) != -1) 
+                {
+                logger.info( "SEND_FILESw bytesRead =" + bytesRead + "=" );
+                outStream.write(buffer, 0, bytesRead);
+                totBytesRead += bytesRead;
+                logger.finest( "SEND_FILESw totBytesRead =" + totBytesRead + "=" );
+                if ( totBytesRead > dispAtBytes )
+                    {
+                    swingWorker.publish3( new CopyCounts( numTested, totBytesRead ) );
+                    dispAtBytes = totBytesRead + 102400;
+                    outStream.flush();
+                    }
+                }
+            swingWorker.publish3( new CopyCounts( numTested, totBytesRead ) );
+            logger.info( "SEND_FILESw Done" );
+
+            inStream.close();        
+            logger.fine( "SEND_FILESw after ins close" );
+            outStream.flush();
+            logger.fine( "SEND_FILESw after out flush" );
+            outStream.close();
+            logger.fine( "SEND_FILESw after out close" );
+
+            // Request is lazily fired whenever you need to obtain information about response.
+            int responseCode = ((HttpsURLConnection) sslConn).getResponseCode();
+            logger.info( "SEND_FILESw responseCode =" + responseCode + "=" );
+            }
+        catch (Exception ex) 
+            {
+            logger.info( "SEND_FILESw ERROR =" + logger.getExceptionAsString(ex) );
+            throw new IOException( "Unauthorized" );
+            }
+        }
 
     public String storeFile( MultipartFile source, String target ) 
         {

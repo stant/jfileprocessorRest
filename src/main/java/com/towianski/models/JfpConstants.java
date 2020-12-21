@@ -27,4 +27,7 @@ public class JfpConstants {
 
     public final static String MATCH_TYPE_GLOB = "G";
     public final static String MATCH_TYPE_REGEX = "R";
+    
+    public final static int HTTPS_BUFFER_SIZE = 102400;
+    public final static long HTTPS_DISP_ON_SIZE = 102400;
 }

@@ -6,8 +6,10 @@
 package com.towianski.jfileprocessor;
 
 import com.towianski.jfileprocess.actions.CloseWinOnTimer;
+import com.towianski.models.CopyCounts;
 import com.towianski.models.ResultsData;
 import com.towianski.utils.MyLogger;
+import com.towianski.utils.NumberUtils;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +20,7 @@ import javax.swing.SwingWorker;
  * @author Stan Towianski - June 2015
  */
 
-public class CopyFrameSwingWorker extends SwingWorker<ResultsData, Long> {
+public class CopyFrameSwingWorker extends SwingWorker<ResultsData, CopyCounts> {
 
     private static final MyLogger logger = MyLogger.getLogger( CopyFrameSwingWorker.class.getName() );
 //    JFileFinderWin jFileFinderWin = null;
@@ -28,7 +30,8 @@ public class CopyFrameSwingWorker extends SwingWorker<ResultsData, Long> {
     JFileCopy jfilecopy = null;
     boolean showProgressFlag = true;
     boolean closeWhenDoneFlag = true;
-
+    NumberFormat numf = NumberFormat.getIntegerInstance();
+        
     public CopyFrameSwingWorker( CopyFrame copyFrame, JFileCopy jfilecopy, ArrayList<String> copyPaths, String toPath, boolean showProgressFlag, boolean closeWhenDoneFlag )
         {
 //        this.jFileFinderWin = jFileFinderWin;
@@ -52,18 +55,38 @@ public class CopyFrameSwingWorker extends SwingWorker<ResultsData, Long> {
         this.closeWhenDoneFlag = closeWhenDoneFlag;
     }
 
-    public void publish2( Long num ) {
+//    public void publish2( Long num ) {
+//        if ( showProgressFlag )
+//            {
+//            publish( num );
+//            }
+//        }
+//
+//    protected void process( List<Long> numList ) {
+//        if ( showProgressFlag )
+//            {
+//            Long lastNum = numList.get( numList.size() - 1 );
+//            copyFrame.setMessage( "" + lastNum );
+//            }
+//        }
+
+    public void publish3( CopyCounts cc ) {
         if ( showProgressFlag )
             {
-            publish( num );
+            publish( cc );
             }
         }
-
-    protected void process( List<Long> numList ) {
+     
+    protected void process( List<CopyCounts> numList ) {
         if ( showProgressFlag )
             {
-            Long lastNum = numList.get( numList.size() - 1 );
-            copyFrame.setMessage( "" + lastNum );
+            CopyCounts cc = numList.get( numList.size() - 1 );
+            if( cc.getOneFileBytes() > 0 )
+                //copyFrame.setMessage( "" + numf.format( cc.getFiles() )+ "    bytes: " + numf.format( cc.getOneFileBytes() ) );
+                copyFrame.setMessage( "file: " + numf.format( cc.getFiles() )+ "    bytes: " + NumberUtils.humanReadableByteCount( cc.getOneFileBytes() ) );
+            else
+                //copyFrame.setMessage( "" + numf.format( cc.getFiles() ) );
+                copyFrame.setMessage( "file: " + numf.format( cc.getFiles() ) );
             }
         }
      

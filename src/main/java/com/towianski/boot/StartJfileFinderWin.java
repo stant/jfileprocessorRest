@@ -106,6 +106,7 @@ public class StartJfileFinderWin {
          * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
          */
 //        MyLogger logger = Mylogger.severeExc( ex );        
+        String loggingLevel = null;
 
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -128,6 +129,10 @@ public class StartJfileFinderWin {
             {
 //            logger.info( "** args [" + i + "] =" + args[i] + "=" );
             logger.info( "** args [" + i + "] =" + args[i] + "=" );
+            if ( args[i].toLowerCase().startsWith( "--loglevel" ) )
+                {
+                loggingLevel = args[i].substring( "--loglevel=".length() );
+                }
             }
         
 //        ConfigurableApplicationContext context = new SpringApplicationBuilder(JFileFinderWin.class).headless(false).run(args);
@@ -135,6 +140,9 @@ public class StartJfileFinderWin {
         
         GlobalMemory.setSecUtils( (context.getBean( SecUtils.class )) );
 
+        if ( loggingLevel != null )
+            logger.setAllLoggerLevels( loggingLevel );  // for debugging
+        
         String[] beanNames = context.getBeanDefinitionNames();
 
         logger.info( "\n---- List Of App Spring Beans ----");

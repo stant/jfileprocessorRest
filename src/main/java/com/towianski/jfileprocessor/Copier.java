@@ -6,6 +6,7 @@
 package com.towianski.jfileprocessor;
 
 import com.towianski.boot.GlobalMemory;
+import com.towianski.models.CopyCounts;
 import com.towianski.utils.MyLogger;
 import java.io.File;
 import java.io.IOException;
@@ -272,7 +273,7 @@ public class Copier extends SimpleFileVisitor<Path>
             }
         numTested++;
         numFileTests ++;
-        if ( swingWorker != null )  swingWorker.publish2( numTested );
+        if ( swingWorker != null )  swingWorker.publish3( new CopyCounts( numTested, 0 ) );  //swingWorker.publish2( numTested );
         
 //                    this.toPath.toRealPath().toString().startsWith( this.startingPath.toRealPath().toString() ) )
 //                    if ( this.toPath.toRealPath().toString().startsWith( this.startingPath.toRealPath().toString() ) )

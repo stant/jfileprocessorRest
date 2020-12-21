@@ -290,6 +290,53 @@ public class Rest {
         }
 
 //    @Bean
+    static public RestTemplate createNoHostVerifyRestTemplateShortReadTimeout( int readTimeoutArg ) 
+        //throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException 
+        {
+        try //throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException
+            {
+            logger.info( "entered createNoHostVerifyRestTemplate()" );
+            SSLContext sslContext = SSLContexts.custom()
+                .loadTrustMaterial(null, new TrustSelfSignedStrategy())
+                .build();
+            
+            SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+            
+            CloseableHttpClient httpClient = HttpClients.custom()
+                .setSSLSocketFactory(sslConnectionSocketFactory)
+                .build();
+            
+            HttpComponentsClientHttpRequestFactory requestFactory =
+                new HttpComponentsClientHttpRequestFactory();
+            
+            requestFactory.setReadTimeout( readTimeoutArg * 1000);
+            requestFactory.setConnectTimeout(1 * 1000);
+
+            requestFactory.setHttpClient(httpClient);
+            
+            requestFactory.setBufferRequestBody(false);     // Very Big. upload file was uselessly slow and this sped it up to download speed !
+            
+            RestTemplate rt = new RestTemplate(requestFactory);
+         //   rt .setErrorHandler( new RestTemplateResponseErrorHandler() );   // to handle globally I think but I don't think I want this.
+            return rt;
+            //return new RestTemplate(requestFactory);
+            }
+        catch (NoSuchAlgorithmException ex)
+            {
+            logger.severeExc( ex );
+            } 
+        catch (KeyStoreException ex)
+            {
+            logger.severeExc( ex );
+            } 
+        catch (KeyManagementException ex)
+            {
+            logger.severeExc( ex );
+            }
+        return null;
+        }
+
+//    @Bean
     static public RestTemplate createNoHostVerifyShortTimeoutRestTemplate() 
         //throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException 
         {
