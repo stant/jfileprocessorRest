@@ -100,6 +100,13 @@ public class TomcatApp {
     }
 
     @Bean
+    public JfpUserHm jfpUserHm() {
+        logger.info( "JfpUserHm() constructor" );
+        JfpUserHm jfpUserHm = ServerUserFileRightsListHolder.readInJfpUserHmFromFile();
+        return jfpUserHm;
+    }
+
+    @Bean
     public SecUtilsServer secUtils() {
         logger.info( "SecUtilsServer() constructor" );
         return new SecUtilsServer();
@@ -300,6 +307,8 @@ public class TomcatApp {
         //globalMemoryServer().setcustomPermissionEvaluatorNormBean( customPermissionEvaluatorNormBean );
         GlobalMemoryServer.setCustomPermissionEvaluatorNormBean( (context.getBean( CustomPermissionEvaluator.class )) );
         GlobalMemoryServer.setServerUserFileRightsList( (context.getBean( ServerUserFileRightsList.class )) );
+        //System.out.println( "TomcatApp GlobalMemoryServer.getCustomPermissionEvaluatorNormBean()=" + GlobalMemoryServer.getCustomPermissionEvaluatorNormBean() );
+        //System.out.println( "TomcatApp GlobalMemoryServer.getServerUserFileRightsList()=" + GlobalMemoryServer.getServerUserFileRightsList() );
         GlobalMemory.setSecUtils( (context.getBean( SecUtils.class )) );
 
         stdOutFilePropertyChange( loggingFile );

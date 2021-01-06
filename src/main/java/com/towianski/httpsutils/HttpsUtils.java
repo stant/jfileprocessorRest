@@ -17,13 +17,13 @@ package com.towianski.httpsutils;
  *
  */
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.towianski.interfaces.getCancelFlag;
 import com.towianski.jfileprocessor.CopyFrameSwingWorker;
 import com.towianski.jfileprocessor.JFileFinderWin;
 import com.towianski.models.CommonFileAttributes;
 import com.towianski.models.ConnUserInfo;
 import com.towianski.models.CopyCounts;
 import com.towianski.models.FilesTblModel;
-import com.towianski.models.JfpConstants;
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.models.ResultsData;
 import com.towianski.models.SearchModel;
@@ -406,7 +406,7 @@ public String httpsIfDiff( String locFile, String user, String password, ConnUse
 //        return session;
 //        }
     
-public CommonFileAttributes stat( String rmtFile ) throws UnsupportedEncodingException
+public CommonFileAttributes stat( String rmtFile ) throws UnsupportedEncodingException, Exception
     {
     try {
 //        String rmtFilePath = URLEncoder.encode( connUserInfo.getToUserHomeDir() + "/" + rmtFile, "UTF-8" );
@@ -422,19 +422,28 @@ public CommonFileAttributes stat( String rmtFile ) throws UnsupportedEncodingExc
         params.add( "filename", rmtFilePath );
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity( params, headers );
 
-        HttpEntity<String> response = noHostVerifyRestTemplate.exchange( connUserInfo.getWhichUsingUri() + JfpRestURIConstants.GET_FILE_STAT
+        ResponseEntity<String> responseEntity = noHostVerifyRestTemplate.exchange( connUserInfo.getWhichUsingUri() + JfpRestURIConstants.GET_FILE_STAT
                 , HttpMethod.PUT, requestEntity, String.class );
-        logger.finer( "HttpsUtils stat()  response =" + response + "=" );
+        logger.info("Status Code: " + responseEntity.getStatusCode());	
+        int statusCodeValue = responseEntity.getStatusCodeValue();
+        if ( statusCodeValue == 401 )
+            {
+            throw new Exception( "Unauthorized" );
+            }
+        else if ( statusCodeValue != 200 )
+            {
+            throw new Exception( "Http Error" );
+            }
 
-        CommonFileAttributes cattr = (CommonFileAttributes) Rest.jsonToObject( response.getBody(), new TypeReference<CommonFileAttributes>() {} );
+        CommonFileAttributes cattr = (CommonFileAttributes) Rest.jsonToObject( responseEntity.getBody(), new TypeReference<CommonFileAttributes>() {} );
         logger.finest( "HttpsUtils.stat() GET_FILE_STAT cattr =" + cattr.toString() );
         return cattr;
-//        } catch (UnsupportedEncodingException ex) {
-//            java.util.logging.Logger.getLogger(HttpsUtils.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            logger.info( "HttpsUtils.stat() GET_FILE_STAT error =" + ex.getLocalizedMessage() );
-            logger.log(Level.SEVERE, null, ex);
-            throw ex;
+        } 
+    catch (Exception ex) 
+        {
+        logger.info( "HttpsUtils.stat() GET_FILE_STAT error =" + ex.getLocalizedMessage() );
+        logger.log(Level.SEVERE, null, ex);
+        throw ex;
         }
         //return null;
     }
@@ -450,7 +459,7 @@ public Boolean exists( String targetPath ) throws UnsupportedEncodingException
 
 //        MultiValueMap<String, String> params = new LinkedMultiValueMap();
         String rmtFilePath = URLEncoder.encode( targetPath, "UTF-8" );
-//        params.add( "fileName", rmtFilePath );
+//        params.add( "filename", rmtFilePath );
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity( Rest.getHeaders( user, password ) );
 
 //                    response = noHostVerifyRestTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.DOES_FILE_EXIST, Boolean.class );
@@ -458,20 +467,67 @@ public Boolean exists( String targetPath ) throws UnsupportedEncodingException
 
         // make an HTTP GET request with headers
         ResponseEntity<Boolean> responseEntity = noHostVerifyRestTemplate.exchange(
-                connUserInfo.getToUri() + JfpRestURIConstants.DOES_FILE_EXIST + "?fileName=" + rmtFilePath,
+                connUserInfo.getToUri() + JfpRestURIConstants.DOES_FILE_EXIST + "?filename=" + rmtFilePath,
                 HttpMethod.GET,
                 requestEntity,
                 Boolean.class
-        );
+            );
         response = responseEntity.getBody();
         }
     catch( Exception exc )
         {
-        logger.info( "FileUtils.exists() DOES_FILE_EXIST threw Exception !!" );
+        logger.info( "HttpsUtils.exists() DOES_FILE_EXIST threw Exception !!" );
         logger.severeExc( exc );
         return false;
         }
-    logger.info( "jfilewin exists()  response =" + response + "=" );
+    logger.info( "HttpsUtils.exists()  response =" + response + "=" );
+    return response;
+    }
+
+public Boolean existsAndCanWrite( String targetPath ) throws UnsupportedEncodingException, Exception
+    {
+    Boolean response = null;
+    int statusCodeValue = -1;
+    
+//    try
+//        {
+        RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
+
+//        MultiValueMap<String, String> params = new LinkedMultiValueMap();
+        String rmtFilePath = URLEncoder.encode( targetPath, "UTF-8" );
+//        params.add( "filename", rmtFilePath );
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity( Rest.getHeaders( user, password ) );
+
+//                    response = noHostVerifyRestTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.DOES_FILE_EXIST, Boolean.class );
+//                    HttpEntity request = new HttpEntity( Rest.getHeaders( connUserInfo.getToUser(), connUserInfo.getToPassword() ) );
+
+        // make an HTTP GET request with headers
+        ResponseEntity<Boolean> responseEntity = noHostVerifyRestTemplate.exchange(
+                connUserInfo.getToUri() + JfpRestURIConstants.DOES_FILE_EXIST_AND_CAN_WRITE + "?filename=" + rmtFilePath,
+                HttpMethod.GET,
+                requestEntity,
+                Boolean.class
+            );
+        logger.info("Status Code: " + responseEntity.getStatusCode());	
+        statusCodeValue = responseEntity.getStatusCodeValue();
+        if ( statusCodeValue == 401 )
+            {
+            throw new Exception( "Unauthorized" );
+            }
+        else if ( statusCodeValue != 200 )
+            {
+            throw new Exception( "Http Error" );
+            }
+
+        response = responseEntity.getBody();
+        logger.info( "response =" + response + "=" );
+//        }
+//    catch( Exception exc )
+//        {
+//        logger.info( "DOES_FILE_EXIST_AND_CAN_WRITE threw Exception !!" );
+//        logger.severeExc( exc );
+//        return false;
+//        }
     return response;
     }
 
@@ -510,12 +566,16 @@ public String mkDir( String rmtDir ) throws UnsupportedEncodingException
         String ans = response.getBody();
         logger.info( "HttpsUtils.mkDir() MKDIR attr =" + ans );
         return ans;
-        } catch (IOException ex) {
-            java.util.logging.Logger.getLogger(HttpsUtils.class.getName()).log(Level.SEVERE, null, ex);
-            throw ex;
+        } 
+    catch (IOException ex) 
+        {
+        java.util.logging.Logger.getLogger(HttpsUtils.class.getName()).log(Level.SEVERE, null, ex);
+        throw ex;
         }
     }
 
+// NOTE: This works now only because jfp deletes up the tree so the folder is empty before it delete a folder
+// but calling this endpoint straight does not work to delete a folder tree.
 public String rmDir( String rmtDir ) throws UnsupportedEncodingException
     {
     try {
@@ -535,11 +595,13 @@ public String rmDir( String rmtDir ) throws UnsupportedEncodingException
         logger.info( "HttpsUtils rmdir()  response =" + response + "=" );
 
         String ans = response.getBody();
-        logger.info( "HttpsUtils.rmdir() MKDIR attr =" + ans );
+        logger.info( "HttpsUtils.rmdir() =" + ans );
         return ans;
-        } catch (IOException ex) {
-            java.util.logging.Logger.getLogger(HttpsUtils.class.getName()).log(Level.SEVERE, null, ex);
-            throw ex;
+        } 
+    catch (IOException ex) 
+        {
+        java.util.logging.Logger.getLogger(HttpsUtils.class.getName()).log(Level.SEVERE, null, ex);
+        throw ex;
         }
     }
 
@@ -565,9 +627,11 @@ public String rm( String rmtFile ) throws UnsupportedEncodingException
         String ans = response.getBody();
         logger.info( "HttpsUtils.rm() RM attr =" + ans );
         return ans;
-        } catch (IOException ex) {
-            java.util.logging.Logger.getLogger(HttpsUtils.class.getName()).log(Level.SEVERE, null, ex);
-            throw ex;
+        } 
+    catch (IOException ex) 
+        {
+        java.util.logging.Logger.getLogger(HttpsUtils.class.getName()).log(Level.SEVERE, null, ex);
+        throw ex;
         }
     }
 
@@ -930,16 +994,16 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
             HttpHeaders headers = Rest.getHeaders( user, password );
                 
             MultiValueMap<String, String> params = new LinkedMultiValueMap();
-            params.add( "fileName", rmtFilePath );
+            params.add( "filename", rmtFilePath );
             //Map<String, String> params = new HashMap();
-            //params.put( "fileName", source );
+            //params.put( "filename", source );
             HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity( params, headers );
 //            HttpEntity<Resource> response = noHostVerifyRestTemplate.exchange( uri + JfpRestURIConstants.GET_FILE
 //                                    , HttpMethod.GET
                                     //requestEntity, Long.class );  //, params );
 
-            //String getFileUrl = uri + JfpRestURIConstants.GET_FILE + "?fileName=" + source;
-            String getFileUrl = uri + JfpRestURIConstants.GET_FILE + "?fileName=" + rmtFilePath;
+            //String getFileUrl = uri + JfpRestURIConstants.GET_FILE + "?filename=" + source;
+            String getFileUrl = uri + JfpRestURIConstants.GET_FILE + "?filename=" + rmtFilePath;
             logger.info( "qqq call =" + getFileUrl + "=" );
             
 //            noHostVerifyRestTemplate.execute( getFileUrl, HttpMethod.GET
@@ -954,11 +1018,18 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
         }
     }
 
-    public void getFileViaRestTemplateSw( String source, String target, CopyFrameSwingWorker swingWorker, long numTested ) throws IOException {
+    public void getFileViaRestTemplateSw( String source, String target, CopyFrameSwingWorker swingWorker, long numTested, getCancelFlag getCancelSearch ) throws IOException {
         try {
+                //RequestCallback requestCallback = request -> request.getHeaders()
+                //.setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM, MediaType.ALL));
             // Optional Accept header
-            RequestCallback requestCallback = request -> request.getHeaders()
-                .setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM, MediaType.ALL));
+            RequestCallback requestCallback = request -> {
+                    String base64Credentials = new String(Base64.encodeBase64( (user + ":" + password).getBytes()));
+                    request.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+                    request.getHeaders().add("Authorization", "Basic " + base64Credentials);
+                    request.getHeaders().setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM, MediaType.ALL) );
+                            };
+            // from HttpHeaders headers = Rest.getHeaders( user, password );
 
             // Streams the response instead of loading it all in memory
             ResponseExtractor<Void> responseExtractor = response -> {
@@ -992,6 +1063,11 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
                                 {
                                 swingWorker.publish3( new CopyCounts( numTested, totBytesRead ) );
                                 dispAtBytes = totBytesRead + 102400;
+                                if ( getCancelSearch.apply() )
+                                    {
+                                    logger.finest( "got CANCEL" );
+                                    throw new IOException( "Canceled" );
+                                    }
                                 }
                             // I have to find and stop at fileLength otherwise it seems to wait for a 1 minute readTimeout
                             // before it detects the end of file send!
@@ -1042,16 +1118,16 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
             HttpHeaders headers = Rest.getHeaders( user, password );
                 
             MultiValueMap<String, String> params = new LinkedMultiValueMap();
-            params.add( "fileName", rmtFilePath );
+            params.add( "filename", rmtFilePath );
             //Map<String, String> params = new HashMap();
-            //params.put( "fileName", source );
+            //params.put( "filename", source );
 //            HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity( params, headers );
 //            HttpEntity<Resource> response = noHostVerifyRestTemplate.exchange( uri + JfpRestURIConstants.GET_FILE
 //                                    , HttpMethod.GET
                                     //requestEntity, Long.class );  //, params );
 
-            //String getFileUrl = uri + JfpRestURIConstants.GET_FILE + "?fileName=" + source;
-            String getFileUrl = uri + JfpRestURIConstants.GET_FILE + "?fileName=" + rmtFilePath;
+            //String getFileUrl = uri + JfpRestURIConstants.GET_FILE + "?filename=" + source;
+            String getFileUrl = uri + JfpRestURIConstants.GET_FILE + "?filename=" + rmtFilePath;
             logger.info( "qqq call =" + getFileUrl + "=" );
             
 //            noHostVerifyRestTemplate.execute( getFileUrl, HttpMethod.GET
@@ -1133,14 +1209,14 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
             params.add( "source", new FileSystemResource( Paths.get( source ) ) );
             params.add( "target", target );
             //Map<String, String> params = new HashMap();
-            //params.put( "fileName", source );
+            //params.put( "filename", source );
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity( params, headers );
 
             logger.info( "qqq call =" + uri + JfpRestURIConstants.SEND_FILE + "=" );
             ResponseEntity<String> response = noHostVerifyRestTemplate.postForEntity( uri + JfpRestURIConstants.SEND_FILE,
                                     requestEntity, String.class );
 
-//            String getFileUrl = uri + JfpRestURIConstants.GET_FILE + "?fileName=" + source;
+//            String getFileUrl = uri + JfpRestURIConstants.GET_FILE + "?filename=" + source;
             
 //            noHostVerifyRestTemplate.execute( getFileUrl, HttpMethod.GET
 //                            , requestCallback, responseExtractor, params);
@@ -1153,7 +1229,8 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
         }
     }
 
-    public void putFileSw( String source, String target, CopyFrameSwingWorker swingWorker, long numTested ) throws IOException, NoSuchAlgorithmException, KeyStoreException, CertificateException, KeyManagementException {
+    public void putFileSw( String source, String target, CopyFrameSwingWorker swingWorker, long numTested, getCancelFlag getCancelSearch ) throws IOException, NoSuchAlgorithmException, KeyStoreException, CertificateException, KeyManagementException 
+        {
             //String rmtFilePath = URLEncoder.encode( source, "UTF-8" );
 
             //HttpHeaders headers = new HttpHeaders();
@@ -1170,7 +1247,7 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
 //            params.add( "source", new FileSystemResource( Paths.get( source ) ) );
 //            params.add( "target", target );
 //            //Map<String, String> params = new HashMap();
-//            //params.put( "fileName", source );
+//            //params.put( "filename", source );
 //            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity( params, headers );
 //
 //            logger.info( "qqq call =" + uri + JfpRestURIConstants.SEND_FILE + "=" );
@@ -1262,7 +1339,7 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
             OutputStream outStream = sslConn.getOutputStream();
             //BufferedOutputStream bufOutStream = new BufferedOutputStream( output );
             BufferedInputStream inStream = new BufferedInputStream( new FileInputStream( path.toFile() ) );
-
+            
             byte[] buffer = new byte[1024000];
             int bytesRead = 0;
             long totBytesRead = 0;
@@ -1278,6 +1355,11 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
                     swingWorker.publish3( new CopyCounts( numTested, totBytesRead ) );
                     dispAtBytes = totBytesRead + 102400;
                     outStream.flush();
+                    if ( getCancelSearch.apply() )
+                        {
+                        logger.finest( "got CANCEL" );
+                        throw new IOException( "Canceled" );
+                        }
                     }
                 }
             swingWorker.publish3( new CopyCounts( numTested, totBytesRead ) );
@@ -1293,36 +1375,44 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
             // Request is lazily fired whenever you need to obtain information about response.
             int responseCode = ((HttpsURLConnection) sslConn).getResponseCode();
             logger.info( "SEND_FILESw responseCode =" + responseCode + "=" );
+            if ( responseCode == 401 )
+                {
+                throw new IOException( "Unauthorized" );
+                }
+            else if ( responseCode != 200 )
+                {
+                throw new IOException( "Http Error" );
+                }
             }
         catch (Exception ex) 
             {
             logger.info( "SEND_FILESw ERROR =" + logger.getExceptionAsString(ex) );
-            throw new IOException( "Unauthorized" );
+            throw new IOException( ex.getLocalizedMessage() );
             }
         }
 
     public String storeFile( MultipartFile source, String target ) 
         {
         // Normalize file name
-        String fileName = StringUtils.cleanPath( source.getOriginalFilename() );
+        String filename = StringUtils.cleanPath( source.getOriginalFilename() );
 
         try {
             // Check if the file's name contains invalid characters
-            if(fileName.contains("..")) 
+            if(filename.contains("..")) 
                 {
-                throw new FileStorageException("Sorry! Filename contains invalid path sequence " + fileName);
+                throw new FileStorageException("Sorry! Filename contains invalid path sequence " + filename);
                 }
 
             // Copy file to the target location (Replacing existing file with the same name)
-            Path targetLocation = Paths.get( "/net2/tmp/" + Paths.get( fileName ).getFileName().toString() );
+            Path targetLocation = Paths.get( "/net2/tmp/" + Paths.get( filename ).getFileName().toString() );
             logger.info( "targetLocation =" + targetLocation.toString() + "=" );
             Files.copy( source.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
-            return fileName;
+            return filename;
             }
         catch (IOException ex) 
             {
-            throw new FileStorageException("Could not store file " + fileName + ". Please try again!", ex);
+            throw new FileStorageException("Could not store file " + filename + ". Please try again!", ex);
             }
         }
 

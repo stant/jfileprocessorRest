@@ -6,11 +6,10 @@
 package com.towianski.boot.server;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.towianski.models.JfpUser;
 import com.towianski.models.ServerUserFileRights;
 import com.towianski.utils.MyLogger;
 import com.towianski.utils.Rest;
-import java.io.File;
-import java.util.ArrayList;
 
 /**
  *
@@ -38,16 +37,15 @@ public class ServerUserFileRightsListHolder {
                 obj = new ServerUserFileRightsList();
                 if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
                     {
-                    obj.getServerUserFileRightsList().add( new ServerUserFileRights( "stan", "test", "c:\\Downloads", "rwx" ) );
-                    obj.getServerUserFileRightsList().add( new ServerUserFileRights( "stan", "test", "c:\\", "r" ) );
-                    obj.getServerUserFileRightsList().add( new ServerUserFileRights( "admin", "test", "c:\\Downloads", "rwx" ) );
+                    obj.getServerUserFileRightsList().add( new ServerUserFileRights( "stan", "c:\\Downloads", "rwx" ) );
+                    obj.getServerUserFileRightsList().add( new ServerUserFileRights( "stan", "c:\\", "r" ) );
+                    obj.getServerUserFileRightsList().add( new ServerUserFileRights( "admin", "c:\\Downloads", "rwx" ) );
                     }
                 else // posix
                     {
-                    obj.getServerUserFileRightsList().add( new ServerUserFileRights( "stan", "test", "/", "r" ) );
-                    obj.getServerUserFileRightsList().add( new ServerUserFileRights( "stan", "test", "/tmp", "rwx" ) );
-                    obj.getServerUserFileRightsList().add( new ServerUserFileRights( "stan", "test", "/tmp", "rwx" ) );
-                    obj.getServerUserFileRightsList().add( new ServerUserFileRights( "admin", "test", "/tmp", "rwx" ) );
+                    obj.getServerUserFileRightsList().add( new ServerUserFileRights( "stan", "/", "r" ) );
+                    obj.getServerUserFileRightsList().add( new ServerUserFileRights( "stan", "/tmp", "rwx" ) );
+                    obj.getServerUserFileRightsList().add( new ServerUserFileRights( "admin", "/tmp", "rwx" ) );
                     }
                 
                 Rest.saveObjectToFile( "ServerUserFileRightsList.json", obj );   // create example file is not existing
@@ -76,8 +74,42 @@ public class ServerUserFileRightsListHolder {
         {
         logger.info( "readInServerUserFileRightsListFromFile()" );
         ServerUserFileRightsList obj = new ServerUserFileRightsList();
-        obj.getServerUserFileRightsList().add( new ServerUserFileRights( "ALLOPEN", "", "", "rwx" ) );
+        obj.getServerUserFileRightsList().add( new ServerUserFileRights( "ALLOPEN", "", "rwx" ) );
         return obj;
+        }
+        
+    public static JfpUserHm readInJfpUserHmFromFile()
+        {
+        logger.info( "readInJfpUserHmFromFile()" );
+        try {
+            JfpUserHm obj = (JfpUserHm) Rest.readObjectFromFile("JfpUserHm.json", new TypeReference<JfpUserHm>(){} );
+            if ( obj == null )
+                {
+                logger.info( "readInJfpUserHmFromFile() Error reading json file" );
+                obj = new JfpUserHm();
+                obj.getJfpUserHm().put( "stan", new JfpUser( "stan", "test" ) );
+                obj.getJfpUserHm().put( "admin", new JfpUser( "admin", "test" ) );
+                
+                Rest.saveObjectToFile( "JfpUserHm.json", obj );   // create example file is not existing
+
+                //serverUserFileRights.setJFileFinderWin( this );
+                }
+            else
+                {
+                logger.info( "readInJfpUserHmFromFile() read in json ok" );
+                //serverUserFileRightsList = obj.getServerUserFileRightsList();
+                //serverUserFileRights.setJFileFinderWin( this );
+                //serverUserFileRights.infuseSavedValues();
+                }
+    //        if ( jFileFinderWin == null )
+    //            return;
+            return obj;
+            }
+        catch( Exception exc )
+            {
+            exc.printStackTrace();
+            }
+        return new JfpUserHm();
         }
         
 //    public static ArrayList<ServerUserFileRights> readInServerUserFileRightsFromFileList()

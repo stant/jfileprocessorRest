@@ -31,7 +31,6 @@ import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -47,7 +46,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 /**
  *
@@ -101,7 +99,7 @@ public class JfpController {
         return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
-    @PreAuthorize("hasPermission(#oldname, 'com.towianski.models.ServerUserFileRights', 'w')")
+    //@PreAuthorize("hasPermission(#oldname, 'com.towianski.models.ServerUserFileRights', 'w')")
     //@PreAuthorize("@accessChecker.check('book', #bookinType)")
     @RequestMapping(value = JfpRestURIConstants.RENAME_FILE, method = RequestMethod.PUT)
 //        public ResponseEntity<String> rename(@PathVariable("oldname") String oldname, @PathVariable("newname") String newname) 
@@ -160,19 +158,20 @@ public class JfpController {
         return searchAction.find( searchModel );
         }
 
-//	public static void main(String[] args) throws Exception {
-//		SpringApplication.run(JfpController.class, args );
-//	}
-
-    @PreAuthorize("hasPermission(#filename, 'com.towianski.models.ServerUserFileRights', 'r')")
+    //@PreAuthorize("hasPermission(#filename, 'com.towianski.models.ServerUserFileRights', 'r')")
     @RequestMapping( value = JfpRestURIConstants.GET_FILE_SIZE, method = RequestMethod.PUT )
     public ResponseEntity<Long> getFileSize(@RequestParam("filename") String filename) {
         try {
             logger.info("GET_FILE_SIZE()");
-            BasicFileAttributes attr = Files.readAttributes( Paths.get( URLDecoder.decode( filename, "UTF-8" ) ), BasicFileAttributes.class );
+            Path filepath = Paths.get( URLDecoder.decode( filename, "UTF-8" ) );
+            if ( ! GlobalMemory.getSecUtils().hasPermission( filepath.getParent(), "r" ) )
+                {
+                logger.info( "Do not have Read permission on folder =" + filepath.getParent() );
+                return new ResponseEntity<>( -1L, HttpStatus.UNAUTHORIZED );
+                }
+            BasicFileAttributes attr = Files.readAttributes( filepath, BasicFileAttributes.class );
             logger.info( "TomcatAppMonitor.run() GET_FILE_SIZE for filename =" + filename + "=    attr.size() = " + attr.size() );
             return new ResponseEntity<>( attr.size(), HttpStatus.OK );
-//            return attr.size();
             } 
         catch (IOException ex) 
             {
@@ -181,15 +180,23 @@ public class JfpController {
         return new ResponseEntity<Long>( (long) -1, HttpStatus.OK );
         }
     
-    @PreAuthorize("hasPermission(#filename, 'com.towianski.models.ServerUserFileRights', 'r')")
+    //@PreAuthorize("hasPermission(#filename, 'com.towianski.models.ServerUserFileRights', 'r')")
     @RequestMapping( value = JfpRestURIConstants.GET_FILE_STAT, method = RequestMethod.PUT )
     public ResponseEntity<String> getFileStat(@RequestParam("filename") String filename) {
         try {
             logger.info("GET_FILE_STAT()");
-            BasicFileAttributes attr = Files.readAttributes( Paths.get( URLDecoder.decode( filename, "UTF-8" ) ), BasicFileAttributes.class );
             CommonFileAttributes cfa = new CommonFileAttributes();
+
+            Path filepath = Paths.get( URLDecoder.decode( filename, "UTF-8" ) );
+            if ( ! GlobalMemory.getSecUtils().hasPermission( filepath.getParent(), "r" ) )
+                {
+                logger.info( "Do not have Read permission on folder =" + filepath.getParent() );
+                return new ResponseEntity<>( Rest.saveObjectToString( cfa ), HttpStatus.UNAUTHORIZED );
+                }
+            BasicFileAttributes attr = Files.readAttributes( filepath, BasicFileAttributes.class );
             cfa.setDirectory( attr.isDirectory() );
             logger.info( "GET_FILE_STAT for filename =" + filename + "=    attr.size() = " + attr.size() );
+            logger.finer( "GET_FILE_STAT cfa =" + Rest.saveObjectToString(cfa) + "=" );
             return new ResponseEntity<>( Rest.saveObjectToString( cfa ), HttpStatus.OK );
             } 
         catch (IOException ex) 
@@ -213,12 +220,12 @@ public class JfpController {
         return "";
         }
 
-//    @PreAuthorize("hasPermission(#fileName, 'com.towianski.models.ServerUserFileRights', 'r')")
+//    @PreAuthorize("hasPermission(#filename, 'com.towianski.models.ServerUserFileRights', 'r')")
 //    @RequestMapping( value = JfpRestURIConstants.GET_FILE, method = RequestMethod.GET )
-//    public ResponseEntity<Resource> getFile( String fileName ) throws IOException
+//    public ResponseEntity<Resource> getFile( String filename ) throws IOException
 //        {
-//        logger.info( "GET_FILE fileName =" + fileName + "=" );
-//        File file = new File( fileName );
+//        logger.info( "GET_FILE filename =" + filename + "=" );
+//        File file = new File( filename );
 //        Path path = Paths.get( file.getAbsolutePath() );
 //        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));   // bombs on outOfMemory for big files !
 //
@@ -234,14 +241,21 @@ public class JfpController {
 //                .body(resource);
 //        }
     
-    @PreAuthorize("hasPermission(#fileName, 'com.towianski.models.ServerUserFileRights', 'r')")
+    //@PreAuthorize("hasPermission(#filename, 'com.towianski.models.ServerUserFileRights', 'r')")
     @RequestMapping( value = JfpRestURIConstants.GET_FILE, method = RequestMethod.GET )
-    //public ResponseEntity<Resource> getFile( String fileName ) throws IOException
-    public void getFile( HttpServletResponse response, String fileName ) throws IOException
-//            @RequestParam(defaultValue = DEFAULT_FILE_NAME) String fileName) throws IOException
+    //public ResponseEntity<Resource> getFile( String filename ) throws IOException
+    public void getFile( HttpServletResponse response, String filename ) throws IOException
+//            @RequestParam(defaultValue = DEFAULT_FILE_NAME) String filename) throws IOException
         {
-        logger.info( "GET_FILE fileName =" + fileName + "=" );
-        File file = new File( fileName );
+        logger.info( "GET_FILE filename =" + filename + "=" );
+        filename = URLDecoder.decode( filename, "UTF-8" );
+        File file = new File( filename );
+        Path filepath = Paths.get( URLDecoder.decode( filename, "UTF-8" ) );
+        if ( ! GlobalMemory.getSecUtils().hasPermission( filepath.getParent(), "r" ) )
+            {
+            logger.info( "Do not have Read permission on folder =" + filepath.getParent() );
+            return;  // new ResponseEntity<>( "not_ok", HttpStatus.UNAUTHORIZED );
+            }
         //Path path = Paths.get( file.getAbsolutePath() );
         //ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
 
@@ -256,8 +270,8 @@ public class JfpController {
 //                .contentType(MediaType.APPLICATION_OCTET_STREAM)
 //                .body(resource);
         
-        //MediaType mediaType = MediaTypeUtils.getMediaTypeForFileName(this.servletContext, fileName);
-        //System.out.println("fileName: " + fileName);
+        //MediaType mediaType = MediaTypeUtils.getMediaTypeForFileName(this.servletContext, filename);
+        //System.out.println("filename: " + filename);
         //System.out.println("mediaType: " + mediaType);
  
         response.setContentType( MediaType.APPLICATION_OCTET_STREAM_VALUE );  //mediaType.getType());
@@ -289,11 +303,11 @@ public class JfpController {
         logger.fine( "GET_FILE after out close" );
         }
     
-//    public static MediaType getMediaTypeForFileName(ServletContext servletContext, String fileName) {
+//    public static MediaType getMediaTypeForFileName(ServletContext servletContext, String filename) {
 //        // application/pdf
 //        // application/xml
 //        // image/gif, ...
-//        String mineType = servletContext.getMimeType(fileName);
+//        String mineType = servletContext.getMimeType(filename);
 //        try {
 //            MediaType mediaType = MediaType.parseMediaType(mineType);
 //            return mediaType;
@@ -313,17 +327,36 @@ public class JfpController {
 //                .map( DataBufferUtils::release )
 //                .blockLast();
 //    }
+
+//    @GetMapping("/pdfFile")
+//    public ResponseEntity<StreamingResponseBody> streamPdfFile() throws FileNotFoundException {
+//      String filename = "Technicalsand.com sample data.pdf";
+//      File file = ResourceUtils.getFile("classpath:static/" + filename);
+//      StreamingResponseBody responseBody = outputStream -> {
+//         Files.copy(file.toPath(), outputStream);
+//      };
+//      return ResponseEntity.ok()
+//            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=Downloaded_" + filename)
+//            .contentType(MediaType.APPLICATION_PDF)
+//            .body(responseBody);
+//    }
     
-    @PreAuthorize("hasPermission(#fileName, 'com.towianski.models.ServerUserFileRights', 'r')")
+    //@PreAuthorize("hasPermission(#filename, 'com.towianski.models.ServerUserFileRights', 'r')")
     @RequestMapping( value = JfpRestURIConstants.DOES_FILE_EXIST, method = RequestMethod.GET )
-    public @ResponseBody Boolean doesFileExist( String fileName ) throws IOException
+    public @ResponseBody Boolean doesFileExist( String filename ) throws IOException
         {
-        fileName = URLDecoder.decode( fileName, "UTF-8" );
-        logger.info( "DOES_FILE_EXIST fileName =" + fileName + "=" );
+        filename = URLDecoder.decode( filename, "UTF-8" );
+        logger.info( "DOES_FILE_EXIST filename =" + filename + "=" );
         File file = null;
 
         try {
-            file = new File( fileName );
+            Path filepath = Paths.get( URLDecoder.decode( filename, "UTF-8" ) );
+            if ( ! GlobalMemory.getSecUtils().hasPermission( filepath.getParent(), "r" ) )
+                {
+                logger.info( "Do not have Read permission on folder =" + filepath.getParent() );
+                return false;
+                }
+            file = new File( filename );
             } 
         catch (Exception ex) 
             {
@@ -332,52 +365,77 @@ public class JfpController {
 
         return file.exists();
         }
+    
+    //@PreAuthorize("hasPermission(#filename, 'com.towianski.models.ServerUserFileRights', 'w')")
+    @RequestMapping( value = JfpRestURIConstants.DOES_FILE_EXIST_AND_CAN_WRITE, method = RequestMethod.GET )
+    public ResponseEntity<Boolean> doesFileExistAndCanWrite( String filename ) throws IOException
+        {
+        filename = URLDecoder.decode( filename, "UTF-8" );
+        logger.info( "filename =" + filename + "=" );
+        File file = null;
+
+        try {
+            if ( ! GlobalMemory.getSecUtils().hasPermission( Paths.get( filename ).getParent(), "w" ) )
+                {
+                logger.info( "Do not have Write permission on folder =" + Paths.get( filename ).getParent() );
+                return new ResponseEntity<>( Boolean.FALSE, HttpStatus.UNAUTHORIZED );
+                }
+
+            file = new File( filename );
+            } 
+        catch (Exception ex) 
+            {
+            return new ResponseEntity<>( Boolean.FALSE, HttpStatus.BAD_REQUEST );
+            }
+
+        return new ResponseEntity<>( file.exists(), HttpStatus.OK );
+        }
 
         
 //    @PostMapping("/jfp/uploadFile")
 //    public UploadFileResponse uploadFile(@RequestParam("file") MultipartFile file) {
-//        String fileName = fileStorageService.storeFile(file);
+//        String filename = fileStorageService.storeFile(file);
 //
 //        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
 //                .path("/downloadFile/")
-//                .path(fileName)
+//                .path(filename)
 //                .toUriString();    @RequestMapping( value = JfpRestURIConstants.GET_FILE, method = RequestMethod.GET )
 //
-//        System.out.println( "fileName =" + fileName + "=" );
+//        System.out.println( "filename =" + filename + "=" );
 //        System.out.println( "fileDownloadUri =" + fileDownloadUri + "=" );
 //        System.out.println( "file.getContentType() =" + file.getContentType() + "=" );
 //        System.out.println( "file.getSize() =" + file.getSize() + "=" );
 //        
-//        return new UploadFileResponse(fileName, fileDownloadUri,
+//        return new UploadFileResponse(filename, fileDownloadUri,
 //                file.getContentType(), file.getSize());
 //    }
 
-//    //@PreAuthorize("hasPermission(#fileName, 'com.towianski.models.ServerUserFileRights', 'w')")
+//    //@PreAuthorize("hasPermission(#filename, 'com.towianski.models.ServerUserFileRights', 'w')")
 //    @RequestMapping( value = JfpRestURIConstants.SEND_FILE, method = RequestMethod.POST )
 ////    public ResponseEntity<UploadFileResponse> sendFile( MultipartFile source, String target ) throws IOException
 //    public ResponseEntity<UploadFileResponse> sendFile( @RequestParam("source") MultipartFile source, @RequestParam("target") String target ) throws IOException
 //        {
 //        logger.info( "entered sendFile() in jfpController" );
-////        File file = new File( fileName.getName() );
+////        File file = new File( filename.getName() );
 ////        Path path = Paths.get( file.getAbsolutePath() );
 ////        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
-////        String fileName2 = fileStorageService.storeFile(file);
+////        String filename2 = fileStorageService.storeFile(file);
 //
-//        String fileName = StringUtils.cleanPath( source.getOriginalFilename() );
+//        String filename = StringUtils.cleanPath( source.getOriginalFilename() );
 //        Path targetLocation = null;
 //
-//        logger.info( "fileName =" + fileName + "=" );
+//        logger.info( "filename =" + filename + "=" );
 //        logger.info( "file.getContentType() =" + source.getContentType() + "=" );
 //        logger.info( "file.getSize() =" + source.getSize() + "=" );
 //
 //        try {
 //            // Check if the file's name contains invalid characters
-//            if(fileName.contains("..")) {
-//                throw new FileStorageException("Sorry! Filename contains invalid path sequence " + fileName);
+//            if(filename.contains("..")) {
+//                throw new FileStorageException("Sorry! Filename contains invalid path sequence " + filename);
 //            }
 //
 //            // Copy file to the target location (Replacing existing file with the same name)
-//            //Path targetLocation = Paths.get( "/net2/tmp/" + Paths.get( fileName ).getFileName().toString() );
+//            //Path targetLocation = Paths.get( "/net2/tmp/" + Paths.get( filename ).getFileName().toString() );
 //            targetLocation = Paths.get( target );
 //            logger.info( "targetLocation =" + targetLocation.toString() + "=" );
 //            
@@ -430,9 +488,9 @@ public class JfpController {
 ////            userDefView.delete(attrName);
 //
 //
-//            //return fileName;
+//            //return filename;
 //        } catch (IOException ex) {
-//            throw new FileStorageException("Could not store file " + fileName + ". Please try again!", ex);
+//            throw new FileStorageException("Could not store file " + filename + ". Please try again!", ex);
 //        }
 //
 ////        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
@@ -443,11 +501,11 @@ public class JfpController {
 //        return new ResponseEntity<>(new UploadFileResponse(targetLocation.getFileName().toString(), targetLocation.getParent().toString(),
 //                source.getContentType(), source.getSize()), HttpStatus.OK);
 //
-////        return new UploadFileResponse(fileName, fileDownloadUri,
+////        return new UploadFileResponse(filename, fileDownloadUri,
 ////                file.getContentType(), file.getSize());
 //        }
 
-    //@PreAuthorize("hasPermission(#fileName, 'com.towianski.models.ServerUserFileRights', 'w')")
+    //@PreAuthorize("hasPermission(#filename, 'com.towianski.models.ServerUserFileRights', 'w')")
     @RequestMapping( value = JfpRestURIConstants.SEND_FILE, method = RequestMethod.POST )
 //    public ResponseEntity<UploadFileResponse> sendFile( MultipartFile source, String target ) throws IOException
 //    public ResponseEntity<UploadFileResponse> sendFileSw( @RequestParam("source") MultipartFile source, @RequestParam("target") String target ) throws IOException
@@ -456,28 +514,28 @@ public class JfpController {
             @RequestParam("source") String source, @RequestParam("target") String target, @RequestParam("fileLength") String fileLengthStr  ) throws IOException
         {
         logger.info( "entered sendFileSw() in jfpController" );
-//        File file = new File( fileName.getName() );
+//        File file = new File( filename.getName() );
 //        Path path = Paths.get( file.getAbsolutePath() );
 //        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
-//        String fileName2 = fileStorageService.storeFile(file);
+//        String filename2 = fileStorageService.storeFile(file);
 
-        String fileName = StringUtils.cleanPath( source );  //.getOriginalFilename() );
+        String filename = StringUtils.cleanPath( source );  //.getOriginalFilename() );
         Path targetLocation = null;
         long fileLength = Long.parseLong( fileLengthStr );
 
-        logger.info( "fileName =" + fileName + "=" );
+        logger.info( "filename =" + filename + "=" );
         logger.info( "target =" + target + "=" );
         logger.info( "fileLength =" + fileLength + "=" );
 
         try {
             // Check if the file's name contains invalid characters
-            if(fileName.contains("..")) 
+            if(filename.contains("..")) 
                 {
-                throw new FileStorageException("Sorry! Filename contains invalid path sequence " + fileName);
+                throw new FileStorageException("Sorry! Filename contains invalid path sequence " + filename);
                 }
 
             // Copy file to the target location (Replacing existing file with the same name)
-            //Path targetLocation = Paths.get( "/net2/tmp/" + Paths.get( fileName ).getFileName().toString() );
+            //Path targetLocation = Paths.get( "/net2/tmp/" + Paths.get( filename ).getFileName().toString() );
             targetLocation = Paths.get( target );
             logger.info( "targetLocation =" + targetLocation.toString() + "=" );
             
@@ -485,57 +543,63 @@ public class JfpController {
             if ( ! GlobalMemory.getSecUtils().hasPermission( targetLocation.getParent(), "w" ) )
                 {
                 logger.info( "Do not have Write permission on folder =" + targetLocation.getParent() );
+                //request.getInputStream().skip(fileLength);
+                //logger.finest( "skipped reading filelength =" + fileLength );
+                request.getInputStream().close();
+                logger.finest( "close input stream to stop file send !" );
                 return new ResponseEntity<>( new UploadFileResponse(targetLocation.getFileName().toString(), targetLocation.getParent().toString(),
                 "source.getContentType()", 0), HttpStatus.UNAUTHORIZED );
                 //throw new Exception( "https: \"" + "\" does not have folder permissions" );
                 }
-            
-//            Files.copy( source.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING );  // FIXXX pass replace flag and not auto replace !
-//                logger.info( "getFileViaRestTemplate save response body to target =" + target + "=" );
-            Path path = Paths.get( target );
-            long totBytesRead = 0;
-            //long fileLength = Long.parseLong( request.getHeaders().get( "X-jfp.file.length" ).get(0) );
-            logger.info( "sendFileSw() get response header fileLength =" + fileLength + "=" );
+            else
+                {
+    //            Files.copy( source.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING );  // FIXXX pass replace flag and not auto replace !
+    //                logger.info( "getFileViaRestTemplate save response body to target =" + target + "=" );
+                Path path = Paths.get( target );
+                long totBytesRead = 0;
+                //long fileLength = Long.parseLong( request.getHeaders().get( "X-jfp.file.length" ).get(0) );
+                logger.info( "sendFileSw() get response header fileLength =" + fileLength + "=" );
 
-            //ByteArrayInputStream bais = (ByteArrayInputStream) response.getBody();
-            FileOutputStream fos = new FileOutputStream( path.toFile() );
-            BufferedOutputStream outStream = new BufferedOutputStream( fos );
+                //ByteArrayInputStream bais = (ByteArrayInputStream) response.getBody();
+                FileOutputStream fos = new FileOutputStream( path.toFile() );
+                BufferedOutputStream outStream = new BufferedOutputStream( fos );
 
-            try {
-                byte[] buffer = new byte[102400]; //just arbitrary size   
-                int bytesRead = 0;
-                while(bytesRead != -1)
-                    {
-                    bytesRead = request.getInputStream().read( buffer, 0, 102400 ); //-1, 0, or more
-                    logger.finest( "sendFileSw() read buffer bytesRead =" + bytesRead + "=" );
-                    if ( bytesRead > 0 )
+                try {
+                    byte[] buffer = new byte[102400]; //just arbitrary size   
+                    int bytesRead = 0;
+                    while(bytesRead != -1)
                         {
-                        outStream.write( buffer, 0, bytesRead );
-                        totBytesRead += bytesRead;
-                        logger.finest( "sendFileSw() totBytesRead =" + totBytesRead + "=" );
-                        // I have to find and stop at fileLength otherwise it seems to wait for a 1 minute readTimeout
-                        // before it detects the end of file send!
-                        if ( totBytesRead >= fileLength )
+                        bytesRead = request.getInputStream().read( buffer, 0, 102400 ); //-1, 0, or more
+                        logger.finest( "sendFileSw() read buffer bytesRead =" + bytesRead + "=" );
+                        if ( bytesRead > 0 )
                             {
-                            logger.fine( "sendFileSw() STOP at fileLength totBytesRead =" + totBytesRead + "=" );
-                            break;
+                            outStream.write( buffer, 0, bytesRead );
+                            totBytesRead += bytesRead;
+                            logger.finest( "sendFileSw() totBytesRead =" + totBytesRead + "=" );
+                            // I have to find and stop at fileLength otherwise it seems to wait for a 1 minute readTimeout
+                            // before it detects the end of file send!
+                            if ( totBytesRead >= fileLength )
+                                {
+                                logger.fine( "sendFileSw() STOP at fileLength totBytesRead =" + totBytesRead + "=" );
+                                break;
+                                }
                             }
                         }
+                    logger.fine( "sendFileSw() Done Reading/writing totBytesRead =" + totBytesRead + "=" );
                     }
-                logger.fine( "sendFileSw() Done Reading/writing totBytesRead =" + totBytesRead + "=" );
-                }
-            catch( Exception exc )
-                {
-                Writer buffer = new StringWriter();
-                PrintWriter pw = new PrintWriter(buffer);
-                exc.printStackTrace(pw);
-                logger.info( "Exception: " + buffer.toString() );
-                }
-            finally 
-                {
-                outStream.flush();
-                if (outStream != null) outStream.close();
-                if (fos != null) fos.close();
+                catch( Exception exc )
+                    {
+                    Writer buffer = new StringWriter();
+                    PrintWriter pw = new PrintWriter(buffer);
+                    exc.printStackTrace(pw);
+                    logger.info( "Exception: " + buffer.toString() );
+                    }
+                finally 
+                    {
+                    outStream.flush();
+                    if (outStream != null) outStream.close();
+                    if (fos != null) fos.close();
+                    }
                 }
             }
         catch( Exception exc )
@@ -584,7 +648,7 @@ public class JfpController {
 //            userDefView.delete(attrName);
 
 
-            //return fileName;
+            //return filename;
 
 //        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
 //                .path(targetLocation.toString())
@@ -594,7 +658,7 @@ public class JfpController {
         return new ResponseEntity<>(new UploadFileResponse(targetLocation.getFileName().toString(), targetLocation.getParent().toString(),
                 "source.getContentType()", fileLength ), HttpStatus.OK);
 
-//        return new UploadFileResponse(fileName, fileDownloadUri,
+//        return new UploadFileResponse(filename, fileDownloadUri,
 //                file.getContentType(), file.getSize());
         }
 
@@ -607,7 +671,7 @@ public class JfpController {
 //                .collect(Collectors.toList());
 //        }
     
-    @PreAuthorize("hasPermission(#dir, 'com.towianski.models.ServerUserFileRights', 'w')")
+    //@PreAuthorize("hasPermission(#dir, 'com.towianski.models.ServerUserFileRights', 'w')")
     @RequestMapping( value = JfpRestURIConstants.MKDIR, method = RequestMethod.PUT )
     public ResponseEntity<String> mkDir(@RequestParam("dir") String dir) {
 
@@ -638,7 +702,7 @@ public class JfpController {
         return new ResponseEntity<>( retMsg, HttpStatus.OK );
         }
     
-    @PreAuthorize("hasPermission(#filename, 'com.towianski.models.ServerUserFileRights', 'w')")
+    //@PreAuthorize("hasPermission(#filename, 'com.towianski.models.ServerUserFileRights', 'w')")
     @RequestMapping( value = JfpRestURIConstants.RM, method = RequestMethod.PUT )
     public ResponseEntity<String> rm(@RequestParam("filename") String filename) {
 
@@ -647,8 +711,15 @@ public class JfpController {
         try {
             logger.info("RM()");
             filePath = Paths.get( URLDecoder.decode( filename, "UTF-8" ) );
-            Files.deleteIfExists( filePath );
             logger.info( "RM for filePath =" + filePath + "=" );
+            if ( ! GlobalMemory.getSecUtils().hasPermission( filePath.getParent(), "w" ) )
+                {
+                logger.info( "Do not have Write permission on folder =" + filePath.getParent() );
+                return new ResponseEntity<>( "Do not have Write permission on folder =" + filePath.getParent(), HttpStatus.UNAUTHORIZED );
+                }
+
+            Files.deleteIfExists( filePath );
+            logger.info( "RM done" );
             retMsg = "deleted";
             } 
         catch (IOException ex) 
@@ -659,7 +730,7 @@ public class JfpController {
         return new ResponseEntity<>( retMsg, HttpStatus.OK );
         }
     
-    @PreAuthorize("hasPermission(#dir, 'com.towianski.models.ServerUserFileRights', 'w')")
+    //@PreAuthorize("hasPermission(#dir, 'com.towianski.models.ServerUserFileRights', 'w')")
     @RequestMapping( value = JfpRestURIConstants.RMDIR, method = RequestMethod.PUT )
     public ResponseEntity<String> rmDir(@RequestParam("dir") String dir) {
 
@@ -668,6 +739,13 @@ public class JfpController {
         try {
             logger.info("RMDIR()");
             dirPath = Paths.get( URLDecoder.decode( dir, "UTF-8" ) );
+            logger.info( "RMDIR for dirPath =" + dirPath + "=" );
+            if ( ! GlobalMemory.getSecUtils().hasPermission( dirPath.getParent(), "w" ) )
+                {
+                logger.info( "Do not have Write permission on folder =" + dirPath.getParent() );
+                return new ResponseEntity<>( "Do not have Write permission on folder =" + dirPath.getParent(), HttpStatus.UNAUTHORIZED );
+                }
+
             Files.deleteIfExists( dirPath );
             logger.info( "RMDIR for dirPath =" + dirPath + "=" );
             return new ResponseEntity<>( retMsg, HttpStatus.OK );

@@ -10,24 +10,24 @@ package com.towianski.httpsutils;
  * @author stan
  */
 public class UploadFileResponse {
-    private String fileName;
+    private String filename;
     private String fileDownloadUri;
     private String fileType;
     private long size;
 
-    public UploadFileResponse(String fileName, String fileDownloadUri, String fileType, long size) {
-        this.fileName = fileName;
+    public UploadFileResponse(String filename, String fileDownloadUri, String fileType, long size) {
+        this.filename = filename;
         this.fileDownloadUri = fileDownloadUri;
         this.fileType = fileType;
         this.size = size;
     }
 
     public String getFileName() {
-        return fileName;
+        return filename;
     }
 
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
+    public void setFileName(String filename) {
+        this.filename = filename;
     }
 
     public String getFileDownloadUri() {

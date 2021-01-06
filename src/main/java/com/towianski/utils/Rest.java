@@ -46,13 +46,13 @@ public class Rest {
     static {
         programMemoryFile = getJfpConfigHome( "ProgramMemory.json", "file", true );
 
-        logger.info( "Rest.saveObjectToFile() Lock  fileName =" + saveReadJsonlockFile + "=" );
+        logger.info( "Rest.saveObjectToFile() Lock  filename =" + saveReadJsonlockFile + "=" );
         }
 
-    static public Object readObjectFromFile( String fileName, TypeReference typeRef )
+    static public Object readObjectFromFile( String filename, TypeReference typeRef )
         {
         synchronized( saveReadJsonlockFile ) {
-            logger.info( "REST.readObjectFromFile()   fileName =" + fileName + "=" );
+            logger.info( "REST.readObjectFromFile()   filename =" + filename + "=" );
             Object obj = null;
     //        ProgramMemory programMemory = new ProgramMemory();
             //read json file data to String
@@ -70,13 +70,13 @@ public class Rest {
                 // This method blocks until it can retrieve the lock.
                 lock = channel.lock();
 
-                fromFile = getJfpConfigHome( fileName, "file", false );
+                fromFile = getJfpConfigHome( filename, "file", false );
                 if ( ! fromFile.exists() )
                     {
                     logger.info( "REST.readObjectFromFile() read file =" + fromFile.toString() + " does not exist." );
                     return null;
                     }
-    //            jsonData = Files.readAllBytes( Paths.get( System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + fileName ) );
+    //            jsonData = Files.readAllBytes( Paths.get( System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + filename ) );
     //            logger.info( "read file =" + fromFile.toString() + "= to get jsonData =" + jsonData.toString() + "=" );
 
                 //create ObjectMapper instance
@@ -153,7 +153,7 @@ public class Rest {
         return null;
     }
 
-    static public void saveObjectToFile( String fileName, Object obj ) 
+    static public void saveObjectToFile( String filename, Object obj ) 
         {
         synchronized( saveReadJsonlockFile ) {
             File toFile = null;
@@ -170,7 +170,7 @@ public class Rest {
                 // This method blocks until it can retrieve the lock.
                 lock = channel.lock();
 
-                toFile = getJfpConfigHome( fileName, "file", false );
+                toFile = getJfpConfigHome( filename, "file", false );
 
                 ObjectMapper objectMapper = new ObjectMapper();
 
@@ -178,7 +178,7 @@ public class Rest {
                 objectMapper.configure( SerializationFeature.INDENT_OUTPUT, true);
 
                 //writing to console, can write to any output stream such as file
-        //            toFile = new File( System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + fileName );
+        //            toFile = new File( System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + filename );
 
                 //        StringWriter stringEmp = new StringWriter();
                 objectMapper.writeValue( toFile, obj );
@@ -230,11 +230,11 @@ public class Rest {
         return null;
         }
 
-    static public void saveStringToFile( String fileName, String outs ) 
+    static public void saveStringToFile( String filename, String outs ) 
         {
         //writing to console, can write to any output stream such as file
         try {
-            File toFile = getJfpConfigHome( fileName, "file", false );
+            File toFile = getJfpConfigHome( filename, "file", false );
             PrintWriter out = new PrintWriter( toFile );
 
             out.println( outs );
@@ -242,7 +242,7 @@ public class Rest {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        logger.info( "write JSON file = " + fileName );
+        logger.info( "write JSON file = " + filename );
     }
 
 //    @Bean

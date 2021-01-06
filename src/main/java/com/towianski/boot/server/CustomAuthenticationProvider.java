@@ -5,9 +5,11 @@
  */
 package com.towianski.boot.server;
 
+import com.towianski.models.JfpUser;
 import com.towianski.models.ServerUserFileRights;
 import com.towianski.utils.MyLogger;
 import java.util.ArrayList;
+import java.util.HashMap;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -29,14 +31,11 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     
     private static final MyLogger logger = MyLogger.getLogger( CustomAuthenticationProvider.class.getName() );
 
-    //@Autowired
-    //ServerUserFileRightsList serverUserFileRightsList = new ServerUserFileRightsList();
-    ArrayList<ServerUserFileRights> serverUserFileRightsList = null;
+    private static HashMap<String, JfpUser> jfpUserHm = null;  // new HashMap<String, JfpUser>();
 
     public CustomAuthenticationProvider() {
         logger.info( "entered CustomAuthenticationProvider() constructor" );
-//        serverUserFileRightsList = ServerUserFileRightsList.readInServerUserFileRightsFromFileList();        
-        serverUserFileRightsList = ServerUserFileRightsListHolder.readInServerUserFileRightsListFromFile().getServerUserFileRightsList();
+        jfpUserHm = ServerUserFileRightsListHolder.readInJfpUserHmFromFile().getJfpUserHm();
     }
         
     @Override
@@ -51,20 +50,18 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         ArrayList<GrantedAuthority> rightsList = new ArrayList<>();
         rightsList.add( new SimpleGrantedAuthority( "ROLE_WRITE" ) );
 
-        logger.info( "serverUserFileRightsList Address = " + System.identityHashCode( serverUserFileRightsList ) );
-        if ( serverUserFileRightsList == null ) logger.info( "serverUserFileRightsList is NULL" );
-        if ( serverUserFileRightsList != null ) logger.info( "serverUserFileRightsList size = " + serverUserFileRightsList.size() );
-        for ( ServerUserFileRights serverUserFileRights : serverUserFileRightsList )
+        logger.info( "jfpUserHm Address = " + System.identityHashCode( jfpUserHm ) );
+        if ( jfpUserHm == null ) logger.info( "jfpUserHm is NULL" );
+        if ( jfpUserHm != null ) logger.info( "jfpUserHm size = " + jfpUserHm.size() );
+        logger.info( "checking auth for =" + name + "=    pass =" + password + "=" );
+        JfpUser jfpUser = jfpUserHm.get( name );
+        if ( jfpUser != null && jfpUser.getPassword().equals( password ) )
             {
-            logger.info( "checking auth for =" + serverUserFileRights.getUser() + "=    pass =" + serverUserFileRights.getPassword() + "=" );
-            if ( serverUserFileRights.getUser().equalsIgnoreCase( name) && serverUserFileRights.getPassword().equals( password) )
-                {
-                logger.info( "Found Valid authenticate username =" + name + "=    pass =" + password + "=" );
-                // use the credentials
-                // and authenticate against the third-party system
-                return new UsernamePasswordAuthenticationToken( name, password, rightsList );
-                } 
-            }
+            logger.info( "Found Valid authenticate username =" + name + "=    pass =" + password + "=" );
+            // use the credentials
+            // and authenticate against the third-party system
+            return new UsernamePasswordAuthenticationToken( name, password, rightsList );
+            } 
         throw new BadCredentialsException("1000");  //null;  //new UsernamePasswordAuthenticationToken( "invalid", password, rightsList );
         }
  

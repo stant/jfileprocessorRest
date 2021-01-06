@@ -59,7 +59,7 @@ public class FileUtils
 
                     MultiValueMap<String, String> params = new LinkedMultiValueMap();
                     //String rmtFilePath = URLEncoder.encode( targetPath, "UTF-8" );
-                    //params.add( "fileName", URLEncoder.encode( targetPath, "UTF-8" ) );
+                    //params.add( "filename", URLEncoder.encode( targetPath, "UTF-8" ) );
                     HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity( params, Rest.getHeaders( connUserInfo.getToUser(), connUserInfo.getToPassword() ) );
 
 //                    response = noHostVerifyRestTemplate.getForObject( connUserInfo.getToUri() + JfpRestURIConstants.DOES_FILE_EXIST, Boolean.class );
@@ -67,7 +67,7 @@ public class FileUtils
 
                     // make an HTTP GET request with headers
                     ResponseEntity<Boolean> responseEntity = noHostVerifyRestTemplate.exchange(
-                            connUserInfo.getToUri() + JfpRestURIConstants.DOES_FILE_EXIST + "?fileName=" + URLEncoder.encode( targetPath, "UTF-8" ),
+                            connUserInfo.getToUri() + JfpRestURIConstants.DOES_FILE_EXIST + "?filename=" + URLEncoder.encode( targetPath, "UTF-8" ),
                             HttpMethod.GET,
                             requestEntity,
                             Boolean.class

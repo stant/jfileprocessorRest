@@ -21,6 +21,7 @@ public class JfpRestURIConstants {
 	public static final String SEND_FILE = "/jfp/rest/sendFile";
 	public static final String SEND_FILES = "/jfp/rest/sendFiles";
 	public static final String DOES_FILE_EXIST = "/jfp/rest/doesFileExist";
+	public static final String DOES_FILE_EXIST_AND_CAN_WRITE = "/jfp/rest/doesFileExistAndCanWrite";
 	public static final String MKDIR = "/jfp/rest/mkDir";
 	public static final String RMDIR = "/jfp/rest/rmDir";
 }

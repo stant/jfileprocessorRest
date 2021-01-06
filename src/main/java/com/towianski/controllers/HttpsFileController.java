@@ -48,18 +48,18 @@ public class HttpsFileController {
     
     @PostMapping("/jfp/uploadFile")
     public UploadFileResponse uploadFile(@RequestParam("file") MultipartFile file) {
-        String fileName = fileStorageService.storeFile(file);
+        String filename = fileStorageService.storeFile(file);
 
         String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/downloadFile/")
-                .path(fileName)
+                .path(filename)
                 .toUriString();
-        System.out.println( "fileName =" + fileName + "=" );
+        System.out.println( "filename =" + filename + "=" );
         System.out.println( "fileDownloadUri =" + fileDownloadUri + "=" );
         System.out.println( "file.getContentType() =" + file.getContentType() + "=" );
         System.out.println( "file.getSize() =" + file.getSize() + "=" );
         
-        return new UploadFileResponse(fileName, fileDownloadUri,
+        return new UploadFileResponse(filename, fileDownloadUri,
                 file.getContentType(), file.getSize());
     }
 
@@ -71,10 +71,10 @@ public class HttpsFileController {
                 .collect(Collectors.toList());
     }
 
-    @GetMapping("/jfp/downloadFile/{fileName:.+}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable String fileName, HttpServletRequest request) {
+    @GetMapping("/jfp/downloadFile/{filename:.+}")
+    public ResponseEntity<Resource> downloadFile(@PathVariable String filename, HttpServletRequest request) {
         // Load file as Resource
-        Resource resource = fileStorageService.loadFileAsResource(fileName);
+        Resource resource = fileStorageService.loadFileAsResource(filename);
 
         // Try to determine file's content type
         String contentType = null;
@@ -96,9 +96,9 @@ public class HttpsFileController {
     }
 
     @GetMapping("/jfp/getFile2")
-    public ResponseEntity<Resource> getFile( String fileName ) throws IOException
+    public ResponseEntity<Resource> getFile( String filename ) throws IOException
         {
-        File file = new File( fileName );
+        File file = new File( filename );
         Path path = Paths.get( file.getAbsolutePath() );
         ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
 
@@ -114,10 +114,10 @@ public class HttpsFileController {
                 .body(resource);
         }
     
-//    @GetMapping("/jfp/getFile/{fileName:.+}")
-//    public ResponseEntity<Resource> getFile(@PathVariable String fileName, HttpServletRequest request) {
+//    @GetMapping("/jfp/getFile/{filename:.+}")
+//    public ResponseEntity<Resource> getFile(@PathVariable String filename, HttpServletRequest request) {
 //        // Load file as Resource
-//        Resource resource = fileStorageService.loadFileAsResource(fileName);
+//        Resource resource = fileStorageService.loadFileAsResource(filename);
 //
 //        // Try to determine file's content type
 //        String contentType = null;

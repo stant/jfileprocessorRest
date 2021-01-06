@@ -73,18 +73,18 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
         if ( serverUserFileRightsList != null ) logger.info( "serverUserFileRightsList size = " + serverUserFileRightsList.size() );
         for ( ServerUserFileRights serverUserFileRights : serverUserFileRightsList )
             {
-            logger.info( "checking auth for =" + serverUserFileRights.getUser() + "=    pass =" + serverUserFileRights.getPassword() + "=    pass =" + serverUserFileRights.getPassword() );
+            logger.info( "checking auth for =" + serverUserFileRights.getUser() + "=" );
             //if ( serverUserFileRights.getUser().equalsIgnoreCase( name) && serverUserFileRights.getPassword().equals( password) )
                 {
-                logger.info("rights user " + serverUserFileRights.getUser() + "    password " + serverUserFileRights.getPassword() + "    targetId =" + targetId + "=    targetType =" + targetType + "=" );
+                logger.info("rights user " + serverUserFileRights.getUser() + "    targetId =" + targetId + "=    targetType =" + targetType + "=" );
                 } 
             }
 
-                if (targetType.equals(ServerUserFileRights.class.getName())) {
-                        return hasPermissionById(principal, targetId, permission);
-                }
+        if (targetType.equals(ServerUserFileRights.class.getName())) {
+            return hasPermissionById(principal, targetId, permission);
+        }
 
-                return false;
+        return false;
         }
 
     private boolean hasPermissionByObject(String principal, ServerUserFileRights serverUserFileRights, Object permission) {
@@ -106,7 +106,7 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
         if ( serverUserFileRightsList != null ) logger.info( "serverUserFileRightsList size = " + serverUserFileRightsList.size() );
         for ( ServerUserFileRights serverUserFileRights : serverUserFileRightsList )
             {
-            logger.info( "checking auth for =" + serverUserFileRights.getUser() + "=    pass =" + serverUserFileRights.getPassword() + "=" );
+            logger.info( "checking auth for =" + serverUserFileRights.getUser() + "=" );
             logger.info( "              for =" + principal + "=    rights =" + serverUserFileRights.getRights() + "=    permission.toString() =" + permission.toString() + "=" );
             logger.info( "              for =" + serverUserFileRights.getPath() + "=    targetId.toString() =" + (targetId == null ? "null" : targetId.toString()) + "=" );
             if ( targetId != null
@@ -114,7 +114,7 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
                     && ( ( targetId.toString() ).startsWith( serverUserFileRights.getPath() ) )
                     && ( ( serverUserFileRights.getRights().toLowerCase() ).indexOf( permission.toString().toLowerCase() ) >= 0 ) )
                 {
-                logger.info("FOUND PERMISSION: rights user " + serverUserFileRights.getUser() + "    password " + serverUserFileRights.getPassword() + "    path " + serverUserFileRights.getPath() );
+                logger.info("FOUND PERMISSION: rights user " + serverUserFileRights.getUser() + "    path " + serverUserFileRights.getPath() );
                 return true;
                 } 
             }

@@ -16,16 +16,14 @@ public class ServerUserFileRights {
     private static final MyLogger logger = MyLogger.getLogger( ServerUserFileRights.class.getName() );
 	 
     String user;
-    String password;
     String path;
     String rights;
 
     public ServerUserFileRights() { }
     
-    public ServerUserFileRights( String user, String password, String path, String rights )
+    public ServerUserFileRights( String user, String path, String rights )
         {
         this.user = user;
-        this.password = password;
         this.path = path;
         this.rights = rights;
         }
@@ -37,14 +35,6 @@ public class ServerUserFileRights {
 
     public void setUser(String user) {
         this.user = user;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getPath() {

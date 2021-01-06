@@ -32,8 +32,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Vector;
 import javax.swing.JOptionPane;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 /**
  *
@@ -289,6 +287,23 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
         cancelFlag = true;
         }
 
+    public Boolean getCancelSearch()
+        {
+        return cancelFlag;
+        }
+//    public Boolean getCancelSearch( String xx )
+//        {
+//        return cancelFlag;
+//        }
+//
+//    private static class cancelFlag {
+//
+//        public cancelFlag() {
+//        }
+//    }
+// Using a lambda expression
+//Function<String, Boolean>  getCancelSearch2 = () -> return getCancelSearch( "" );
+
     /**
      * This function recursively copy all the sub folder and files from sourceFolder to destinationFolder
      * */
@@ -342,6 +357,12 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
     
     public void copyRecursiveLocalToSftp( String sourceFolderStr, String destinationFolderStr ) throws IOException
     {
+        if ( cancelFlag )
+            {
+            logger.finest( "Copy cancelled by user." );
+            return;
+            }
+
         //Check if sourceFolder is a directory or file
         //If sourceFolder is file; then copy the file directly to new location
         logger.info( "copyRecursiveLocalToSftp sourceFolderStr =" + sourceFolderStr + "=   to destinationFolderStr =" + destinationFolderStr + "=" );
@@ -515,6 +536,12 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
     
     public void copyRecursiveLocalToHttps( String sourceFolderStr, String destinationFolderStr ) throws IOException
     {
+        if ( cancelFlag )
+            {
+            logger.finest( "Copy cancelled by user." );
+            return;
+            }
+
         //Check if sourceFolder is a directory or file
         //If sourceFolder is file; then copy the file directly to new location
         logger.info( "copyRecursiveLocalToHttps sourceFolderStr =" + sourceFolderStr + "=   to destinationFolderStr =" + destinationFolderStr + "=" );
@@ -579,7 +606,6 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
                 try
                     {
                     logger.info( "mkdir =" + destinationFolderStr + "=" );
-                    //chanSftp.mkdir( destinationFolderStr );
                     httpsUtilsTar.mkDir( destinationFolderStr );
                     logger.info( "Directory created :: " + destinationFolderStr );
                     } 
@@ -635,8 +661,8 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
                 
 //                logger.info( "copyOptions contains? StandardCopyOption.REPLACE_EXISTING =" + copyOptions.contains(StandardCopyOption.REPLACE_EXISTING) + "=" );
                     
-                logger.info( "httpsUtilsTar.exists( destinationFolderStr ) ?" + httpsUtilsTar.exists( destinationFolderStr ) + "=" );
-                if ( httpsUtilsTar.exists( destinationFolderStr ) )
+                logger.info( "httpsUtilsTar.exists( destinationFolderStr ) ?" + httpsUtilsTar.existsAndCanWrite( destinationFolderStr ) + "=" );
+                if ( httpsUtilsTar.existsAndCanWrite( destinationFolderStr ) )
                     {
                     if ( copyOptions.contains( StandardCopyOption.REPLACE_EXISTING ) )  // Fixxx when on server need to pass this flag and might not be as it overwrites !
                         {
@@ -647,7 +673,7 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
                         logger.info( "put " + sourceFolderStr );
                         if ( ! connUserInfo.isRunCopyOnRemote() )
                             {
-                            httpsUtilsTar.putFileSw( sourceFolderStr, destinationFolderStr, swingWorker, numTested );
+                            httpsUtilsTar.putFileSw( sourceFolderStr, destinationFolderStr, swingWorker, numTested, this::getCancelSearch );
                             }
                         else
                             {
@@ -669,7 +695,7 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
                     logger.info( "put new " + sourceFolderStr );
                     if ( ! connUserInfo.isRunCopyOnRemote() )
                         {
-                        httpsUtilsTar.putFileSw( sourceFolderStr, destinationFolderStr, swingWorker, numTested );
+                        httpsUtilsTar.putFileSw( sourceFolderStr, destinationFolderStr, swingWorker, numTested, this::getCancelSearch );
                         }
                     else
                         {
@@ -712,6 +738,12 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
     
     public void copyRecursiveSftpToLocal( String sourceFolderStr, String destinationFolderStr ) throws IOException
         {
+        if ( cancelFlag )
+            {
+            logger.finest( "Copy cancelled by user." );
+            return;
+            }
+
         //Check if sourceFolder is a directory or file
         //If sourceFolder is file; then copy the file directly to new location
         numTested++;
@@ -885,6 +917,12 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
     
     public void copyRecursiveHttpsToLocal( String sourceFolderStr, String destinationFolderStr ) throws IOException
         {
+        if ( cancelFlag )
+            {
+            logger.finest( "Copy cancelled by user." );
+            return;
+            }
+
         //Check if sourceFolder is a directory or file
         //If sourceFolder is file; then copy the file directly to new location
         numTested++;
@@ -1011,7 +1049,7 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
                             }        
                         if ( ! connUserInfo.isRunCopyOnRemote() )
                             {
-                            httpsUtilsSrc.getFileViaRestTemplateSw( sourceFolderStr, destinationFolderStr, swingWorker, numTested );
+                            httpsUtilsSrc.getFileViaRestTemplateSw( sourceFolderStr, destinationFolderStr, swingWorker, numTested, this::getCancelSearch );
                             }
                         else
                             {
@@ -1035,7 +1073,7 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
                     logger.info( "copyRecursiveHttpsToLocal() httpsUtilsSrc.getFileViaRestTemplate srcFile =" + sourceFolderStr + "=   destFile =" + destinationFolderStr + "=" );
                     if ( ! connUserInfo.isRunCopyOnRemote() )
                         {
-                        httpsUtilsSrc.getFileViaRestTemplateSw( sourceFolderStr, destinationFolderStr, swingWorker, numTested );
+                        httpsUtilsSrc.getFileViaRestTemplateSw( sourceFolderStr, destinationFolderStr, swingWorker, numTested, this::getCancelSearch );
                         }
                     else
                         {
@@ -1081,6 +1119,12 @@ public class CopierNonWalker //extends SimpleFileVisitor<Path>
     
     public void copyRecursiveSftpToSftp( String sourceFolderStr, String destinationFolderStr ) throws IOException
         {
+        if ( cancelFlag )
+            {
+            logger.finest( "Copy cancelled by user." );
+            return;
+            }
+
         //Check if sourceFolder is a directory or file
         //If sourceFolder is file; then copy the file directly to new location
         numTested++;
