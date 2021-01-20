@@ -7,13 +7,11 @@ package com.towianski.jfileprocessor;
 
 import com.towianski.httpsutils.HttpsUtils;
 import com.towianski.models.ConnUserInfo;
-import com.towianski.sshutils.JschSftpUtils;
 import com.towianski.utils.MyLogger;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JComponent;
@@ -56,6 +54,11 @@ public class HttpsReturnFileFrame extends javax.swing.JFrame {
         this.setLocation(0, 0);
         this.addEscapeListener( this );
         doCmdBtn.requestFocusInWindow();
+        }
+
+    public Boolean getCancelSearch()
+        {
+        return false;
         }
 
     public void addEscapeListener(final JFrame win) {
@@ -144,10 +147,11 @@ public class HttpsReturnFileFrame extends javax.swing.JFrame {
             {
             try {
                 HttpsUtils httpsUtils = new HttpsUtils( "TO", connUserInfo );
-                httpsUtils.putFile( locFile, rmtFile );
+                //httpsUtils.putFile( locFile, rmtFile );
+                httpsUtils.putFileSw( locFile, rmtFile, null, 1, this::getCancelSearch );
                 this.dispatchEvent( new WindowEvent( this, WindowEvent.WINDOW_CLOSING ));
                 this.dispose();
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 Logger.getLogger(HttpsReturnFileFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
             }

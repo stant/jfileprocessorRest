@@ -815,6 +815,16 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                                 " --warfile=%f --path=/%F --port=8070 --warserver --logging.file=" + 
                                 JfpHomeTempDir + "%F.log",
                         "url:https://localhost:8070/jfp/sys/stop" ) );
+                
+                fileAssocList.addFileAssoc( new FileAssoc( JfpConstants.ASSOC_TYPE_SUFFIX, 
+                        JfpConstants.MATCH_TYPE_GLOB, "**.{sh,bat}", 
+                        "%f %p",
+                        "" ) );
+                
+                fileAssocList.addFileAssoc( new FileAssoc( JfpConstants.ASSOC_TYPE_FILENAME, 
+                        JfpConstants.MATCH_TYPE_GLOB, "**/jfp-server.{sh,bat}", 
+                        "%f %p",
+                        "url:https://localhost:8090/jfp/sys/stop" ) );
                 Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
                 }
             else
@@ -1648,8 +1658,20 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                 args[0] = startingFolder.getText().trim();
                 //int startingPathLength = (args[0].endsWith( System.getProperty( "file.separator" ) ) || args[0].endsWith( "/" ) ) ? args[0].length() - 1 : args[0].length();
                 //args[0] = args[0].substring( 0, startingPathLength );
-                if ( ! ( args[0].endsWith(System.getProperty( "file.separator" ) )
-                         || args[0].endsWith( "/" ) ) ) 
+                
+                if ( args[0].trim().equals( "" ) )
+                    {
+                    if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
+                        {
+                        args[0] = "C:\\";
+                        }
+                    else   //if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "linux" ) )
+                        {
+                        args[0] = "/";
+                        }
+                    }
+                if ( ! ( args[0].endsWith(System.getProperty( "file.separator" ) ) ) )
+//                         || args[0].endsWith( "/" ) ) ) 
                     {
                     args[0] += System.getProperty( "file.separator" );
                     }

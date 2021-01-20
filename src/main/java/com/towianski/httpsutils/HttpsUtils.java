@@ -41,6 +41,7 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -918,9 +919,16 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
 
     public void getFileViaRestTemplate( String source, String target ) throws IOException {
         try {
+            logger.info( "getFileViaRestTemplate source =" + source + "=   target =" + target + "=" );
+
             // Optional Accept header
-            RequestCallback requestCallback = request -> request.getHeaders()
-                .setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM, MediaType.ALL));
+            RequestCallback requestCallback = request -> {
+                    String base64Credentials = new String(Base64.encodeBase64( (user + ":" + password).getBytes()));
+                    request.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+                    request.getHeaders().add("Authorization", "Basic " + base64Credentials);
+                    request.getHeaders().setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM, MediaType.ALL) );
+                            };
+            // from HttpHeaders headers = Rest.getHeaders( user, password );
 
             // Streams the response instead of loading it all in memory
             ResponseExtractor<Void> responseExtractor = response -> {
@@ -1061,7 +1069,7 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
                             logger.finest( "getFileViaRestTemplate totBytesRead =" + totBytesRead + "=" );
                             if ( totBytesRead > dispAtBytes )
                                 {
-                                swingWorker.publish3( new CopyCounts( numTested, totBytesRead ) );
+                                if ( swingWorker != null ) swingWorker.publish3( new CopyCounts( numTested, totBytesRead ) );
                                 dispAtBytes = totBytesRead + 102400;
                                 if ( getCancelSearch.apply() )
                                     {
@@ -1079,7 +1087,7 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
                             }
                         }
                     logger.finest( "getFileViaRestTemplate Done Reading/writing totBytesRead =" + totBytesRead + "=" );
-                    swingWorker.publish3( new CopyCounts( numTested, totBytesRead ) );
+                    if ( swingWorker != null ) swingWorker.publish3( new CopyCounts( numTested, totBytesRead ) );
                     outStream.flush();
                     }
                 catch( Exception exc )
@@ -1200,7 +1208,8 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
 
             //HttpHeaders headers = new HttpHeaders();
             HttpHeaders headers = Rest.getHeaders( user, password );
-            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+            //headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+            //headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
 
             logger.info( "putFile save response body to source =" + source + "=" );
             logger.info( "putFile save response body to target =" + target + "=" );
@@ -1290,23 +1299,29 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
 
             //URLConnection connection = new URL( uri + JfpRestURIConstants.SEND_FILE ).openConnection();
             HttpsURLConnection sslConn = (HttpsURLConnection)new URL( uri + JfpRestURIConstants.SEND_FILE +
-                    "?source=" + URLEncoder.encode( Paths.get( source ).toString(), "UTF-8" ) +
-                    "&target=" + URLEncoder.encode( Paths.get( target ).toString(), "UTF-8" ) +
+                    "?source=" + URLEncoder.encode( source, "UTF-8" ) +
+                    "&target=" + URLEncoder.encode( target, "UTF-8" ) +
                     "&fileLength=" + URLEncoder.encode( path.toFile().length() + "", "UTF-8" )
                     ).openConnection();
             logger.info( "qqq call =" + uri + JfpRestURIConstants.SEND_FILE +
-                    "?source=" + URLEncoder.encode( Paths.get( source ).toString(), "UTF-8" ) +
-                    "&target=" + URLEncoder.encode( Paths.get( target ).toString(), "UTF-8" ) +
+                    "?source=" + URLEncoder.encode( source, "UTF-8" ) +
+                    "&target=" + URLEncoder.encode( target, "UTF-8" ) +
                     "&fileLength=" + URLEncoder.encode( path.toFile().length() + "", "UTF-8" ) 
                 );
-            
+
+//            HttpsURLConnection sslConn = (HttpsURLConnection)new URL( uri + JfpRestURIConstants.SEND_FILE ).openConnection();
+//            logger.info( "qqq call =" + uri + JfpRestURIConstants.SEND_FILE );
+
+            //target = URLDecoder.decode( target, "UTF-8" );
+            //logger.info( "target decoded =" + target + "=" );
+
             sslConn.setFixedLengthStreamingMode( path.toFile().length() );
 //            sslConn.setChunkedStreamingMode( 1024000 ); //10MB chunk This ensures that any file (of any size) is streamed over a https connection, without internal buffering. 
             
             sslConn.setSSLSocketFactory(sslContext.getSocketFactory());
             //sslConn.setSSLSocketFactory( sslConnectionSocketFactory.getClass() );
             
-            sslConn.setDoOutput(true);  //  implicitly set the request method to POST
+            sslConn.setDoOutput(true);  //  implicitly sets the request method to POST
             sslConn.setRequestMethod("POST");
             sslConn.setReadTimeout(60 * 1000);
             sslConn.setConnectTimeout(5 * 1000);
@@ -1314,6 +1329,11 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
             String base64Credentials = new String(Base64.encodeBase64( (user + ":" + password).getBytes()));         
             sslConn.setRequestProperty("Authorization", "Basic " + base64Credentials );
             sslConn.setRequestProperty("Connection", "close");
+
+            //sslConn.setRequestProperty( "source", URLEncoder.encode( Paths.get( source ).toString(), "UTF-8" ) );
+            //sslConn.setRequestProperty( "target", URLEncoder.encode( Paths.get( target ).toString(), "UTF-8" ) );
+            //sslConn.setRequestProperty( "fileLength", URLEncoder.encode( path.toFile().length() + "", "UTF-8" ) );
+            
 //            OutputStream output = connection.getOutputStream();
 //            PrintWriter writer = new PrintWriter(new OutputStreamWriter( output, "UTF-8"), true);
             
@@ -1352,7 +1372,7 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
                 logger.finest( "SEND_FILESw totBytesRead =" + totBytesRead + "=" );
                 if ( totBytesRead > dispAtBytes )
                     {
-                    swingWorker.publish3( new CopyCounts( numTested, totBytesRead ) );
+                    if ( swingWorker != null ) swingWorker.publish3( new CopyCounts( numTested, totBytesRead ) );
                     dispAtBytes = totBytesRead + 102400;
                     outStream.flush();
                     if ( getCancelSearch.apply() )
@@ -1362,7 +1382,7 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
                         }
                     }
                 }
-            swingWorker.publish3( new CopyCounts( numTested, totBytesRead ) );
+            if ( swingWorker != null ) swingWorker.publish3( new CopyCounts( numTested, totBytesRead ) );
             logger.info( "SEND_FILESw Done" );
 
             inStream.close();        
@@ -1381,7 +1401,7 @@ public void FileGet( String rmtFile, String user, String password, String rhost,
                 }
             else if ( responseCode != 200 )
                 {
-                throw new IOException( "Http Error" );
+                throw new IOException( "Http Error responseCode = " + responseCode );
                 }
             }
         catch (Exception ex) 

@@ -59,7 +59,8 @@ import org.springframework.util.StringUtils;
 public class JfpController {
 	
     private static final MyLogger logger = MyLogger.getLogger( JfpController.class.getName() );
-
+    //private int controllerOnFsType = -1;  // tried this once. it did not work. maybe because controller is not singleton? did not look more
+    
     // not working - @PreAuthorize("hasPermission(#searchModel.StartingFolder, 'com.towianski.models.ServerUserFileRights', 'r')")
     @RequestMapping(value = JfpRestURIConstants.SEARCH, method = RequestMethod.POST)
     public ResponseEntity<ResultsData> search(@RequestBody SearchModel searchModel) {
@@ -146,9 +147,11 @@ public class JfpController {
         if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
             {
             logger.info("SYS_GET_FILESYS - DOS");
+            //controllerOnFsType = Constants.FILESYSTEM_DOS;
             return Constants.FILESYSTEM_DOS;
             }
         logger.info("SYS_GET_FILESYS - POSIX");
+        //controllerOnFsType = Constants.FILESYSTEM_POSIX;
         return Constants.FILESYSTEM_POSIX;
     }
 
@@ -519,13 +522,21 @@ public class JfpController {
 //        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
 //        String filename2 = fileStorageService.storeFile(file);
 
-        String filename = StringUtils.cleanPath( source );  //.getOriginalFilename() );
+        String filename = StringUtils.cleanPath( URLDecoder.decode( source, "UTF-8" ) );  //StringUtils.cleanPath( source );  //.getOriginalFilename() );
         Path targetLocation = null;
         long fileLength = Long.parseLong( fileLengthStr );
+
+        target = URLDecoder.decode( target, "UTF-8" );
 
         logger.info( "filename =" + filename + "=" );
         logger.info( "target =" + target + "=" );
         logger.info( "fileLength =" + fileLength + "=" );
+
+//        if ( controllerOnFsType == Constants.FILESYSTEM_POSIX )  // because param comes on url line where / are not allowed so it comes over as \ converted.
+//            {
+//            target = target.replace( "\\", "/" );
+//            logger.info( "posix target =" + target + "=" );
+//            }
 
         try {
             // Check if the file's name contains invalid characters
@@ -655,6 +666,9 @@ public class JfpController {
 //                .toUriString(); 
 //        logger.info( "fileDownloadUri =" + fileDownloadUri + "=" );
         
+        logger.info( "targetLocation.getFileName().toString() =" + targetLocation.getFileName().toString() + "=" );
+        logger.info( "targetLocation.getParent().toString() =" + targetLocation.getParent().toString() + "=" );
+        logger.info( "fileLength =" + fileLength + "=" );
         return new ResponseEntity<>(new UploadFileResponse(targetLocation.getFileName().toString(), targetLocation.getParent().toString(),
                 "source.getContentType()", fileLength ), HttpStatus.OK);
 
