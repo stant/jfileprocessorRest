@@ -12,7 +12,6 @@ import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
 import com.towianski.models.ConnUserInfo;
 import com.towianski.utils.MyLogger;
-import com.towianski.utils.Rest;
 import java.util.Properties;
 import javax.swing.JOptionPane;
 

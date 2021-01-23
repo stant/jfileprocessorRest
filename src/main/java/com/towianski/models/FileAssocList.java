@@ -21,7 +21,7 @@ import java.util.TreeMap;
 public class FileAssocList {
     
     private static final MyLogger logger = MyLogger.getLogger( FileAssocList.class.getName() );
-    String version = "1.0";
+    String version = "1.1";
     TreeMap<String,FileAssoc> fileAssocList = new TreeMap<String,FileAssoc>();
     ArrayList<FileAssoc> matchingFileAssocList = new ArrayList<FileAssoc>();
 
@@ -49,6 +49,24 @@ public class FileAssocList {
     }
 
     @JsonProperty
+    public void dumpFileAssocList()
+        {
+        logger.info( "Dump file assoc's :" );
+        for( Map.Entry<String,FileAssoc> entry : fileAssocList.entrySet() ) 
+            {
+            String key = entry.getKey();
+            FileAssoc fa = entry.getValue();
+
+            logger.info( "" );
+            logger.info( "fa.getAssocType =" + fa.getAssocType() + "=" );
+            logger.info( "fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
+            logger.info( "fa.getStartDir =" + fa.getStartDir() + "=" );
+            logger.info( "fa.exec =" + fa.getExec() + "=" );
+            logger.info( "fa.stop =" + fa.getStop() + "=" );
+            }
+        }
+
+    @JsonProperty
     public ArrayList<FileAssoc> getFileAssocList( String selectedPath )
     {
         matchingFileAssocList = new ArrayList<FileAssoc>();
@@ -59,6 +77,13 @@ public class FileAssocList {
         for( Map.Entry<String,FileAssoc> entry : fileAssocList.entrySet() ) {
             String key = entry.getKey();
             FileAssoc fa = entry.getValue();
+
+            logger.finest( "Search thru:" );
+            logger.finest( "fa.getAssocType =" + fa.getAssocType() + "=" );
+            logger.finest( "fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
+            logger.finest( "fa.getStartDir =" + fa.getStartDir() + "=" );
+            logger.finest( "fa.exec =" + fa.getExec() + "=" );
+            logger.finest( "fa.stop =" + fa.getStop() + "=" );
 
             if ( fa.getMatchType().equalsIgnoreCase( JfpConstants.MATCH_TYPE_REGEX) )
                 {
@@ -75,6 +100,7 @@ public class FileAssocList {
                 logger.info( "FOUND match to add to List" );
                 logger.info( "matched and got fa.getAssocType =" + fa.getAssocType() + "=" );
                 logger.info( "matched and got fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
+                logger.info( "matched and got fa.getStartDir =" + fa.getStartDir() + "=" );
                 logger.info( "matched and got fa.exec =" + fa.getExec() + "=" );
                 logger.info( "matched and got fa.stop =" + fa.getStop() + "=" );
                 matchingFileAssocList.add( fa );
@@ -113,6 +139,7 @@ public class FileAssocList {
                 logger.info( "FOUND match" );
                 logger.info( "matched and got fa.getAssocType =" + fa.getAssocType() + "=" );
                 logger.info( "matched and got fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
+                logger.info( "matched and got fa.getStartDir =" + fa.getStartDir() + "=" );
                 logger.info( "matched and got fa.exec =" + fa.getExec() + "=" );
                 logger.info( "matched and got fa.stop =" + fa.getStop() + "=" );
                 return fa;

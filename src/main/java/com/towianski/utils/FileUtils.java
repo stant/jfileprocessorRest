@@ -11,9 +11,11 @@ import com.towianski.models.JfpRestURIConstants;
 import com.towianski.sshutils.Sftp;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import org.springframework.http.HttpEntity;
@@ -138,13 +140,13 @@ public class FileUtils
             }
         }
 
-    public static void fileMove( ConnUserInfo connUserInfo, String sourcePath, String targetPath )
+    public static void fileMove( ConnUserInfo connUserInfo, String sourcePath, String targetPath, boolean replaceFlag )
             throws HttpClientErrorException
         {
         logger.info( "jfilewin FileMove()" );
-        logger.info( "jfilewin FileMove()  connUserInfo.isConnectedFlag() =" + connUserInfo.isConnectedFlag() + "=" );
+        if ( connUserInfo != null ) logger.info( "jfilewin FileMove()  connUserInfo.isConnectedFlag() =" + connUserInfo.isConnectedFlag() + "=" );
 
-        if ( connUserInfo.isConnectedFlag() )
+        if ( connUserInfo != null && connUserInfo.isConnectedFlag() )
             {
 //            RestTemplate restTemplate = new RestTemplate();
             RestTemplate noHostVerifyRestTemplate = Rest.createNoHostVerifyRestTemplate();
@@ -184,12 +186,19 @@ public class FileUtils
             {
             logger.info( "jfilewin FileMove()" );
     //        Path sourcePath = Paths.get( tcl.getOldValue().toString().trim() );
-            logger.info( "try to move dir source =" + sourcePath + "=   target =" + targetPath + "=" );
+            logger.info( "try to move dir source =" + sourcePath + "=   target =" + targetPath + "=   replaceFlag = " + replaceFlag );
             if ( Files.exists( Paths.get( sourcePath ) ) )
                 {
                 try
                     {
-                    Files.move( Paths.get( sourcePath ), Paths.get( targetPath ) );
+                    if ( replaceFlag )
+                        {
+                        Files.move( Paths.get( sourcePath ), Paths.get( targetPath ), StandardCopyOption.REPLACE_EXISTING );
+                        }
+                    else
+                        {
+                        Files.move( Paths.get( sourcePath ), Paths.get( targetPath ) );                            
+                        }
                     } 
                 catch (IOException ex)
                     {

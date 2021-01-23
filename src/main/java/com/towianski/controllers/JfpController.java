@@ -115,7 +115,7 @@ public class JfpController {
             }
         try
             {
-            FileUtils.fileMove( new ConnUserInfo(), oldname, newname );
+            FileUtils.fileMove( new ConnUserInfo(), oldname, newname, false );
             }
         catch (Exception ex)
             {

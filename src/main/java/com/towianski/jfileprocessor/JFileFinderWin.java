@@ -28,6 +28,7 @@ import com.towianski.chainfilters.ChainFilterOfPreVisitMinDepth;
 import com.towianski.chainfilters.ChainFilterOfShowHidden;
 import com.towianski.chainfilters.FilterChain;
 import com.towianski.httpsutils.HttpsUtils;
+import com.towianski.interfaces.Callback;
 import com.towianski.models.JfpRestURIConstants;
 import com.towianski.jfileprocess.actions.BackwardFolderAction;
 import com.towianski.jfileprocess.actions.CopyAction;
@@ -42,6 +43,7 @@ import com.towianski.jfileprocess.actions.UpFolderAction;
 import com.towianski.jfileprocess.actions.ProcessInThread;
 import com.towianski.jfileprocess.actions.NewFolderAction;
 import com.towianski.jfileprocess.actions.ScriptOnSelectedFilesAction;
+import com.towianski.jfileprocess.actions.SystemTrayIcon;
 import com.towianski.jfileprocess.actions.WatchStartingFolder;
 import com.towianski.listeners.MyFocusAdapter;
 import com.towianski.listeners.MyRowSorterListener;
@@ -76,6 +78,7 @@ import static com.towianski.utils.ClipboardUtils.getClipboardStringsList;
 import static com.towianski.utils.ClipboardUtils.setClipboardContents;
 import com.towianski.utils.ConnectionWin;
 import com.towianski.utils.DesktopUtils;
+import static com.towianski.utils.DesktopUtils.getJfpConfigHome;
 import com.towianski.utils.FileAssocWin;
 import com.towianski.utils.FileUtils;
 import com.towianski.utils.GithubClient;
@@ -134,8 +137,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -158,7 +159,6 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.JTable;
-import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
@@ -803,14 +803,34 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
 
     public FileAssocList readInFileAssocList() {
         logger.info( "readInFileAssocList()" );
+        System.out.println( "readInFileAssocList()" );
         try {
             fileAssocList = (FileAssocList) Rest.readObjectFromFile( "FileAssocList.json", new TypeReference<FileAssocList>(){} );
+            if ( ! fileAssocList.getVersion().equals( "1.1" ) )
+                {
+                fileAssocList = null;
+                logger.info( "fileAssocList.getVersion() OLD =" + fileAssocList.getVersion() );
+                System.out.println( "fileAssocList.getVersion() OLD =" + fileAssocList.getVersion() );
+                }
+            }
+        catch( Exception exc )
+            {
+            fileAssocList = null;
+            File fromFile = getJfpConfigHome( "FileAssocList.json", "file", false );
+            FileUtils.fileMove( null, fromFile.toString(), fromFile.toString() + "-old", true );
+            exc.printStackTrace();
+            }
+
+        try {
             if ( fileAssocList == null )
                 {
                 logger.info( "readInFileAssocFromFile() Error reading json file" );
+                System.out.println( "readInFileAssocFromFile() Error reading json file" );
                 fileAssocList = new FileAssocList();
                 fileAssocList.addFileAssoc( new FileAssoc( JfpConstants.ASSOC_TYPE_SUFFIX, 
                         JfpConstants.MATCH_TYPE_GLOB, "**.war", 
+                        "Any War File",
+                        "%p",
                         "$JAVA -Dspring.profiles.active=warserver -jar " + JfpHomeDir + "$JFP" + 
                                 " --warfile=%f --path=/%F --port=8070 --warserver --logging.file=" + 
                                 JfpHomeTempDir + "%F.log",
@@ -818,12 +838,16 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                 
                 fileAssocList.addFileAssoc( new FileAssoc( JfpConstants.ASSOC_TYPE_SUFFIX, 
                         JfpConstants.MATCH_TYPE_GLOB, "**.{sh,bat}", 
-                        "%f %p",
+                        "Shell/Bat file",
+                        "%p",
+                        "%f",
                         "" ) );
                 
                 fileAssocList.addFileAssoc( new FileAssoc( JfpConstants.ASSOC_TYPE_FILENAME, 
                         JfpConstants.MATCH_TYPE_GLOB, "**/jfp-server.{sh,bat}", 
-                        "%f %p",
+                        "Jfp Server",
+                        "%p",
+                        "%f",
                         "url:https://localhost:8090/jfp/sys/stop" ) );
                 Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
                 }
@@ -835,6 +859,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                 }
     //        if ( jFileFinderWin == null )
     //            return;
+    //        fileAssocList.dumpFileAssocList();
             return fileAssocList;
             }
         catch( Exception exc )
@@ -1523,7 +1548,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                     else
                         {
                         String sourcePath = tcl.getOldValue().toString().trim();
-                        FileUtils.fileMove( connUserInfo, sourcePath, targetPathStr );
+                        FileUtils.fileMove( connUserInfo, sourcePath, targetPathStr, false );
                         logger.info( "After  FileUtils.fileMove()" );
                         fileAssocList.moveFileAssoc( sourcePath, targetPathStr );
                         Rest.saveObjectToFile( "FileAssocList.json", fileAssocList );
@@ -2422,11 +2447,11 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
 //                Process p = Runtime.getRuntime().exec("start /wait cmd /K " + file);
 //                int exitVal = p.waitFor();
                 }
-            } 
+            }
         catch (Exception ex) 
             {
             ex.printStackTrace();
-            logger.severeExc( ex);
+            logger.severeExc( ex );
             JOptionPane.showMessageDialog( this, "Open not supported in this desktop", "Error", JOptionPane.ERROR_MESSAGE );
             }
         finally
@@ -2578,7 +2603,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                     {
     //                logger.info( "jfpWin got OK " );
                     FileAssoc fa = new FileAssoc( fileAssocWin.getAssocType(),
-                            fileAssocWin.getMatchType(), fileAssocWin.getMatchPattern(), fileAssocWin.getExec(), fileAssocWin.getStop() );
+                            fileAssocWin.getMatchType(), fileAssocWin.getMatchPattern(), fileAssocWin.getDesc(), fileAssocWin.getStartDir(), fileAssocWin.getExec(), fileAssocWin.getStop() );
     //                logger.info( "matched and got fa.getAssocType =" + fa.getAssocType() + "=" );
     //                logger.info( "matched and got fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
     //                logger.info( "matched and got fa.exec =" + fa.getExec() + "=" );
@@ -2708,7 +2733,9 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
 //                cmdList = new ArrayList<String>(Arrays.asList( cmdAr )); 
                 cmdList = replaceCmdVars( cmdList, selectedPath );   // do after split so spaces in filenames do not become part of splits
 
-                int rc = jp.execJava2( cmdList, true );
+                String startDir = fa.getStartDir().replace( "%p", Paths.get( selectedPath ).getParent().toString() );
+
+                int rc = jp.execJava2( startDir, cmdList, true );
                 if ( cmdType.equalsIgnoreCase( JfpConstants.ASSOC_CMD_TYPE_STOP ) )
                     rcStr = runCmdString + "<br>stop returned code =" + rc + "=";
                 else
@@ -2716,17 +2743,23 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                 logger.info( rcStr );
                 }
 
+            if ( cmdType.equalsIgnoreCase( JfpConstants.ASSOC_CMD_TYPE_EXEC ) &&
+                 ( fa.getStop() != null && ! fa.getStop().equals( "" ) ) )
+                {
+                createSystemTrayIconIfCmdHasStop( selectedPath, (fa.getDesc() != null && !fa.getDesc().equals( "" )) ? fa.getDesc() : fa.getMatchPattern() );
+                }
+            
             // Start a msgBox - if doing exec and it has a stop cmd. if just start kwrite or something do not show msgBox
             if ( cmdType.equalsIgnoreCase( JfpConstants.ASSOC_CMD_TYPE_STOP ) ||
                  ( fa.getStop() != null && ! fa.getStop().equals( "" ) ) )
-            {
+                {
                 final String tmp = rcStr;
                 java.awt.EventQueue.invokeLater(new Runnable() {
                     public void run() {
                         new MsgBoxFrame( tmp ).setVisible( true );
                     }
                 });
-            }
+                }
         
 //                if ( selectedPath.toUpperCase().endsWith( ".GROOVY" ) )
 //                    {
@@ -2745,8 +2778,28 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         }
     }
 
+    public void createSystemTrayIconIfCmdHasStop( String selectedPath, String execDesc )
+        {
+//        FileAssoc fa = findFileAssocOrAsk( selectedPath, "dontAsk" );
+//        if ( fa != null )
+//            {
+//            if ( fa.getStop() != null && ! fa.getStop().equals( "" ) )
+//                {
+                Callback cb = new Callback() { // implementing class            
+                @Override
+                public void call() 
+                    {
+                    logger.info( "callback called to stop for path =" + selectedPath+ "=" );
+                    jfpExecOrStop( selectedPath, JfpConstants.ASSOC_CMD_TYPE_STOP );
+                    }
+                };
+                new SystemTrayIcon( cb, execDesc );
+//                }
+//            }
+        }
+
     public ArrayList<String> replaceCmdVars( ArrayList<String> cmdList, String selectedPath )
-    {
+        {
         ArrayList<String> newCmdList = new ArrayList<String>();
         try {
             Path fpath = Paths.get( selectedPath );
@@ -2760,7 +2813,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                 }
             for ( String tmp : newCmdList )
                 {
-                logger.info( "cnewCmdListmd piece =" + tmp + "=" );
+                logger.info( "newCmdList piece =" + tmp + "=" );
                 }
         } catch (Exception ex) {
             logger.severeExc( ex );
@@ -5095,37 +5148,6 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
     }//GEN-LAST:event_countBtnActionPerformed
 
     private void savedPathsListMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_savedPathsListMouseClicked
-        DefaultListModel listModel = (DefaultListModel) savedPathReplacablePanel.getSavedPathsList().getModel();
-        int index = savedPathsList.getSelectedIndex();
-        String strPath = listModel.getElementAt(index).toString();
-        if ( strPath.equals( "New Window" ) )
-            {
-            try {
-                ProcessInThread jp = new ProcessInThread();
-                int rc = jp.execJava( com.towianski.jfileprocessor.JFileFinderWin.class, true );
-                logger.info( "javaprocess.exec start new window rc = " + rc + "=" );
-            } catch (IOException ex) {
-                logger.severeExc( ex );
-            } catch (InterruptedException ex) {
-                logger.severeExc( ex );
-            }
-            return;
-            }
-        else if ( strPath.equals( "Trash" ) )
-            {
-            try {
-                ProcessInThread jp = new ProcessInThread();
-                int rc = jp.execJava( com.towianski.jfileprocessor.JFileFinderWin.class, true, DesktopUtils.getTrashFolder().toString() );
-                logger.info( "javaprocess.exec start new window rc = " + rc + "=" );
-            } catch (IOException ex) {
-                logger.severeExc( ex );
-            } catch (InterruptedException ex) {
-                logger.severeExc( ex );
-            }
-            return;
-            }
-        startingFolder.setText( savedPathReplacablePanel.getSavedPathsHm().get( strPath ) );
-        searchBtnActionPerformed( null );
     }//GEN-LAST:event_savedPathsListMouseClicked
 
     private void deletePathActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deletePathActionPerformed
@@ -5571,17 +5593,17 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                 File file = new File( (String) filesTblModel.getValueAt( rowIndex, FilesTblModel.FILESTBLMODEL_PATH ) );
                 try {
 //                    int rc = JavaProcess.execJava( com.towianski.jfileprocessor.JFileFinderWin.class, file.getParent() );
-                ProcessInThread jp = new ProcessInThread();
-//                int rc = jp.execJava(com.towianski.jfileprocessor.JFileFinderWin.class, true, file.getParent() );
-                ArrayList<String> cmdList = new ArrayList<String>(); 
-                cmdList.add( "$JAVA" );
-    //            cmdList.add( "-cp" );
-    //            cmdList.add( "$CLASSPATH" );
-                cmdList.add( "-jar" );
-                cmdList.add( JFileProcessorVersion.getFileName() );
-                cmdList.add( file.getParent() );
-                
-                int rc = jp.execJava2( cmdList, true );
+                    ProcessInThread jp = new ProcessInThread();
+    //                int rc = jp.execJava(com.towianski.jfileprocessor.JFileFinderWin.class, true, file.getParent() );
+                    ArrayList<String> cmdList = new ArrayList<String>(); 
+                    cmdList.add( "$JAVA" );
+        //            cmdList.add( "-cp" );
+        //            cmdList.add( "$CLASSPATH" );
+                    cmdList.add( "-jar" );
+                    cmdList.add( JFileProcessorVersion.getFileName() );
+                    cmdList.add( "--dirSearch=" + file.getParent() );
+
+                    int rc = jp.execJava2WinOrPosix( null, cmdList, true );
                     logger.info( "javaprocess.exec start new window rc = " + rc + "=" );
                     } 
                 catch (IOException ex) 
@@ -5939,7 +5961,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
     }//GEN-LAST:event_editFileAssocActionPerformed
 
     private void jfpStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jfpStopActionPerformed
-                jfpExecOrStop( getSelectedPath(), JfpConstants.ASSOC_CMD_TYPE_STOP );
+        jfpExecOrStop( getSelectedPath(), JfpConstants.ASSOC_CMD_TYPE_STOP );
     }//GEN-LAST:event_jfpStopActionPerformed
 
     private void logLevelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logLevelActionPerformed
@@ -6094,9 +6116,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                }
             }  
             */
-            
-    
-                         
+
             });   
         
     }

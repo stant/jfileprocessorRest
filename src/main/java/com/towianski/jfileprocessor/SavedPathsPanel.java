@@ -191,7 +191,7 @@ public class SavedPathsPanel extends javax.swing.JPanel {
                 cmdList.add( "-jar" );
                 cmdList.add( JFileProcessorVersion.getFileName() );
 
-                int rc = jp.execJava2( cmdList, true );
+                int rc = jp.execJava2WinOrPosix( null, cmdList, true );
                 logger.info( "SavedPathsPanel.javaprocess.exec start new window rc = " + rc + "=" );
             } catch (IOException ex) {
                 logger.severeExc( ex );
@@ -212,9 +212,9 @@ public class SavedPathsPanel extends javax.swing.JPanel {
     //            cmdList.add( "$CLASSPATH" );
                 cmdList.add( "-jar" );
                 cmdList.add( JFileProcessorVersion.getFileName() );
-                cmdList.add( DesktopUtils.getTrashFolder().toString() );
+                cmdList.add( "--dirSearch=" + DesktopUtils.getTrashFolder().toString() );
                 
-                int rc = jp.execJava2( cmdList, true );
+                int rc = jp.execJava2WinOrPosix( null, cmdList, true );
                 logger.info( "javaprocess.exec start new window Trash rc = " + rc + "=" );
             } catch (IOException ex) {
                 logger.severeExc( ex );

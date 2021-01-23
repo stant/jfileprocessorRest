@@ -8,8 +8,11 @@ package com.towianski.boot.server;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.towianski.models.JfpUser;
 import com.towianski.models.ServerUserFileRights;
+import static com.towianski.utils.DesktopUtils.getJfpConfigHome;
+import com.towianski.utils.FileUtils;
 import com.towianski.utils.MyLogger;
 import com.towianski.utils.Rest;
+import java.io.File;
 
 /**
  *
@@ -29,8 +32,22 @@ public class ServerUserFileRightsListHolder {
     public static ServerUserFileRightsList readInServerUserFileRightsListFromFile()
         {
         logger.info( "readInServerUserFileRightsListFromFile()" );
+        ServerUserFileRightsList obj = null;
+
         try {
-            ServerUserFileRightsList obj = (ServerUserFileRightsList) Rest.readObjectFromFile("ServerUserFileRightsList.json", new TypeReference<ServerUserFileRightsList>(){} );
+            obj = (ServerUserFileRightsList) Rest.readObjectFromFile("ServerUserFileRightsList.json", new TypeReference<ServerUserFileRightsList>(){} );
+            if ( ! obj.getVersion().equals( "1.0" ) )
+                obj = null;
+            }
+        catch( Exception exc )
+            {
+            obj = null;
+            File fromFile = getJfpConfigHome( "ServerUserFileRightsList.json", "file", false );
+            FileUtils.fileMove( null, fromFile.toString(), fromFile.toString() + "-old", true );
+            exc.printStackTrace();
+            }
+
+        try {
             if ( obj == null )
                 {
                 logger.info( "readInServerUserFileRightsListFromFile() Error reading json file" );

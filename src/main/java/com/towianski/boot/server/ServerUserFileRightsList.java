@@ -18,13 +18,22 @@ import java.util.ArrayList;
 public class ServerUserFileRightsList {
     
     private static final MyLogger logger = MyLogger.getLogger(ServerUserFileRightsList.class.getName() );
-	 
+
+    private String version = "1.0";
     private static ArrayList<ServerUserFileRights> serverUserFileRightsList = new ArrayList<ServerUserFileRights>();
     
     public ServerUserFileRightsList()
         {
         logger.info( "ServerUserFileRightsList() constuct" );
         }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
 
     public ArrayList<ServerUserFileRights> getServerUserFileRightsList() {
         return serverUserFileRightsList;

@@ -1,4 +1,6 @@
 
+import org.apache.tools.ant.taskdefs.condition.Os
+
 buildscript {
     repositories {
         mavenCentral()
@@ -6,13 +8,13 @@ buildscript {
         maven { url "https://plugins.gradle.org/m2" }
     }
     dependencies {
-      classpath("org.springframework.boot:spring-boot-gradle-plugin:2.4.1")
+      classpath("org.springframework.boot:spring-boot-gradle-plugin:2.4.2")
 	//classpath "gradle.plugin.com.dorongold.plugins:task-tree:1.3"
         }
 }
 
 plugins {
-   id 'org.springframework.boot' version '2.4.1'
+   id 'org.springframework.boot' version '2.4.2'
 }
 
 
@@ -23,7 +25,7 @@ apply plugin: 'war'
 //apply plugin: com.dorongold.gradle.tasktree.TaskTreePlugin
 
 group 'com.towianski'
-version '2.3-beta'
+version '2.4-beta'
 
 mainClassName = 'com.towianski.boot.StartApp'
 
@@ -116,6 +118,22 @@ main = 'com.towianski.boot.StartApp'
 //
 //Then to run: gradle run -PappArgs="['arg1', 'args2']"
 
+def checkWin = {
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        println "*** Windows "
+        return true;
+    }
+    return false;
+}
+
+def checkUnix = {
+    if (Os.isFamily(Os.FAMILY_UNIX)) {
+        println "*** *Nix "
+        return true;
+    }
+    return false;
+}
+
 task generateSources {
 	inputs.property "version", project.version
         inputs.property "rootProject.name", project.name
@@ -148,7 +166,7 @@ task generateRunScriptPosix {
         inputs.property "version", project.version
         inputs.property "rootProject.name", project.name
 	doFirst {
-            def runFile = file("../../programs/jfp/run.sh")
+            def runFile = file("../../programs/jfp/jfp.sh")
             runFile.parentFile.mkdirs()
             runFile.text = """#!/bin/bash
 
@@ -171,7 +189,7 @@ task generateServerScriptPosix {
         inputs.property "version", project.version
         inputs.property "rootProject.name", project.name
 	doFirst {
-            def runFile = file("../../programs/jfp/server.sh")
+            def runFile = file("../../programs/jfp/jfp-server.sh")
             runFile.parentFile.mkdirs()
             runFile.text = """#!/bin/bash
 
@@ -194,7 +212,7 @@ task generateRunScript2Posix {
         inputs.property "version", project.version
         inputs.property "rootProject.name", project.name
 	doFirst {
-            def runFile = file("../../programs/jfp/runx2.sh")
+            def runFile = file("../../programs/jfp/jfpx2.sh")
             runFile.parentFile.mkdirs()
             runFile.text = """#!/bin/bash
 
@@ -214,7 +232,7 @@ task generateRunScriptWindows {
 	inputs.property "version", project.version
         inputs.property "rootProject.name", project.name
 	doFirst {
-        def runFile = file("../../programs/jfp/run.bat")
+        def runFile = file("../../programs/jfp/jfp.bat")
         runFile.text = 
 """
 rem if you have problem with jfp window and fonts being too small
@@ -234,7 +252,7 @@ task generateRunScript2Windows {
 	inputs.property "version", project.version
         inputs.property "rootProject.name", project.name
 	doFirst {
-        def runFile = file("../../programs/jfp/runx2.bat")
+        def runFile = file("../../programs/jfp/jfpx2.bat")
         runFile.text = 
 """
 rem if you have problem with jfp window and fonts being too small
@@ -254,7 +272,7 @@ task generateServerScriptWindows {
 	inputs.property "version", project.version
         inputs.property "rootProject.name", project.name
 	doFirst {
-        def runFile = file("../../programs/jfp/server.bat")
+        def runFile = file("../../programs/jfp/jfp-server.bat")
         runFile.text = 
 """
 rem set JAVA_HOME=F:\\programs\\Java\\jdk10
@@ -269,8 +287,12 @@ java -Dserver.port=8090 -jar ${rootProject.name}-${version}.war --server --loggi
         }
 }
 
-task runFilePermissions(type: Exec) {
-    commandLine 'chmod', '755', '../../programs/jfp/run.sh', '../../programs/jfp/server.sh', '../../programs/jfp/runx2.sh', '../../programs/jfp/run.bat', '../../programs/jfp/server.bat', '../../programs/jfp/runx2.bat'
+task runPosixFilePermissions(type: Exec) {
+    commandLine 'chmod', '755', '../../programs/jfp/jfp.sh', '../../programs/jfp/jfp-server.sh', '../../programs/jfp/jfpx2.sh'
+}
+
+task runWinFilePermissions(type: Exec) {
+    commandLine 'chmod', '755', '../../programs/jfp/jfp.bat', '../../programs/jfp/jfp-server.bat', '../../programs/jfp/jfpx2.bat'
 }
 
 
@@ -278,7 +300,22 @@ compileJava.dependsOn generateSources
 
 clean.dependsOn cleanPackageFolder
 
-packageDistribution.dependsOn generateRunScriptPosix,generateRunScript2Posix,generateServerScriptPosix,generateRunScriptWindows,generateRunScript2Windows,generateServerScriptWindows,runFilePermissions
+//String osName = System.getProperty("os.name").toLowerCase();
+//if (osName.contains("windows")) {
+//...
+//}
+
+generateRunScriptPosix   //.onlyIf { checkUnix() }
+generateRunScript2Posix   //.onlyIf { checkUnix() }
+generateServerScriptPosix   //.onlyIf { checkUnix() }
+generateRunScriptWindows   //.onlyIf { checkWin() }
+generateRunScript2Windows   //.onlyIf { checkWin() }
+generateServerScriptWindows   //.onlyIf { checkWin() }
+
+runPosixFilePermissions   //.onlyIf { checkUnix() }
+runWinFilePermissions   //.onlyIf { checkWin() }
+
+packageDistribution.dependsOn generateRunScriptPosix,generateRunScript2Posix,generateServerScriptPosix,generateRunScriptWindows,generateRunScript2Windows,generateServerScriptWindows,runPosixFilePermissions,runWinFilePermissions
 
 //generateRunScriptPosix.dependsOn copy
 
@@ -305,35 +342,35 @@ repositories {
 }
 
 dependencies {
-    compile("org.springframework.boot:spring-boot-starter:2.4.1")
-//    compile("org.springframework:spring-context:5.1.8.RELEASE")
-    compile("org.springframework.boot:spring-boot-starter-web:2.4.1") 
-    compile("org.springframework.boot:spring-boot-starter-actuator:2.4.1") 
-    //compile("org.springframework.security.oauth.boot:spring-security-oauth2-autoconfigure:2.4.1") 
-    compile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '9.0.39'
+    implementation("org.springframework.boot:spring-boot-starter:2.4.2")
+//    implementation("org.springframework:spring-context:5.1.8.RELEASE")
+    implementation("org.springframework.boot:spring-boot-starter-web:2.4.2") 
+    implementation("org.springframework.boot:spring-boot-starter-actuator:2.4.2") 
+    //implementation("org.springframework.security.oauth.boot:spring-security-oauth2-autoconfigure:2.4.2") 
+    implementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '9.0.41'
 ////{
 //    exclude module: "spring-boot-starter-tomcat"
 //    exclude group: 'org.apache.tomcat'
 //}
-//    providedCompile 'org.springframework.boot:spring-boot-starter-tomcat:2.4.1'    
-//    providedCompile group: 'org.springframework.boot', name: 'spring-boot-loader', version: '2.4.1'
+//    providedCompile 'org.springframework.boot:spring-boot-starter-tomcat:2.4.2'    
+//    providedCompile group: 'org.springframework.boot', name: 'spring-boot-loader', version: '2.4.2'
 //    compile("org.springframework:spring-core:5.1.8.RELEASE")
     
 //    compile("com.fasterxml.jackson.core:jackson-databind:2.9.9")
 //    compile("org.springframework:spring-web:5.1.8.RELEASE")
 //    compile("org.springframework:spring-webmvc:5.1.8.RELEASE")
     
-    compile("org.springframework.boot:spring-boot-starter-security:2.4.1")
+    implementation("org.springframework.boot:spring-boot-starter-security:2.4.2")
 //    compile group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: '2.0.0.RELEASE'
 //    compile("org.springframework:spring-web:5.0.4.RELEASE")
 
     
-    compile 'org.apache.httpcomponents:httpclient:4.5.7'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.7'
 //    compile("com.fasterxml.jackson.core:jackson-databind:2.9.4")
-    compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.7'
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    implementation group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.7'
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
     providedCompile fileTree(dir: 'libs/../../JfpLib/dist', include: ['*.jar'])
-    compile 'com.jcraft:jsch:0.1.55'
+    implementation 'com.jcraft:jsch:0.1.55'
 //    compile 'com.github.mwiede:jsch:0.1.59'
 //    compile 'org.slf4j:slf4j-api:1.7.25'
 //    compile 'org.slf4j:slf4j-simple:1.7.25'
@@ -360,7 +397,7 @@ war {
         'Start-Class': 'com.towianski.boot.StartApp',
         'Spring-Boot-Classes': 'WEB-INF/classes/',
         'Spring-Boot-Lib': 'WEB-INF/lib/',
-        'Spring-Boot-Version': '2.4.1',
+        'Spring-Boot-Version': '2.4.2',
         'Main-Class': 'org.springframework.boot.loader.WarLauncher'
 //        'Main-Class': 'org.springframework.boot.loader.PropertiesLauncher'
 //        'Class-Path': configurations.runtimeClasspath.files.collect { it.getName() }.join(' ')

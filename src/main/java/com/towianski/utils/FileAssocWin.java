@@ -121,6 +121,8 @@ public class FileAssocWin extends javax.swing.JDialog {
             setAssocType( fa.getAssocType() );
             setMatchType( fa.getMatchType());
             setMatchPattern( fa.getMatchPattern());
+            setDesc( fa.getDesc() );
+            setStartDir( fa.getStartDir() );
             setExec( fa.getExec() );
             setStop( fa.getStop() );
             }
@@ -188,6 +190,14 @@ public class FileAssocWin extends javax.swing.JDialog {
     {
         matchPattern.setText(ss);
     }
+
+    public String getStartDir() {
+        return startDir.getText();
+    }
+
+    public void setStartDir(String ss) {
+        startDir.setText( ss );
+    }
     
     public String getExec()
     {
@@ -197,6 +207,16 @@ public class FileAssocWin extends javax.swing.JDialog {
     public void setExec( String ss )
     {
         exec.setText( ss );
+    }
+    
+    public String getDesc()
+    {
+        return desc.getText();
+    }
+
+    public void setDesc( String ss )
+    {
+        desc.setText( ss );
     }
 
     public String getStop() {
@@ -276,10 +296,13 @@ public class FileAssocWin extends javax.swing.JDialog {
         leftFa = new javax.swing.JButton();
         rightFa = new javax.swing.JButton();
         jButton1 = new javax.swing.JButton();
+        jLabel2 = new javax.swing.JLabel();
+        startDir = new javax.swing.JTextField();
+        jLabel4 = new javax.swing.JLabel();
+        desc = new javax.swing.JTextField();
 
         setMinimumSize(new java.awt.Dimension(900, 300));
         setModal(true);
-        setPreferredSize(new java.awt.Dimension(900, 300));
         setSize(new java.awt.Dimension(200, 60));
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosed(java.awt.event.WindowEvent evt) {
@@ -344,12 +367,10 @@ public class FileAssocWin extends javax.swing.JDialog {
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
-        gridBagConstraints.gridy = 3;
+        gridBagConstraints.gridy = 5;
         gridBagConstraints.gridwidth = 5;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-        gridBagConstraints.ipadx = 223;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        gridBagConstraints.weightx = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(10, 7, 0, 10);
         getContentPane().add(exec, gridBagConstraints);
 
@@ -363,7 +384,7 @@ public class FileAssocWin extends javax.swing.JDialog {
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 6;
+        gridBagConstraints.gridy = 8;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
         gridBagConstraints.insets = new java.awt.Insets(10, 10, 7, 10);
         getContentPane().add(okBtn, gridBagConstraints);
@@ -376,12 +397,12 @@ public class FileAssocWin extends javax.swing.JDialog {
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
-        gridBagConstraints.gridy = 6;
+        gridBagConstraints.gridy = 8;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
         gridBagConstraints.insets = new java.awt.Insets(10, 10, 7, 10);
         getContentPane().add(cancelBtn, gridBagConstraints);
 
-        jLabel1.setText("Execute Command");
+        jLabel1.setText("Description");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 3;
@@ -432,14 +453,14 @@ public class FileAssocWin extends javax.swing.JDialog {
         getContentPane().add(oneFileRB, gridBagConstraints);
 
         jTextPane1.setEditable(false);
-        jTextPane1.setText("get replaced in commands:\n%f - full file path     %F - filename\n$JAVA   $JAVAW   $CLASSPATH   $JFP   $JFPHOMETMP");
+        jTextPane1.setText("get replaced in commands:\n%f - full file path     %F - filename     %p - parent path\n$JAVA   $JAVAW   $CLASSPATH   $JFP   $JFPHOMETMP");
         jTextPane1.setMinimumSize(new java.awt.Dimension(200, 75));
         jTextPane1.setPreferredSize(new java.awt.Dimension(200, 75));
         jScrollPane1.setViewportView(jTextPane1);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 3;
-        gridBagConstraints.gridy = 6;
+        gridBagConstraints.gridy = 8;
         gridBagConstraints.gridwidth = 4;
         gridBagConstraints.gridheight = 2;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
@@ -455,7 +476,7 @@ public class FileAssocWin extends javax.swing.JDialog {
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
-        gridBagConstraints.gridy = 4;
+        gridBagConstraints.gridy = 6;
         gridBagConstraints.gridwidth = 5;
         gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
@@ -466,8 +487,9 @@ public class FileAssocWin extends javax.swing.JDialog {
         jLabel3.setText("Stop Command");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 4;
+        gridBagConstraints.gridy = 6;
         gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.ipadx = 5;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
         gridBagConstraints.insets = new java.awt.Insets(10, 22, 0, 0);
         getContentPane().add(jLabel3, gridBagConstraints);
@@ -480,7 +502,8 @@ public class FileAssocWin extends javax.swing.JDialog {
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 7;
+        gridBagConstraints.gridy = 9;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
         gridBagConstraints.insets = new java.awt.Insets(10, 10, 7, 10);
         getContentPane().add(deleteBtn, gridBagConstraints);
 
@@ -520,6 +543,60 @@ public class FileAssocWin extends javax.swing.JDialog {
         gridBagConstraints.insets = new java.awt.Insets(10, 20, 0, 10);
         getContentPane().add(jButton1, gridBagConstraints);
 
+        jLabel2.setText("Execute Command");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 5;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.ipadx = 5;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+        gridBagConstraints.insets = new java.awt.Insets(10, 22, 0, 0);
+        getContentPane().add(jLabel2, gridBagConstraints);
+
+        startDir.setMinimumSize(new java.awt.Dimension(150, 25));
+        startDir.setPreferredSize(new java.awt.Dimension(150, 25));
+        startDir.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                startDirActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 4;
+        gridBagConstraints.gridwidth = 5;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(10, 7, 0, 10);
+        getContentPane().add(startDir, gridBagConstraints);
+
+        jLabel4.setText("Start in Directory");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 4;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.ipadx = 5;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+        gridBagConstraints.insets = new java.awt.Insets(10, 22, 0, 0);
+        getContentPane().add(jLabel4, gridBagConstraints);
+
+        desc.setMinimumSize(new java.awt.Dimension(150, 25));
+        desc.setPreferredSize(new java.awt.Dimension(150, 25));
+        desc.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                descActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 3;
+        gridBagConstraints.gridwidth = 5;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(10, 7, 0, 10);
+        getContentPane().add(desc, gridBagConstraints);
+
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
@@ -527,12 +604,12 @@ public class FileAssocWin extends javax.swing.JDialog {
         okFlag = true;
         deleteFlag = false;
         logger.info( "file assoc win OK");
-        fa = new FileAssoc( getAssocType(), getMatchType(), getMatchPattern(), getExec(), getStop() );
+        fa = new FileAssoc( getAssocType(), getMatchType(), getMatchPattern(), getDesc(), getStartDir(), getExec(), getStop() );
         if ( isOkFlag() && winAction == JfpConstants.ASSOC_WINDOW_ACTION_EDIT )
             {
             logger.info( "matched and got fa.getAssocType =" + fa.getAssocType() + "=" );
             logger.info( "matched and got fa.getMatchPattern =" + fa.getMatchPattern() + "=" );
-            logger.info( "matched and got fa.exec =" + fa.getExec() + "=" );
+            logger.info( "matched and got fa.getStartDir =" + fa.getStartDir()+ "=   fa.exec =" + fa.getExec() + "=" );
             fileAssocList.addFileAssoc( fa );
             if ( faIdx < matchingFileAssocList.size() )
                 {
@@ -635,7 +712,7 @@ public class FileAssocWin extends javax.swing.JDialog {
             okFlag = false;
             deleteFlag = true;
             logger.info( "file assoc win Delete");
-            fa = new FileAssoc( getAssocType(), getMatchType(), getMatchPattern(), getExec(), getStop() );
+            fa = new FileAssoc( getAssocType(), getMatchType(), getMatchPattern(), getDesc(), getStartDir(), getExec(), getStop() );
             if ( faIdx < matchingFileAssocList.size() )
                 {
                 fileAssocList.deleteFileAssoc( fa );
@@ -673,6 +750,14 @@ public class FileAssocWin extends javax.swing.JDialog {
         }
 
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void startDirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startDirActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_startDirActionPerformed
+
+    private void descActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_descActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_descActionPerformed
 
     /**
      * @param args the command line arguments
@@ -717,12 +802,15 @@ public class FileAssocWin extends javax.swing.JDialog {
     private javax.swing.ButtonGroup buttonGroup2;
     private javax.swing.JButton cancelBtn;
     private javax.swing.JButton deleteBtn;
+    private javax.swing.JTextField desc;
     private javax.swing.JTextField exec;
     private javax.swing.JRadioButton filenameRB;
     private javax.swing.JRadioButton globMatchType;
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextPane jTextPane1;
     private javax.swing.JButton leftFa;
@@ -731,6 +819,7 @@ public class FileAssocWin extends javax.swing.JDialog {
     private javax.swing.JRadioButton oneFileRB;
     private javax.swing.JRadioButton regexMatchType;
     private javax.swing.JButton rightFa;
+    private javax.swing.JTextField startDir;
     private javax.swing.JTextField stop;
     private javax.swing.JRadioButton suffixRB;
     // End of variables declaration//GEN-END:variables

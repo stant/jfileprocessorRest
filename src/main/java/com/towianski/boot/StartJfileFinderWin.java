@@ -107,6 +107,8 @@ public class StartJfileFinderWin {
          */
 //        MyLogger logger = Mylogger.severeExc( ex );        
         String loggingLevel = null;
+        String startDir = "";
+        boolean doSearch = false;
 
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -129,9 +131,19 @@ public class StartJfileFinderWin {
             {
 //            logger.info( "** args [" + i + "] =" + args[i] + "=" );
             logger.info( "** args [" + i + "] =" + args[i] + "=" );
+
             if ( args[i].toLowerCase().startsWith( "--loglevel" ) )
                 {
                 loggingLevel = args[i].substring( "--loglevel=".length() );
+                }
+            else if ( args[i].toLowerCase().startsWith( "--dirsearch" ) )
+                {
+                startDir = args[i].substring( "--dirsearch=".length() );
+                doSearch = true;
+                }
+            else if ( args[i].toLowerCase().startsWith( "--dir" ) )
+                {
+                startDir = args[i].substring( "--dir=".length() );
                 }
             }
         
@@ -152,6 +164,10 @@ public class StartJfileFinderWin {
         logger.info( "---- List Of App Spring Beans ----\n");
 
         logger.info( "jFileFinderWin jFileFinderWin = " + context.getBean(JFileFinderWin.class) );
+        
+        JFileFinderWin jfp = context.getBean(JFileFinderWin.class);
+        jfp.setStartingFolder( startDir );
+        if ( doSearch )  jfp.searchBtnAction(null);
         
 //        EventQueue.invokeLater(() -> {
 //            JFileFinderWin jFileFinderWin = context.getBean(JFileFinderWin.class);

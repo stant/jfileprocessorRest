@@ -20,7 +20,25 @@ import java.util.Arrays;
 public class ProcessInThread {
 
     private static final MyLogger logger = MyLogger.getLogger( ProcessInThread.class.getName() );
-    public ProcessInThread() {}        
+
+        String javaHome = System.getProperty("java.home");
+        String javaBin = null;
+        String javaW = null;
+        String classpath = System.getProperty("java.class.path");
+
+    public ProcessInThread() 
+        {
+        javaBin = javaHome +
+                File.separator + "bin" +
+                File.separator + "java";
+//        javaW = javaBin + "w";
+        javaW = "javaw";   // path with space cause error
+        if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
+            {
+            javaBin += ".exe";
+            javaW += ".exe";
+            }
+        }        
 
 //    public static int execJava(Class klass, String... passArgs)
 //            throws IOException, InterruptedException 
@@ -48,31 +66,50 @@ public class ProcessInThread {
 //        return process.exitValue();
 //    }
 
-    public int execJava2( ArrayList<String> cmdListArg, Boolean daemonFlag, String... passArgs)
+    
+    public ArrayList<String> replaceVars( ArrayList<String> cmdListArg )
             throws IOException, InterruptedException 
         {
-        String javaHome = System.getProperty("java.home");
-        String javaBin = javaHome +
-                File.separator + "bin" +
-                File.separator + "java";
-        String javaW = javaBin + "w";
-        if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
-            {
-            javaBin += ".exe";
-            javaW += ".exe";
-            }
-        String classpath = System.getProperty("java.class.path");
         ArrayList<String> cmdList = new ArrayList<String>();
         for ( String tmp : cmdListArg )
             {
             tmp = tmp.replace( "$JFP", JFileProcessorVersion.getFileName() );
+            tmp = tmp.replace( "$JAVAW", javaW );   // tricky must be before $JAVA
             tmp = tmp.replace( "$JAVA", javaBin );
-            tmp = tmp.replace( "$JAVAW", javaW );
             tmp = tmp.replace( "$CLASSPATH", classpath );
             tmp = tmp.replace( "$JFPHOMETMP", DesktopUtils.getJfpHomeTmpDir( false ) );
             cmdList.add( tmp );
             logger.info( "cmdList tmp = " + tmp + "=" );
             }
+        return cmdList;
+        }
+    
+    public int execJava2WinOrPosix( String startDir, ArrayList<String> cmdListArg, Boolean daemonFlag, String... passArgs)
+            throws IOException, InterruptedException 
+        {
+        if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
+            {
+            ArrayList<String> cmdList = new ArrayList<String>();
+            cmdList.add( "cmd.exe" );
+            cmdList.add( "/C" );
+
+            for ( String tmp : cmdListArg )
+                {
+                tmp = tmp.replace( "$JAVA", "$JAVAW" );
+                cmdList.add( tmp );
+                logger.info( "cmdList tmp = " + tmp + "=" );
+                }
+        
+            cmdListArg = cmdList;
+            }
+
+        return execJava2( startDir, cmdListArg, daemonFlag, passArgs );            
+        }
+    
+    public int execJava2( String startDir, ArrayList<String> cmdListArg, Boolean daemonFlag, String... passArgs )
+            throws IOException, InterruptedException 
+        {
+        ArrayList<String> cmdList = replaceVars( cmdListArg );
         
         String[] runJarList = classpath.split( System.getProperty( "path.separator" ) );
         //logger.info( "classpath = " + classpath + "=" );
@@ -103,97 +140,21 @@ public class ProcessInThread {
         String[] allArgs = Arrays.copyOf( runArgs, runArgs.length + passArgs.length);
         System.arraycopy( passArgs, 0, allArgs, runArgs.length, passArgs.length );
   
-        ProcessRunnable proc = new ProcessRunnable( null, allArgs );
+        ProcessRunnable proc = new ProcessRunnable( startDir, false, allArgs );
         Thread bgThread = newThread( "ProcessInThread.execJava2", 0, daemonFlag, proc );
         bgThread.start();
         return proc.getExitValue();
-    }
+        }
 
     public int execJavaString( String cmd, Boolean daemonFlag )
             throws IOException, InterruptedException 
         {
-        String javaHome = System.getProperty("java.home");
-        String javaBin = javaHome +
-                File.separator + "bin" +
-                File.separator + "java";
-        String classpath = System.getProperty("java.class.path");
-        ArrayList<String> cmdList = new ArrayList<String>();
-//        for ( String tmp : cmdListArg )
-//            {
-//            tmp = tmp.replace( "$JAVA", javaBin );
-//            tmp = tmp.replace( "$CLASSPATH", classpath );
-//            cmdList.add( tmp );
-//            logger.info( "cmdList tmp = " + tmp + "=" );
-//            }
-        
-//        String[] runJarList = classpath.split( System.getProperty( "path.separator" ) );
-//        //logger.info( "classpath = " + classpath + "=" );
-//        //logger.info( "runJarList = " + runJarList );
-//        String runJar = null;
-//        for ( String tmp : runJarList )
-//            {
-//            //logger.info( "runJar tmp = " + tmp + "=" );
-//            if ( tmp.indexOf( "JFileProcessor" ) >= 0 )
-//                {   
-//                runJar = tmp;
-//                break;
-//                }
-//            }
-
-  
+        logger.info( "cmdString = " + cmd + "=" );
         ProcessRunnableString proc = new ProcessRunnableString( null, cmd );
         Thread bgThread = newThread( "ProcessInThread.execJavaString", 0, daemonFlag, proc );
         bgThread.start();
         return proc.getExitValue();
-    }
-
-    public int execJava(Class klass, Boolean daemonFlag, String... passArgs)
-            throws IOException, InterruptedException 
-        {
-        String javaHome = System.getProperty("java.home");
-        String javaBin = javaHome +
-                File.separator + "bin" +
-                File.separator + "java";
-        String javaW = javaBin + "w";
-        if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
-            {
-            javaBin += ".exe";
-            javaW += ".exe";
-            }
-        String classpath = System.getProperty("java.class.path");
-        String[] runJarList = classpath.split( System.getProperty( "path.separator" ) );
-        //logger.info( "classpath = " + classpath + "=" );
-        //logger.info( "runJarList = " + runJarList );
-        String runJar = null;
-        for ( String tmp : runJarList )
-            {
-            //logger.info( "runJar tmp = " + tmp + "=" );
-            if ( tmp.indexOf( "JFileProcessor" ) >= 0 )
-                {   
-                runJar = tmp;
-                break;
-                }
-            }
-//        String className = klass.getCanonicalName();
-        String className = "com.towianski.boot.StartApp";
-        
-//        String[] runArgs = { javaBin, "-cp", classpath, className };
-//        String[] runPosixArgs = { javaBin, "-Dserver.port=" + System.getProperty( "server.port", "8443" ), "-cp", classpath, "org.springframework.boot.loader.JarLauncher" };
-//        String[] runWinArgs = { "powershell.exe", "Start-Process", "-FilePath", "\"" + javaBin + "-Dserver.port=" + System.getProperty( "server.port", "8443" ) + "-cp" + classpath + "org.springframework.boot.loader.JarLauncher" + "\"", "-Wait" };
-        String[] runPosixArgs = { javaBin, "-cp", classpath, "org.springframework.boot.loader.JarLauncher" };
-        String[] runWinArgs = { "powershell.exe", "Start-Process", "-FilePath", "\"" + javaBin + "-cp" + classpath + "org.springframework.boot.loader.JarLauncher" + "\"", "-Wait" };
-
-//        String[] runArgs = System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) ? runWinArgs : runPosixArgs;
-        String[] runArgs = runPosixArgs;
-        
-        String[] allArgs = Arrays.copyOf( runArgs, runArgs.length + passArgs.length);
-        System.arraycopy( passArgs, 0, allArgs, runArgs.length, passArgs.length );
-  
-        ProcessRunnable proc = new ProcessRunnable( null, allArgs );
-        Thread bgThread = newThread( "ProcessInThread.execJava", 0, daemonFlag, proc );
-        bgThread.start();
-        return proc.getExitValue();
-    }
+        }
 
 //    public static int exec( String startDir, String... passArgs ) 
 //            throws IOException, InterruptedException 
@@ -268,7 +229,7 @@ public class ProcessInThread {
                 logger.info( "(" + tmp + ") " );
                 }
 //            builder = new ProcessBuilder( allArgs );
-            proc = new ProcessRunnable( null, allArgs );
+            proc = new ProcessRunnable( null, waitFlag, allArgs );
             }
         else if ( System.getProperty( "os.name" ).toLowerCase().startsWith( "win" ) )
             {
@@ -278,7 +239,7 @@ public class ProcessInThread {
     //            cmd.add( str );
                 }
 //            builder = new ProcessBuilder( myargs );
-            proc = new ProcessRunnable( startDir, myargs );
+            proc = new ProcessRunnable( startDir, waitFlag, myargs );
             }
         else
             {
@@ -288,7 +249,7 @@ public class ProcessInThread {
     //            cmd.add( str );
                 }
 //            builder = new ProcessBuilder( myargs );
-            proc = new ProcessRunnable( startDir, myargs );
+            proc = new ProcessRunnable( startDir, waitFlag, myargs );
             }
         
         Thread bgThread = newThread( "ProcessInThread.exec", 0, daemonFlag, proc );

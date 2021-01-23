@@ -18,12 +18,14 @@ public final class ProcessRunnable implements Runnable {
     private static final MyLogger logger = MyLogger.getLogger( ProcessRunnable.class.getName() );
     String startDir = null;
     String[] allArgs = {};
+    boolean waitForFlag = false;
     int exitValue = 0;
     
-    public ProcessRunnable( String startDir, String[] allArgs )
+    public ProcessRunnable( String startDir, boolean waitForFlag, String[] allArgs )
         {
         this.startDir = startDir;
         this.allArgs = allArgs;
+        this.waitForFlag = waitForFlag;
         }
 
     @Override
@@ -37,18 +39,21 @@ public final class ProcessRunnable implements Runnable {
                 logger.info( "(" + tmp + ") " );
                 tmpcmd = tmpcmd + tmp + " ";
                 }
-            logger.info( "(" + tmpcmd + ") " );
+            logger.info( "startDir =" + startDir + "=   cmd line (" + tmpcmd + ") " );
             ProcessBuilder builder = new ProcessBuilder( allArgs );
-            if ( startDir != null )
+            if ( startDir != null && ! startDir.equals( "" ) )
                 {
                 builder.directory( new File( startDir ) );
                 }
             builder.redirectErrorStream(true);
             
             Process process = builder.start();
-            process.waitFor();
-            exitValue = process.exitValue();
-            logger.info( "process.waitFor() rc = " + exitValue );
+            
+            if ( waitForFlag )
+                {
+                exitValue = process.waitFor();
+                logger.info( "process.waitFor() rc = " + exitValue );
+                }
         } catch (IOException ex) {
             logger.severeExc( ex );
         } catch (InterruptedException ex) {

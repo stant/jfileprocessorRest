@@ -14,6 +14,8 @@ public class FileAssoc {
     String assocType = JfpConstants.ASSOC_TYPE_SUFFIX;
     String matchType = JfpConstants.MATCH_TYPE_GLOB;
     String matchPattern = "**";
+    String desc = "";
+    String startDir = "";
     String exec = "";
     String stop = "";
 
@@ -21,10 +23,12 @@ public class FileAssoc {
     {
     }
     
-    public FileAssoc( String assocType, String matchType, String matchPattern, String exec, String stop ) {
+    public FileAssoc( String assocType, String matchType, String matchPattern, String desc, String startDir, String exec, String stop ) {
         this.assocType = assocType;
         this.matchType = matchType;
         this.matchPattern = matchPattern;
+        this.desc = desc;
+        this.startDir = startDir;
         this.exec = exec;
         this.stop = stop;
     }
@@ -67,6 +71,22 @@ public class FileAssoc {
 
     public void setStop(String stop) {
         this.stop = stop;
+    }
+
+    public String getStartDir() {
+        return startDir;
+    }
+
+    public void setStartDir(String startDir) {
+        this.startDir = startDir;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
     }
     
 }

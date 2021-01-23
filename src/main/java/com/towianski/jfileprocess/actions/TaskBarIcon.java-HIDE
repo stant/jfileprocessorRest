@@ -1,0 +1,72 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.towianski.jfileprocess.actions;
+
+/**
+ *
+ * @author stan
+ */
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import java.awt.Image;
+import java.awt.Taskbar;
+import java.awt.Toolkit;
+import java.io.IOException;
+import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+
+/**
+ * author: flohall
+ * date: 2019-07-07
+ */
+public class TaskBarIcon {
+
+    public static void main (String[] args){
+
+        final JFrame jFrame = new JFrame();
+
+        //loading an image from a file
+        final Toolkit defaultToolkit = Toolkit.getDefaultToolkit();
+//        final URL imageResource = TaskBarIcon.class.getClassLoader().getResource( "resources/icons/yellow/file-link-icon-16.png" );
+//        final Image image = defaultToolkit.getImage(imageResource);
+        Image image = null;
+        
+        ImageIcon fileicon = null;
+        try {
+            fileicon = new ImageIcon(ImageIO.read(SystemTrayIcon.class.getResource("/icons/yellow/file-link-icon-16.png")));
+            image = fileicon.getImage();
+        } catch (IOException ex) {
+            Logger.getLogger(SystemTrayIcon.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        //this is new since JDK 9
+        final Taskbar taskbar = Taskbar.getTaskbar();
+
+        try {
+            //set icon for mac os (and other systems which do support this method)
+//            taskbar.setIconImage(image);
+            taskbar.setIconImage( image );
+        } catch (final UnsupportedOperationException e) {
+            System.out.println("The os does not support: 'taskbar.setIconImage'");
+        } catch (final SecurityException e) {
+            System.out.println("There was a security exception for: 'taskbar.setIconImage'");
+        }
+
+        //set icon for windows os (and other systems which do support this method)
+        jFrame.setIconImage(image);
+
+        //adding something to the window so it does show up
+        jFrame.getContentPane().add(new JLabel("Hello World"));
+
+        //some default JFrame things
+        jFrame.setDefaultCloseOperation(jFrame.EXIT_ON_CLOSE);
+        jFrame.pack();
+        jFrame.setVisible(true);
+    }
+}
