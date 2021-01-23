@@ -11,6 +11,10 @@ and the problem even varies between Java versions. You will have to play with yo
 in windows to get a window size that is not too small. 
 Here is some help:  https://superuser.com/questions/988379/how-do-i-run-java-apps-upscaled-on-a-high-dpi-display
 
+I found installing jfp in c:\program files(x86) or whatever causes a problem. I put a temp folder
+under there and windows puts more restrictive rights on it so I could not copy remote temp files to it
+so I install elsewhere like c:\programs\jfp
+
 MAC OS: any issues, let me know as I do not always have access to test on it.
 
 Report Issues at:  ![github main](https://github.com/stant/jfileprocessorRest/issues)
@@ -126,17 +130,14 @@ cat ServerUserFileRightsList.json
 {
   "serverUserFileRightsList" : [ {
     "user" : "stan",
-    "password" : "test",
     "path" : "/tmp",
     "rights" : "rwx"
   }, {
     "user" : "stan",
-    "password" : "test",
     "path" : "/net3",
     "rights" : "rwx"
   }, {
     "user" : "admin",
-    "password" : "test",
     "path" : "/tmp",
     "rights" : "rwx"
   } ]
@@ -160,8 +161,9 @@ total 28
 -rw-r--r-- 1 stan stan 1245 Dec  2 09:08 Bookmarks.txt
 -rw-r--r-- 1 stan stan 5502 Dec  2 09:08 FileAssocList.json
 drwxr-xr-x 2 stan stan 4096 Nov 30 18:05 groovy-scripts
+-rw-r--r-- 1 stan stan  168 Jan  5 18:54 JfpUserHm.json         files for defined users and passwords
 -rw-r--r-- 1 stan stan  366 Dec  2 09:08 ProgramMemory.json
--rw-r--r-- 1 stan stan  325 Nov  1 23:27 ServerUserFileRightsList.json      for https file server: you define user, password, path, rights (r,w,x,rw...)
+-rw-r--r-- 1 stan stan  325 Nov  1 23:27 ServerUserFileRightsList.json      for https file server: you define user, path, rights (r,w,x,rw...)
 drwxr-xr-x 6 stan stan 4096 Nov  9 00:42 TrashFolder
 ```
 
