@@ -210,6 +210,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
 
     Thread jfinderThread = null;
     JFileFinderSwingWorker jFileFinderSwingWorker = null;
+    String startingFolderSave = "";
     WatchStartingFolder watchStartingFolder = null;
     RestServerSw restServerSw = null;        
     ResultsData resultsData = null;
@@ -233,7 +234,7 @@ public class JFileFinderWin extends javax.swing.JFrame {
     boolean alreadySetColumnSizes = false;
     List <RowSorter.SortKey> sortKeysSaved = null;
     
-    CircularArrayList pathsHistoryList = new CircularArrayList(50 );
+    CircularArrayList pathsHistoryList = new CircularArrayList( 50 );
     SavedPathsPanel savedPathReplacablePanel = new SavedPathsPanel( this );
 //    HashMap<String,String> savedPathsHm = new HashMap<String,String>();
     HashMap<String,ListOfFilesPanel> listOfFilesPanelHm = new HashMap<String,ListOfFilesPanel>();
@@ -803,14 +804,14 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
 
     public FileAssocList readInFileAssocList() {
         logger.info( "readInFileAssocList()" );
-        System.out.println( "readInFileAssocList()" );
+        //System.out.println( "readInFileAssocList()" );
         try {
             fileAssocList = (FileAssocList) Rest.readObjectFromFile( "FileAssocList.json", new TypeReference<FileAssocList>(){} );
             if ( ! fileAssocList.getVersion().equals( "1.1" ) )
                 {
                 fileAssocList = null;
                 logger.info( "fileAssocList.getVersion() OLD =" + fileAssocList.getVersion() );
-                System.out.println( "fileAssocList.getVersion() OLD =" + fileAssocList.getVersion() );
+                //System.out.println( "fileAssocList.getVersion() OLD =" + fileAssocList.getVersion() );
                 }
             }
         catch( Exception exc )
@@ -825,7 +826,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             if ( fileAssocList == null )
                 {
                 logger.info( "readInFileAssocFromFile() Error reading json file" );
-                System.out.println( "readInFileAssocFromFile() Error reading json file" );
+                //System.out.println( "readInFileAssocFromFile() Error reading json file" );
                 fileAssocList = new FileAssocList();
                 fileAssocList.addFileAssoc( new FileAssoc( JfpConstants.ASSOC_TYPE_SUFFIX, 
                         JfpConstants.MATCH_TYPE_GLOB, "**.war", 
@@ -1015,6 +1016,14 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
 
     public synchronized void setSearchBtnIsWaiting(boolean searchBtnIsWaiting) {
         this.searchBtnIsWaiting = searchBtnIsWaiting;
+    }
+
+    public CircularArrayList getPathsHistoryList() {
+        return pathsHistoryList;
+    }
+
+    public void setPathsHistoryList(CircularArrayList pathsHistoryList) {
+        this.pathsHistoryList = pathsHistoryList;
     }
 
     public void setActionMessage(String xx) {
@@ -4676,8 +4685,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
 
     private void searchBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchBtnActionPerformed
         countOnlyFlag = false;
-        searchBtnAction( evt );
-        
+        searchBtnAction( evt );        
     }//GEN-LAST:event_searchBtnActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
@@ -4846,7 +4854,7 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
     }                                        
 
     private void forwardFolderActionPerformed(java.awt.event.ActionEvent evt) {                                         
-            logger.info( "forwardFolderActionPerformed" );
+        logger.info( "forwardFolderActionPerformed" );
         startingFolder.setText( pathsHistoryList.getForward() );
 //        searchBtnActionPerformed( null );
     }                                        
@@ -5461,10 +5469,6 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
         // TODO add your handling code here:
     }//GEN-LAST:event_stdOutFileActionPerformed
 
-    private void rightHistoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rightHistoryActionPerformed
-        forwardFolderActionPerformed( null );
-    }//GEN-LAST:event_rightHistoryActionPerformed
-
     private void leftHistoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_leftHistoryActionPerformed
         backwardFolderActionPerformed( null );
     }//GEN-LAST:event_leftHistoryActionPerformed
@@ -5677,6 +5681,8 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             }
         stopDirWatcher();
 
+        startingFolderSave = pathsHistoryList.getBackward();
+        
 //        if ( rmtConnectBtn.getText().equalsIgnoreCase( PROCESS_STATUS_CANCEL_SEARCH ) )
 //            {
 //            logger.info( "rmtConnectBtnActionPerformed() hit stop button, got rootPaneCheckingEnabled =" + rootPaneCheckingEnabled + "=" );
@@ -5774,6 +5780,15 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             restServerSw = null;
 //            rmtConnectBtn.setBackground( saveColor );
             rmtConnectBtn.setText( "" );
+            setConnectionType( "" );
+            setRmtUser( "" );
+            setRmtPasswd( "" );
+            setRmtHost( "" );
+            setRmtSshPort( "" );
+            setRmtAskHttpsPort( "" );
+            // might go back one extra if path not set from bookmark. not bad
+            startingFolder.setText( startingFolderSave );
+            searchBtnActionPerformed( null );
             }
         connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", "", getRmtAskHttpsPort() );
         connUserInfo.setFrom( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", "", "" );
@@ -5802,11 +5817,15 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
             restServerSw = null;
 //            rmtConnectBtn.setBackground( saveColor );
             rmtConnectBtn.setText( "" );
+            setConnectionType( "" );
             setRmtUser( "" );
             setRmtPasswd( "" );
             setRmtHost( "" );
-            setRmtSshPort("" );
-            setRmtAskHttpsPort("" );
+            setRmtSshPort( "" );
+            setRmtAskHttpsPort( "" );
+            // might go back one extra if path not set from bookmark. not bad
+            startingFolder.setText( startingFolderSave );
+            searchBtnActionPerformed( null );
             }
         connUserInfo = new ConnUserInfo( false, Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", "", getRmtAskHttpsPort() );
         connUserInfo.setFrom( Constants.PATH_PROTOCOL_FILE, "", "", hostAddress, "", "", "" );
@@ -5998,6 +6017,10 @@ Class<?> renameFiles = Class.forName("windows.RenameFiles", true, loader);
                 break;
         }
     }//GEN-LAST:event_logLevelActionPerformed
+
+    private void rightHistoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rightHistoryActionPerformed
+        forwardFolderActionPerformed( null );
+    }//GEN-LAST:event_rightHistoryActionPerformed
 
     private void connectionTypeMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_connectionTypeMouseClicked
         ConnectionWin connectionWin = new ConnectionWin( connectionType, rmtHost, rmtUser, rmtPasswd, rmtAskHttpsPort, rmtSshPort, rmtSshKeyFilename );

@@ -27,6 +27,7 @@ public class ProgramMemory {
     String startConsoleCmd = "";
     String myEditorCmd = "";
     String checkForUpdateDate = "";   // value is only here, which is better
+    CircularArrayList pathsHistoryList = new CircularArrayList( 50 );
         public static int TBLCOLMODEL_WIDTH_FILETYPE = 0;
         public static int TBLCOLMODEL_WIDTH_FOLDERTYPE = 1;
         public static int TBLCOLMODEL_WIDTH_PATH_SHORT = 2;
@@ -122,6 +123,14 @@ public class ProgramMemory {
         {
         this.myEditorCmd = myEditorCmd;
         }
+
+    public CircularArrayList getPathsHistoryList() {
+        return pathsHistoryList;
+    }
+
+    public void setPathsHistoryList(CircularArrayList pathsHistoryList) {
+        this.pathsHistoryList = pathsHistoryList;
+    }
     
     
     //---------
@@ -135,6 +144,7 @@ public class ProgramMemory {
         jFileFinderWin.setShowPermsFlag(showPermsFlag);
         jFileFinderWin.setStartConsoleCmd( startConsoleCmd );
         jFileFinderWin.setMyEditorCmd( myEditorCmd );
+        jFileFinderWin.setPathsHistoryList( pathsHistoryList );
         
         setTblColModelWidth( TBLCOLMODEL_WIDTH_FILETYPE, 16 );
         setTblColModelWidth( TBLCOLMODEL_WIDTH_FOLDERTYPE, 16 );
@@ -152,6 +162,7 @@ public class ProgramMemory {
             this.showPermsFlag = jFileFinderWin.isShowPermsFlag();
             this.startConsoleCmd = jFileFinderWin.getStartConsoleCmd();
             this.myEditorCmd = jFileFinderWin.getMyEditorCmd();
+            this.pathsHistoryList = jFileFinderWin.getPathsHistoryList();
             
             TableColumnModel tblColModel = jFileFinderWin.getFilesTbl().getColumnModel();
             setTblColModelWidth( TBLCOLMODEL_WIDTH_FILETYPE, tblColModel.getColumn( FilesTblModel.FILESTBLMODEL_FILETYPE ).getWidth() );

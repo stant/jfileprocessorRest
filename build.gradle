@@ -25,7 +25,7 @@ apply plugin: 'war'
 //apply plugin: com.dorongold.gradle.tasktree.TaskTreePlugin
 
 group 'com.towianski'
-version '2.4-beta'
+version '2.4.1'
 
 mainClassName = 'com.towianski.boot.StartApp'
 
@@ -54,7 +54,7 @@ task copy(type: Copy) {
 }
 
 task copyLib(type: Copy) {
-        //from("/net2/github/JfpLib/dist") {
+        from("${projectDir}/src/main/resources/icons/jfp.png")
         from("${projectDir}/../JfpLib/dist") {
             include "JfpLib.jar" 
         }
