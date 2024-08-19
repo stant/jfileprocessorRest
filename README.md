@@ -4,7 +4,7 @@ Place to get the official versions (many sites are behind):
 ![github main](https://github.com/stant/jfileprocessorRest)
 ![github main](https://github.com/stant/jfileprocessorRest/releases)
 
-made using Java 8, but now compatible with Java 9+    (tested 8-12)
+made using Java 17    (tested 17, 21, 22)
 
 WINDOWS OS: Java Swing programs have an issue with high DPI displays. I do not know of a good solution
 and the problem even varies between Java versions. You will have to play with your "compatibility" settings
@@ -64,9 +64,17 @@ glob:  */*/whatever                 find whatever folder at 3rd level below star
 ```
 
 
-Remote Host connection:  This uses sftp and also https. 
-the ssh server must have sftp turned on and this assumes port 22 for now.
-it also uses https which assumes port 8443 for now. This gives it ssl security but does not check the validity/certificate of the host itself. You probably would use this on a network you know/trust anyways.
+Remote Host connection:  This uses sftp or https. 
+the ssh server must have sftp turned on.
+sftp used to be a hybrid where it also used https to do filter searches. I did away with this,
+which makes that slower but it is only uses ssh now. Now sftp uses only an ssh server!
+I also do not try to install and run a jfp/https server.
+To use ssh or https you have to start a server to connect to.
+You can run openssh on linux (maybe mac too?) 
+and now windows (11 anyways) has it's own implementation of openssh server which seems to work well!
+You have to find a web page to see how to set it up. Not too bad.
+
+for https. This gives it ssl security but does not check the validity/certificate of the host itself. You probably would use this on a network you know/trust anyways.
 
 
 Escape: closes windows
